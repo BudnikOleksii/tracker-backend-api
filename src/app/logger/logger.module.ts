@@ -1,10 +1,9 @@
-import { Module } from '@nestjs/common'
-import { ConfigModule, ConfigService } from '@nestjs/config'
-import { LoggerModule as PinoLoggerModule } from 'nestjs-pino'
+import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { LoggerModule as PinoLoggerModule } from 'nestjs-pino';
 
-import { createLoggerConfig } from './logger.config.js'
-
-import type { Env } from '../config/env.schema.js'
+import { createLoggerConfig } from './logger.config.js';
+import type { Env } from '../config/env.schema.js';
 
 @Module({
   imports: [

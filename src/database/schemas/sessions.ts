@@ -1,13 +1,6 @@
-import {
-  index,
-  pgTable,
-  text,
-  timestamp,
-  uniqueIndex,
-  uuid,
-} from 'drizzle-orm/pg-core'
+import { index, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 
-import { usersTable } from './users.js'
+import { usersTable } from './users.js';
 
 export const sessionsTable = pgTable(
   'sessions',
@@ -20,9 +13,7 @@ export const sessionsTable = pgTable(
     expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
     ipAddress: text('ip_address'),
     userAgent: text('user_agent'),
-    createdAt: timestamp('created_at', { withTimezone: true })
-      .notNull()
-      .defaultNow(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true })
       .notNull()
       .defaultNow()
@@ -33,7 +24,7 @@ export const sessionsTable = pgTable(
     uniqueIndex('sessions_token_idx').on(table.token),
     index('sessions_expires_at_idx').on(table.expiresAt),
   ],
-)
+);
 
-export type Session = typeof sessionsTable.$inferSelect
-export type InsertSession = typeof sessionsTable.$inferInsert
+export type Session = typeof sessionsTable.$inferSelect;
+export type InsertSession = typeof sessionsTable.$inferInsert;

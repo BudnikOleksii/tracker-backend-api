@@ -1,27 +1,17 @@
-import {
-  Catch,
-  HttpException,
-  HttpStatus,
-  Logger,
-  Optional,
-  Inject,
-} from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
-import { ClsService } from 'nestjs-cls'
+import { Catch, HttpException, HttpStatus, Logger, Optional, Inject } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { ClsService } from 'nestjs-cls';
+import type { ExceptionFilter, ArgumentsHost } from '@nestjs/common';
+import type { Request, Response } from 'express';
 
-import { ProblemDetailsFilter } from './problem-details.filter.js'
+import type { ProblemDetailsDto } from '@/shared/dtos/problem-details.dto.js';
 
-import type { Env } from '../config/env.schema.js'
-import type { ProblemDetailsDto } from '@/shared/dtos/problem-details.dto.js'
-import type {
-  ExceptionFilter,
-  ArgumentsHost,
-} from '@nestjs/common'
-import type { Request, Response } from 'express'
+import { ProblemDetailsFilter } from './problem-details.filter.js';
+import type { Env } from '../config/env.schema.js';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
-  private readonly logger = new Logger(AllExceptionsFilter.name)
+  private readonly logger = new Logger(AllExceptionsFilter.name);
 
   constructor(
     @Optional() private readonly cls?: ClsService,
@@ -32,25 +22,26 @@ export class AllExceptionsFilter implements ExceptionFilter {
   ) {}
 
   catch(exception: unknown, host: ArgumentsHost) {
-    const context = host.switchToHttp()
-    const response = context.getResponse<Response>()
-    const request = context.getRequest<Request>()
+    const context = host.switchToHttp();
+    const response = context.getResponse<Response>();
+    const request = context.getRequest<Request>();
 
     if (exception instanceof HttpException && this.problemDetailsFilter) {
-      return this.problemDetailsFilter.catch(exception, host)
+      return this.problemDetailsFilter.catch(exception, host);
     }
 
-    const status = HttpStatus.INTERNAL_SERVER_ERROR
+    const status = HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const isProduction = this.configService?.get('NODE_ENV', { infer: true }) === 'production'
-    let message = 'Internal server error'
+    const isProduction = this.configService?.get('NODE_ENV', { infer: true }) === 'production';
+    let message = 'Internal server error';
     if (exception instanceof Error) {
-      message = isProduction ? 'The server encountered an unexpected error' : exception.message
+      message = isProduction ? 'The server encountered an unexpected error' : exception.message;
     }
 
-    const requestId = this.cls?.getId()
+    const requestId = this.cls?.getId();
 
-    const baseUrl = this.configService?.get('API_BASE_URL', { infer: true }) ?? 'https://api.example.com'
+    const baseUrl =
+      this.configService?.get('API_BASE_URL', { infer: true }) ?? 'https://api.example.com';
     const problemDetails: ProblemDetailsDto = {
       type: `${baseUrl}/errors/internal-server-error`,
       title: 'Internal Server Error',
@@ -60,17 +51,17 @@ export class AllExceptionsFilter implements ExceptionFilter {
       timestamp: new Date().toISOString(),
       code: 'INTERNAL_SERVER_ERROR',
       detail: message,
-    }
+    };
 
-    const logMessage = `${requestId ? `[req:${requestId}] ` : ''}${request.method} ${request.url} ${status}`
+    const logMessage = `${requestId ? `[req:${requestId}] ` : ''}${request.method} ${request.url} ${status}`;
     if (exception instanceof Error) {
-      this.logger.error(logMessage, exception.stack)
+      this.logger.error(logMessage, exception.stack);
     } else {
-      this.logger.error(logMessage, JSON.stringify(exception))
+      this.logger.error(logMessage, JSON.stringify(exception));
     }
 
-    response.setHeader('Content-Type', 'application/problem+json')
-    response.setHeader('Cache-Control', 'no-store')
-    response.status(status).json(problemDetails)
+    response.setHeader('Content-Type', 'application/problem+json');
+    response.setHeader('Cache-Control', 'no-store');
+    response.status(status).json(problemDetails);
   }
 }

@@ -1,15 +1,10 @@
-import { Injectable } from '@nestjs/common'
-import { map } from 'rxjs/operators'
+import { Injectable } from '@nestjs/common';
+import { map } from 'rxjs/operators';
+import type { NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
+import type { Reflector } from '@nestjs/core';
+import type { Observable } from 'rxjs';
 
-import { USE_ENVELOPE_KEY } from '@/shared/decorators/use-envelope.decorator.js'
-
-import type {
-  NestInterceptor,
-  ExecutionContext,
-  CallHandler,
-} from '@nestjs/common'
-import type { Reflector } from '@nestjs/core'
-import type { Observable } from 'rxjs'
+import { USE_ENVELOPE_KEY } from '@/shared/decorators/use-envelope.decorator.js';
 
 @Injectable()
 export class TransformInterceptor implements NestInterceptor {
@@ -19,20 +14,17 @@ export class TransformInterceptor implements NestInterceptor {
     return next.handle().pipe(
       map((data: unknown) => {
         if (data === null || data === undefined) {
-          return data
+          return data;
         }
 
-        const useEnvelope = this.reflector.get<boolean>(
-          USE_ENVELOPE_KEY,
-          context.getHandler(),
-        )
+        const useEnvelope = this.reflector.get<boolean>(USE_ENVELOPE_KEY, context.getHandler());
 
         if (useEnvelope) {
-          return data
+          return data;
         }
 
-        return data
+        return data;
       }),
-    )
+    );
   }
 }

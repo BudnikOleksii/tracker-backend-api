@@ -1,11 +1,10 @@
-import { Global, Module } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
+import { Global, Module } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import type { DynamicModule } from '@nestjs/common';
 
-import { DB_TOKEN } from './types.js'
-import { createDrizzleInstance } from './database.provider.js'
-
-import type { Env } from '../app/config/env.schema.js'
-import type { DynamicModule } from '@nestjs/common'
+import { DB_TOKEN } from './types.js';
+import { createDrizzleInstance } from './database.provider.js';
+import type { Env } from '../app/config/env.schema.js';
 
 @Global()
 @Module({})
@@ -24,11 +23,11 @@ export class DatabaseModule {
                 max: configService.get('DB_POOL_MAX', { infer: true }),
                 min: configService.get('DB_POOL_MIN', { infer: true }),
               },
-            })
+            });
           },
         },
       ],
       exports: [DB_TOKEN],
-    }
+    };
   }
 }

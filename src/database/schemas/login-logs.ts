@@ -1,15 +1,8 @@
-import {
-  index,
-  pgEnum,
-  pgTable,
-  text,
-  timestamp,
-  uuid,
-} from 'drizzle-orm/pg-core'
+import { index, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
-import { usersTable } from './users.js'
+import { usersTable } from './users.js';
 
-export const loginStatusEnum = pgEnum('login_status', ['success', 'failed'])
+export const loginStatusEnum = pgEnum('login_status', ['success', 'failed']);
 
 export const loginLogsTable = pgTable(
   'login_logs',
@@ -27,7 +20,7 @@ export const loginLogsTable = pgTable(
     index('login_logs_user_id_idx').on(table.userId),
     index('login_logs_created_at_idx').on(table.createdAt),
   ],
-)
+);
 
-export type LoginLog = typeof loginLogsTable.$inferSelect
-export type InsertLoginLog = typeof loginLogsTable.$inferInsert
+export type LoginLog = typeof loginLogsTable.$inferSelect;
+export type InsertLoginLog = typeof loginLogsTable.$inferInsert;

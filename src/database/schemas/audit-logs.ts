@@ -1,4 +1,4 @@
-import { index, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
+import { index, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 export const auditLogsTable = pgTable(
   'audit_logs',
@@ -13,16 +13,14 @@ export const auditLogsTable = pgTable(
     ipAddress: text('ip_address'),
     userAgent: text('user_agent'),
     requestId: text('request_id'),
-    createdAt: timestamp('created_at', { withTimezone: true })
-      .notNull()
-      .defaultNow(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
     index('audit_logs_actor_id_idx').on(table.actorId),
     index('audit_logs_action_idx').on(table.action),
     index('audit_logs_created_at_idx').on(table.createdAt),
   ],
-)
+);
 
-export type AuditLog = typeof auditLogsTable.$inferSelect
-export type InsertAuditLog = typeof auditLogsTable.$inferInsert
+export type AuditLog = typeof auditLogsTable.$inferSelect;
+export type InsertAuditLog = typeof auditLogsTable.$inferInsert;

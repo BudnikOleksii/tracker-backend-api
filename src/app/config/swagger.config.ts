@@ -1,32 +1,35 @@
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
-import { apiReference } from '@scalar/nestjs-api-reference'
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { apiReference } from '@scalar/nestjs-api-reference';
+import type { INestApplication } from '@nestjs/common';
+import type { OpenAPIObject, SwaggerCustomOptions } from '@nestjs/swagger';
 
-import { ProblemDetailsDto } from '../../shared/dtos/problem-details.dto.js'
-
-import type { INestApplication } from '@nestjs/common'
-import type { OpenAPIObject, SwaggerCustomOptions } from '@nestjs/swagger'
+import { ProblemDetailsDto } from '@/shared/dtos/problem-details.dto.js';
 
 export const swaggerCustomOptions: SwaggerCustomOptions = {
   swaggerOptions: {
     persistAuthorization: true,
   },
-}
+};
 
 function addDefaultErrorResponses(document: OpenAPIObject): void {
-  if (!document.paths) return
+  if (!document.paths) {
+    return;
+  }
 
   for (const path in document.paths) {
-    const pathItem = document.paths[path]
-    if (!pathItem) continue
+    const pathItem = document.paths[path];
+    if (!pathItem) {
+      continue;
+    }
 
     for (const method in pathItem) {
       if (!['get', 'post', 'put', 'patch', 'delete', 'options', 'head'].includes(method)) {
-        continue
+        continue;
       }
 
-      const operation = pathItem[method as keyof typeof pathItem]
+      const operation = pathItem[method as keyof typeof pathItem];
       if (!operation || typeof operation !== 'object' || !('responses' in operation)) {
-        continue
+        continue;
       }
 
       if (operation.responses && !operation.responses.default) {
@@ -39,7 +42,7 @@ function addDefaultErrorResponses(document: OpenAPIObject): void {
               },
             },
           },
-        }
+        };
       }
     }
   }
@@ -56,7 +59,7 @@ export function setupSwagger(app: INestApplication): void {
     .addTag('users', 'User management endpoints')
     .addTag('audit-logs', 'Audit log endpoints')
     .addBearerAuth()
-    .build()
+    .build();
 
   const document = SwaggerModule.createDocument(app, config, {
     include: [],
@@ -64,19 +67,19 @@ export function setupSwagger(app: INestApplication): void {
     extraModels: [ProblemDetailsDto],
     operationIdFactory: (controllerKey: string, methodKey: string) =>
       `${controllerKey}_${methodKey}`,
-  })
+  });
 
-  addDefaultErrorResponses(document)
+  addDefaultErrorResponses(document);
 
   SwaggerModule.setup('swagger', app, document, {
     ...swaggerCustomOptions,
     yamlDocumentUrl: '/openapi.yaml',
-  })
+  });
 
   app.use(
     '/docs',
     apiReference({
       content: document,
     }),
-  )
+  );
 }

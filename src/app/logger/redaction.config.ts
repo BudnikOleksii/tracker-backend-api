@@ -13,6 +13,6 @@ export const redactPaths = [
   'res.body.token',
   'res.body.accessToken',
   'res.body.refreshToken',
-]
+];
 
-export const redactCensor = '[REDACTED]'
+export const redactCensor = '[REDACTED]';

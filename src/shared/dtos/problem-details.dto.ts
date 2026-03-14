@@ -1,44 +1,44 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class FieldError {
   @ApiPropertyOptional({ example: 'email' })
-  field?: string
+  field?: string;
 
   @ApiPropertyOptional({ example: '/email' })
-  pointer?: string
+  pointer?: string;
 
   @ApiProperty({ example: 'INVALID_EMAIL' })
-  code: string
+  code: string;
 
   @ApiProperty({ example: 'email must be a valid email address' })
-  message: string
+  message: string;
 }
 
 export class ProblemDetailsDto {
   @ApiProperty({ example: 'https://api.example.com/errors/validation-failed' })
-  type: string
+  type: string;
 
   @ApiProperty({ example: 'Unprocessable Entity' })
-  title: string
+  title: string;
 
   @ApiProperty({ example: 422 })
-  status: number
+  status: number;
 
   @ApiPropertyOptional({ example: '/api/users' })
-  instance?: string
+  instance?: string;
 
   @ApiPropertyOptional({ example: 'req_xyz789' })
-  request_id?: string
+  request_id?: string;
 
   @ApiPropertyOptional({ example: '2024-11-03T10:30:00Z' })
-  timestamp?: string
+  timestamp?: string;
 
   @ApiPropertyOptional({ example: 'INVALID_CREDENTIALS' })
-  code?: string
+  code?: string;
 
   @ApiPropertyOptional({ example: 'Invalid email or password' })
-  detail?: string
+  detail?: string;
 
   @ApiPropertyOptional({ type: [FieldError] })
-  errors?: FieldError[]
+  errors?: FieldError[];
 }

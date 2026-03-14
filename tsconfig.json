@@ -31,7 +31,7 @@
     "strictPropertyInitialization": false,
     "paths": {
       "@/*": ["src/*"]
-    },
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.test.ts"]

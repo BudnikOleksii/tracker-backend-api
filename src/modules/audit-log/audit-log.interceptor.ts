@@ -1,25 +1,24 @@
-import { Injectable } from '@nestjs/common'
-import { tap } from 'rxjs/operators'
+import { Injectable } from '@nestjs/common';
+import { tap } from 'rxjs/operators';
+import type { NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
+import type { Request } from 'express';
+import type { Observable } from 'rxjs';
 
-import { AuditLogService } from './audit-log.service.js'
+import { AuditLogService } from './audit-log.service.js';
 
-import type { NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common'
-import type { Request } from 'express'
-import type { Observable } from 'rxjs'
-
-const MUTATING_METHODS = new Set(['POST', 'PATCH', 'PUT', 'DELETE'])
+const MUTATING_METHODS = new Set(['POST', 'PATCH', 'PUT', 'DELETE']);
 
 @Injectable()
 export class AuditLogInterceptor implements NestInterceptor {
   constructor(private readonly auditLogService: AuditLogService) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
-    const req = context.switchToHttp().getRequest<Request>()
-    const { method, url, params } = req
-    const user = req.user as { id: string, email?: string } | undefined
+    const req = context.switchToHttp().getRequest<Request>();
+    const { method, url, params } = req;
+    const user = req.user as { id: string; email?: string } | undefined;
 
     if (!MUTATING_METHODS.has(method) || !user) {
-      return next.handle()
+      return next.handle();
     }
 
     return next.handle().pipe(
@@ -29,8 +28,8 @@ export class AuditLogInterceptor implements NestInterceptor {
           actorId: user.id,
           actorEmail: user.email,
           resourceId: (params as Record<string, string>)?.id,
-        })
+        });
       }),
-    )
+    );
   }
 }

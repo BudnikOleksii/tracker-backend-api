@@ -3,72 +3,89 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
-} from '@nestjs/common'
-import * as bcrypt from 'bcrypt'
+} from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 
-import { hasRequiredRole } from '@/shared/enums/role.enum.js'
-import { ErrorCode } from '@/shared/enums/error-code.enum.js'
+import { hasRequiredRole } from '@/shared/enums/role.enum.js';
+import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 
-import { UserRepository } from './user.repository.js'
+import { UserRepository } from './user.repository.js';
+import type { UserInfo, UserListQuery, UserListResult, UserSummary } from './user.repository.js';
+import type { RoleType } from '@/shared/enums/role.enum.js';
 
-import type {
-  UserInfo,
-  UserListQuery,
-  UserListResult,
-  UserSummary,
-} from './user.repository.js'
-import type { RoleType } from '../../shared/enums/role.enum.js'
-
-const BCRYPT_ROUNDS = 12
+const BCRYPT_ROUNDS = 12;
 
 @Injectable()
 export class UserService {
   constructor(private readonly userRepository: UserRepository) {}
 
   async findAll(query: UserListQuery): Promise<UserListResult> {
-    return this.userRepository.findAll(query)
+    return this.userRepository.findAll(query);
   }
 
   async findById(id: string): Promise<UserInfo> {
-    const user = await this.userRepository.findById(id)
+    const user = await this.userRepository.findById(id);
     if (!user) {
-      throw new NotFoundException({ code: ErrorCode.USER_NOT_FOUND, message: `User ${id} not found` })
+      throw new NotFoundException({
+        code: ErrorCode.USER_NOT_FOUND,
+        message: `User ${id} not found`,
+      });
     }
-    return user
+
+    return user;
   }
 
-  async create(data: { name: string, email: string, password: string, role?: string }): Promise<UserInfo> {
-    const exists = await this.userRepository.existsByEmail(data.email)
+  async create(data: {
+    name: string;
+    email: string;
+    password: string;
+    role?: string;
+  }): Promise<UserInfo> {
+    const exists = await this.userRepository.existsByEmail(data.email);
     if (exists) {
-      throw new ConflictException({ code: ErrorCode.EMAIL_EXISTS, message: 'This email address is already in use' })
+      throw new ConflictException({
+        code: ErrorCode.EMAIL_EXISTS,
+        message: 'This email address is already in use',
+      });
     }
 
-    const passwordHash = await bcrypt.hash(data.password, BCRYPT_ROUNDS)
+    const passwordHash = await bcrypt.hash(data.password, BCRYPT_ROUNDS);
+
     return this.userRepository.create({
       name: data.name,
       email: data.email,
       passwordHash,
       role: data.role,
-    })
+    });
   }
 
-  async update(id: string, data: { name?: string, banned?: boolean, banReason?: string }): Promise<UserInfo> {
-    const updated = await this.userRepository.update(id, data)
+  async update(
+    id: string,
+    data: { name?: string; banned?: boolean; banReason?: string },
+  ): Promise<UserInfo> {
+    const updated = await this.userRepository.update(id, data);
     if (!updated) {
-      throw new NotFoundException({ code: ErrorCode.USER_NOT_FOUND, message: `User ${id} not found` })
+      throw new NotFoundException({
+        code: ErrorCode.USER_NOT_FOUND,
+        message: `User ${id} not found`,
+      });
     }
-    return updated
+
+    return updated;
   }
 
   async delete(id: string): Promise<void> {
-    const deleted = await this.userRepository.hardDelete(id)
+    const deleted = await this.userRepository.hardDelete(id);
     if (!deleted) {
-      throw new NotFoundException({ code: ErrorCode.USER_NOT_FOUND, message: `User ${id} not found` })
+      throw new NotFoundException({
+        code: ErrorCode.USER_NOT_FOUND,
+        message: `User ${id} not found`,
+      });
     }
   }
 
   async getSummary(): Promise<UserSummary> {
-    return this.userRepository.getSummary()
+    return this.userRepository.getSummary();
   }
 
   async assignRole(
@@ -78,18 +95,27 @@ export class UserService {
     actorRole: RoleType,
   ): Promise<UserInfo> {
     if (actorId === targetUserId) {
-      throw new ForbiddenException({ code: ErrorCode.FORBIDDEN, message: 'Modifying your own role is not allowed' })
+      throw new ForbiddenException({
+        code: ErrorCode.FORBIDDEN,
+        message: 'Modifying your own role is not allowed',
+      });
     }
 
     if (!hasRequiredRole(actorRole, 'ADMIN')) {
-      throw new ForbiddenException({ code: ErrorCode.INSUFFICIENT_SCOPE, message: 'Insufficient permissions' })
+      throw new ForbiddenException({
+        code: ErrorCode.INSUFFICIENT_SCOPE,
+        message: 'Insufficient permissions',
+      });
     }
 
-    const updated = await this.userRepository.update(targetUserId, { role: newRole })
+    const updated = await this.userRepository.update(targetUserId, { role: newRole });
     if (!updated) {
-      throw new NotFoundException({ code: ErrorCode.USER_NOT_FOUND, message: `User ${targetUserId} not found` })
+      throw new NotFoundException({
+        code: ErrorCode.USER_NOT_FOUND,
+        message: `User ${targetUserId} not found`,
+      });
     }
 
-    return updated
+    return updated;
   }
 }

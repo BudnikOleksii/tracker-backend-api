@@ -1,33 +1,33 @@
-import { ApiProperty } from '@nestjs/swagger'
+import { ApiProperty } from '@nestjs/swagger';
 
 import {
   IsEmailField,
   IsNotEmptyField,
   IsStringField,
-} from '../../../shared/decorators/validators.js'
+} from '@/shared/decorators/validators.js';
 
 export class LoginDto {
   @ApiProperty({ example: 'user@example.com' })
   @IsEmailField({ message: 'Invalid email format' })
-  email: string
+  email: string;
 
   @ApiProperty({ example: 'Pass123456' })
   @IsStringField()
   @IsNotEmptyField({ message: 'Password must not be empty' })
-  password: string
+  password: string;
 }
 
 export class AuthResponseDto {
   @ApiProperty({ example: 'eyJhbGciOiJIUzI1NiJ9...' })
-  accessToken: string
+  accessToken: string;
 
   @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440000' })
-  refreshToken: string
+  refreshToken: string;
 
   @ApiProperty()
   user: {
-    id: string
-    email: string
-    role: string
-  }
+    id: string;
+    email: string;
+    role: string;
+  };
 }

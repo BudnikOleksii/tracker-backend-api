@@ -1,14 +1,14 @@
-import { Body, Controller, Get, HttpCode, Post, Request, UseGuards } from '@nestjs/common'
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger'
+import { Body, Controller, Get, HttpCode, Post, Request, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 
-import { JwtAuthGuard } from '@/shared/guards/index.js'
+import { JwtAuthGuard } from '@/shared/guards/index.js';
 
-import { AuthService } from './auth.service.js'
-import { LoginDto, AuthResponseDto } from './dtos/login.dto.js'
-import { LogoutDto } from './dtos/logout.dto.js'
-import { RefreshTokenDto } from './dtos/refresh-token.dto.js'
-import { RegisterDto } from './dtos/register.dto.js'
-import { RevokeSessionDto } from './dtos/revoke-session.dto.js'
+import { AuthService } from './auth.service.js';
+import { LoginDto, AuthResponseDto } from './dtos/login.dto.js';
+import { LogoutDto } from './dtos/logout.dto.js';
+import { RefreshTokenDto } from './dtos/refresh-token.dto.js';
+import { RegisterDto } from './dtos/register.dto.js';
+import { RevokeSessionDto } from './dtos/revoke-session.dto.js';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -20,7 +20,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({ status: 201, type: AuthResponseDto })
   async register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto.email, dto.password, dto.name)
+    return this.authService.register(dto.email, dto.password, dto.name);
   }
 
   @Post('login')
@@ -29,13 +29,20 @@ export class AuthController {
   @ApiResponse({ status: 200, type: AuthResponseDto })
   async login(
     @Body() dto: LoginDto,
-    @Request() req: { headers: Record<string, string | string[] | undefined>, socket?: { remoteAddress?: string } },
+    @Request()
+    req: {
+      headers: Record<string, string | string[] | undefined>;
+      socket?: { remoteAddress?: string };
+    },
   ) {
     const deviceContext = {
-      ipAddress: (req.headers['x-forwarded-for'] as string | undefined)?.split(',')[0]?.trim() ?? req.socket?.remoteAddress,
+      ipAddress:
+        (req.headers['x-forwarded-for'] as string | undefined)?.split(',')[0]?.trim() ??
+        req.socket?.remoteAddress,
       userAgent: req.headers['user-agent'] as string | undefined,
-    }
-    return this.authService.login(dto.email, dto.password, deviceContext)
+    };
+
+    return this.authService.login(dto.email, dto.password, deviceContext);
   }
 
   @Post('refresh-token')
@@ -43,7 +50,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Refresh access token' })
   @ApiResponse({ status: 200, type: AuthResponseDto })
   async refreshToken(@Body() dto: RefreshTokenDto) {
-    return this.authService.refreshToken(dto.refreshToken)
+    return this.authService.refreshToken(dto.refreshToken);
   }
 
   @Get('session')
@@ -51,9 +58,15 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current session info' })
   async getSession(
-    @Request() req: Express.Request & { user: { id: string, email: string, role: string, sessionId: string } },
+    @Request()
+    req: Express.Request & { user: { id: string; email: string; role: string; sessionId: string } },
   ) {
-    return this.authService.getSession(req.user.sessionId, req.user.id, req.user.email, req.user.role)
+    return this.authService.getSession(
+      req.user.sessionId,
+      req.user.id,
+      req.user.email,
+      req.user.role,
+    );
   }
 
   @Get('sessions')
@@ -61,9 +74,9 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'List active sessions' })
   async listSessions(
-    @Request() req: Express.Request & { user: { id: string, sessionId: string } },
+    @Request() req: Express.Request & { user: { id: string; sessionId: string } },
   ) {
-    return this.authService.listSessions(req.user.id, req.user.sessionId)
+    return this.authService.listSessions(req.user.id, req.user.sessionId);
   }
 
   @Post('logout')
@@ -72,11 +85,14 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Logout (single device)' })
   async logout(@Body() dto: LogoutDto) {
-    const success = await this.authService.logout(dto.refreshToken)
+    const success = await this.authService.logout(dto.refreshToken);
+
     return {
       success,
-      message: success ? 'Logged out successfully' : 'Logout failed: session not found or already expired',
-    }
+      message: success
+        ? 'Logged out successfully'
+        : 'Logout failed: session not found or already expired',
+    };
   }
 
   @Post('revoke-session')
@@ -86,9 +102,9 @@ export class AuthController {
   @ApiOperation({ summary: 'Revoke a specific session' })
   async revokeSession(
     @Body() dto: RevokeSessionDto,
-    @Request() req: Express.Request & { user: { id: string, sessionId: string } },
+    @Request() req: Express.Request & { user: { id: string; sessionId: string } },
   ) {
-    return this.authService.revokeSession(dto.sessionId, req.user.id, req.user.sessionId)
+    return this.authService.revokeSession(dto.sessionId, req.user.id, req.user.sessionId);
   }
 
   @Post('revoke-sessions')
@@ -96,13 +112,12 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Revoke all sessions' })
-  async revokeSessions(
-    @Request() req: Express.Request & { user: { id: string } },
-  ) {
-    const revokedCount = await this.authService.revokeAllSessions(req.user.id)
+  async revokeSessions(@Request() req: Express.Request & { user: { id: string } }) {
+    const revokedCount = await this.authService.revokeAllSessions(req.user.id);
+
     return {
       revokedCount,
       message: `All sessions revoked successfully. Total: ${revokedCount}`,
-    }
+    };
   }
 }

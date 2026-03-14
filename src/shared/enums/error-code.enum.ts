@@ -28,6 +28,6 @@ export const ErrorCode = {
   BAD_REQUEST: 'BAD_REQUEST',
   RATE_LIMIT_EXCEEDED: 'RATE_LIMIT_EXCEEDED',
   INTERNAL_SERVER_ERROR: 'INTERNAL_SERVER_ERROR',
-} as const
+} as const;
 
-export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode]
+export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];

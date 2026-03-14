@@ -1,15 +1,15 @@
-import { Module } from '@nestjs/common'
-import { ConfigModule, ConfigService } from '@nestjs/config'
-import { JwtModule } from '@nestjs/jwt'
-import { PassportModule } from '@nestjs/passport'
+import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
 
-import { AuthController } from './auth.controller.js'
-import { AuthService } from './auth.service.js'
-import { JwtStrategy } from './jwt.strategy.js'
-import { LoginLogRepository } from './login-log.repository.js'
-import { SessionRepository } from './session.repository.js'
+import type { Env } from '@/app/config/env.schema.js';
 
-import type { Env } from '@/app/config/env.schema.js'
+import { AuthController } from './auth.controller.js';
+import { AuthService } from './auth.service.js';
+import { JwtStrategy } from './jwt.strategy.js';
+import { LoginLogRepository } from './login-log.repository.js';
+import { SessionRepository } from './session.repository.js';
 
 @Module({
   imports: [
@@ -26,12 +26,7 @@ import type { Env } from '@/app/config/env.schema.js'
     }),
   ],
   controllers: [AuthController],
-  providers: [
-    AuthService,
-    JwtStrategy,
-    SessionRepository,
-    LoginLogRepository,
-  ],
+  providers: [AuthService, JwtStrategy, SessionRepository, LoginLogRepository],
   exports: [AuthService, SessionRepository],
 })
 export class AuthModule {}

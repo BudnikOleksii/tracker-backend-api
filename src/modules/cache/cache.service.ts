@@ -1,8 +1,8 @@
-import { CACHE_MANAGER } from '@nestjs/cache-manager'
-import { Inject, Injectable } from '@nestjs/common'
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Inject, Injectable } from '@nestjs/common';
+import type { Cache } from 'cache-manager';
 
-import type { CachePort } from './cache.port.js'
-import type { Cache } from 'cache-manager'
+import type { CachePort } from './cache.port.js';
 
 @Injectable()
 export class CacheService implements CachePort {
@@ -12,29 +12,30 @@ export class CacheService implements CachePort {
   ) {}
 
   async get<T>(key: string): Promise<T | undefined> {
-    return this.cacheManager.get<T>(key)
+    return this.cacheManager.get<T>(key);
   }
 
   async set<T>(key: string, value: T, ttl?: number): Promise<void> {
-    const ttlMs = ttl ? ttl * 1000 : undefined
-    await this.cacheManager.set(key, value, ttlMs)
+    const ttlMs = ttl ? ttl * 1000 : undefined;
+    await this.cacheManager.set(key, value, ttlMs);
   }
 
   async del(key: string): Promise<void> {
-    await this.cacheManager.del(key)
+    await this.cacheManager.del(key);
   }
 
   async reset(): Promise<void> {
-    await this.cacheManager.clear()
+    await this.cacheManager.clear();
   }
 
   async wrap<T>(key: string, fn: () => Promise<T>, ttl?: number): Promise<T> {
-    const cached = await this.get<T>(key)
+    const cached = await this.get<T>(key);
     if (cached !== undefined) {
-      return cached
+      return cached;
     }
-    const result = await fn()
-    await this.set(key, result, ttl)
-    return result
+    const result = await fn();
+    await this.set(key, result, ttl);
+
+    return result;
   }
 }

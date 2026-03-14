@@ -1,17 +1,16 @@
-import { Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common';
 
-import { loginLogsTable } from '@/database/schemas/index.js'
-import { DB_TOKEN } from '@/database/types.js'
-
-import type { DrizzleDb } from '@/database/types.js'
+import { loginLogsTable } from '@/database/schemas/index.js';
+import { DB_TOKEN } from '@/database/types.js';
+import type { DrizzleDb } from '@/database/types.js';
 
 export interface LoginLogEntry {
-  userId?: string
-  email: string
-  status: 'success' | 'failed'
-  ipAddress?: string
-  userAgent?: string
-  failReason?: string
+  userId?: string;
+  email: string;
+  status: 'success' | 'failed';
+  ipAddress?: string;
+  userAgent?: string;
+  failReason?: string;
 }
 
 @Injectable()
@@ -29,6 +28,6 @@ export class LoginLogRepository {
       ipAddress: entry.ipAddress ?? null,
       userAgent: entry.userAgent ?? null,
       failReason: entry.failReason ?? null,
-    })
+    });
   }
 }

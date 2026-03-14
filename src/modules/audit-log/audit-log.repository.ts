@@ -1,47 +1,46 @@
-import { Inject, Injectable } from '@nestjs/common'
-import { and, count, desc, eq, type SQL } from 'drizzle-orm'
+import { Inject, Injectable } from '@nestjs/common';
+import { and, count, desc, eq, type SQL } from 'drizzle-orm';
 
-import { auditLogsTable } from '../../database/schemas/audit-logs.js'
-import { DB_TOKEN } from '../../database/types.js'
-
-import type { DrizzleDb } from '../../database/types.js'
+import { auditLogsTable } from '@/database/schemas/index.js';
+import { DB_TOKEN } from '@/database/types.js';
+import type { DrizzleDb } from '@/database/types.js';
 
 export interface AuditLogData {
-  action: string
-  actorId?: string
-  actorEmail?: string
-  resourceType?: string
-  resourceId?: string
-  detail?: Record<string, unknown>
-  ipAddress?: string
-  userAgent?: string
-  requestId?: string
+  action: string;
+  actorId?: string;
+  actorEmail?: string;
+  resourceType?: string;
+  resourceId?: string;
+  detail?: Record<string, unknown>;
+  ipAddress?: string;
+  userAgent?: string;
+  requestId?: string;
 }
 
 export interface AuditLogRecord {
-  id: string
-  action: string
-  actorId: string | null
-  actorEmail: string | null
-  resourceType: string | null
-  resourceId: string | null
-  detail: unknown
-  ipAddress: string | null
-  userAgent: string | null
-  requestId: string | null
-  createdAt: Date
+  id: string;
+  action: string;
+  actorId: string | null;
+  actorEmail: string | null;
+  resourceType: string | null;
+  resourceId: string | null;
+  detail: unknown;
+  ipAddress: string | null;
+  userAgent: string | null;
+  requestId: string | null;
+  createdAt: Date;
 }
 
 export interface AuditLogListQuery {
-  page: number
-  pageSize: number
-  actorId?: string
-  action?: string
+  page: number;
+  pageSize: number;
+  actorId?: string;
+  action?: string;
 }
 
 export interface AuditLogListResult {
-  data: AuditLogRecord[]
-  total: number
+  data: AuditLogRecord[];
+  total: number;
 }
 
 @Injectable()
@@ -62,21 +61,21 @@ export class AuditLogRepository {
       ipAddress: data.ipAddress ?? null,
       userAgent: data.userAgent ?? null,
       requestId: data.requestId ?? null,
-    })
+    });
   }
 
   async findAll(query: AuditLogListQuery): Promise<AuditLogListResult> {
-    const { page, pageSize, actorId, action } = query
+    const { page, pageSize, actorId, action } = query;
 
-    const conditions: SQL[] = []
+    const conditions: SQL[] = [];
     if (actorId) {
-      conditions.push(eq(auditLogsTable.actorId, actorId))
+      conditions.push(eq(auditLogsTable.actorId, actorId));
     }
     if (action) {
-      conditions.push(eq(auditLogsTable.action, action))
+      conditions.push(eq(auditLogsTable.action, action));
     }
 
-    const whereClause = conditions.length > 0 ? and(...conditions) : undefined
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
     const [rows, totalResult] = await Promise.all([
       this.db
@@ -86,11 +85,8 @@ export class AuditLogRepository {
         .orderBy(desc(auditLogsTable.createdAt))
         .limit(pageSize)
         .offset((page - 1) * pageSize),
-      this.db
-        .select({ count: count() })
-        .from(auditLogsTable)
-        .where(whereClause),
-    ])
+      this.db.select({ count: count() }).from(auditLogsTable).where(whereClause),
+    ]);
 
     const data: AuditLogRecord[] = rows.map((row) => ({
       id: row.id,
@@ -104,11 +100,11 @@ export class AuditLogRepository {
       userAgent: row.userAgent,
       requestId: row.requestId,
       createdAt: row.createdAt,
-    }))
+    }));
 
     return {
       data,
       total: totalResult[0]?.count ?? 0,
-    }
+    };
   }
 }

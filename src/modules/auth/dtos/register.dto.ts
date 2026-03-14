@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger'
+import { ApiProperty } from '@nestjs/swagger';
 
 import {
   IsEmailField,
@@ -7,19 +7,19 @@ import {
   MatchesField,
   MaxLengthField,
   MinLengthField,
-} from '../../../shared/decorators/validators.js'
+} from '@/shared/decorators/validators.js';
 
 export class RegisterDto {
   @ApiProperty({ example: 'user@example.com' })
   @IsEmailField({ message: 'Invalid email format' })
-  email: string
+  email: string;
 
   @ApiProperty({ example: 'John Doe' })
   @IsStringField()
   @IsNotEmptyField({ message: 'Name must not be empty' })
   @MinLengthField(1, { message: 'Name must be at least 1 character long' })
   @MaxLengthField(50, { message: 'Name must not exceed 50 characters' })
-  name: string
+  name: string;
 
   @ApiProperty({ example: 'Pass123456' })
   @IsStringField()
@@ -29,5 +29,5 @@ export class RegisterDto {
   @MatchesField(/^(?=.*[a-zA-Z])(?=.*\d)/, {
     message: 'Password must contain at least one letter and one digit',
   })
-  password: string
+  password: string;
 }

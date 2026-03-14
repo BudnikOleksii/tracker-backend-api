@@ -1,9 +1,7 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 export const envSchema = z.object({
-  NODE_ENV: z
-    .enum(['development', 'production', 'test'])
-    .default('development'),
+  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 
   PORT: z
     .string()
@@ -13,9 +11,7 @@ export const envSchema = z.object({
       message: 'PORT must be between 1 and 65535',
     }),
 
-  DATABASE_URL: z
-    .url()
-    .default('postgres://postgres:postgres@localhost:5432/postgres'),
+  DATABASE_URL: z.url().default('postgres://postgres:postgres@localhost:5432/postgres'),
 
   DB_POOL_MAX: z
     .string()
@@ -55,7 +51,12 @@ export const envSchema = z.object({
   ALLOWED_ORIGINS: z
     .string()
     .optional()
-    .transform((value) => value?.split(',').map((s) => s.trim()).filter(Boolean)),
+    .transform((value) =>
+      value
+        ?.split(',')
+        .map((s) => s.trim())
+        .filter(Boolean),
+    ),
 
   REDIS_URL: z
     .string()
@@ -72,29 +73,25 @@ export const envSchema = z.object({
       message: 'REDIS_TTL must be greater than 0',
     }),
 
-  API_BASE_URL: z
-    .url()
-    .default('https://api.example.com'),
-})
+  API_BASE_URL: z.url().default('https://api.example.com'),
+});
 
-export type Env = z.infer<typeof envSchema>
+export type Env = z.infer<typeof envSchema>;
 
 export function validateEnv(config: Record<string, unknown>): Env {
   try {
-    return envSchema.parse(config)
+    return envSchema.parse(config);
   } catch (error) {
     if (error instanceof z.ZodError) {
       const errorMessages = error.issues
-        .map(
-          (issue: z.core.$ZodIssue) => `${issue.path.join('.')}: ${issue.message}`,
-        )
-        .join('\n')
+        .map((issue: z.core.$ZodIssue) => `${issue.path.join('.')}: ${issue.message}`)
+        .join('\n');
 
       throw new Error(
         `Environment variable validation failed:\n${errorMessages}\n\nPlease check your .env file or environment variable configuration`,
         { cause: error },
-      )
+      );
     }
-    throw error
+    throw error;
   }
 }
