@@ -9,5 +9,5 @@
   "global": false,
   "simulateCommands": false,
   "simulateSubagents": false,
-  "simulateSkills": false,
+  "simulateSkills": false
 }

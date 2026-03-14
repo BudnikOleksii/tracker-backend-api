@@ -7,7 +7,7 @@ The auth module uses "session" naming for methods that operate on refresh tokens
 - Rename all "session"-named methods across `auth.service.ts`, `auth.controller.ts`, and related files to use "refresh token" terminology (e.g., `getSession` → `getRefreshToken`, `listSessions` → `listRefreshTokens`, `revokeSession` → `revokeRefreshToken`, `revokeAllSessions` → `revokeAllRefreshTokens`)
 - **BREAKING**: Update API endpoint names/paths if they reference "session"
 - Refactor methods with multiple positional parameters to use the Receive an Object, Return an Object (RO-RO) pattern, accepting a single typed params object
-- Extract inline type declarations from controller method arguments into reusable interfaces (e.g., `AuthenticatedUser`, request types with varying user property shapes)
+- Extract inline type declarations from controller method arguments into reusable interfaces (e.g., `AuthUser`, `AuthenticatedRequest`)
 - Consolidate related interfaces using `extends` and TypeScript utility types (`Pick`, `Omit`) to reduce duplication
 - Update ESLint `@typescript-eslint/max-params` rule from `max: 6` to `max: 3`, with `eslint-disable` comments for NestJS constructor injection
 

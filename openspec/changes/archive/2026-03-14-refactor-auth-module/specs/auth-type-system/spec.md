@@ -39,7 +39,7 @@ Service methods with more than 2 positional parameters SHALL accept a single typ
 #### Scenario: getRefreshToken uses params object
 
 - **WHEN** `getRefreshToken` is called
-- **THEN** it MUST accept a single `GetRefreshTokenParams` object containing `sessionId`, `userId`, `email`, and `role`
+- **THEN** it MUST accept a single `GetRefreshTokenParams` object containing `id`, `email`, `role`, and `sessionId`
 
 #### Scenario: revokeRefreshToken uses params object
 
