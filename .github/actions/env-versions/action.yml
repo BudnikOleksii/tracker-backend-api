@@ -8,7 +8,7 @@ outputs:
     value: 22.15.0
   pnpm_version:
     description: The version of pnpm to use
-    value: 10.10.0
+    value: 10.11.0
 
 runs:
   using: 'composite'
