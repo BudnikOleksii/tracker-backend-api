@@ -15,7 +15,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "typecheck": "tsc -b --noEmit"
+    "check-types": "tsc -b --noEmit"
   },
   "dependencies": {
     "@keyv/redis": "5.1.6",
