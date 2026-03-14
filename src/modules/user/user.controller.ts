@@ -28,7 +28,7 @@ import { UserQueryDto } from './dtos/user-query.dto.js';
 import { UserService } from './user.service.js';
 
 @ApiTags('Users')
-@Controller('users')
+@Controller('usersOld')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN')
 @ApiBearerAuth()
@@ -48,7 +48,6 @@ export class UserController {
       pageSize,
       search: query.search,
       role: query.role,
-      banned: query.banned,
     });
 
     const totalPages = Math.ceil(result.total / pageSize);
@@ -82,7 +81,6 @@ export class UserController {
   @ApiResponse({ status: 409, description: 'Email already in use' })
   async create(@Body() dto: CreateUserDto) {
     return this.userService.create({
-      name: dto.name,
       email: dto.email,
       password: dto.password,
       role: dto.role,
@@ -94,9 +92,7 @@ export class UserController {
   @ApiResponse({ status: 404, description: 'User not found' })
   async update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateUserDto) {
     return this.userService.update(id, {
-      name: dto.name,
-      banned: dto.banned,
-      banReason: dto.banReason,
+      role: dto.role,
     });
   }
 

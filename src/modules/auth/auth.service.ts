@@ -5,7 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { eq } from 'drizzle-orm';
 
-import { usersTable } from '@/database/schemas/index.js';
+import { users } from '@/database/schemas/index.js';
 import { DB_TOKEN } from '@/database/types.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 import type { Env } from '@/app/config/env.schema.js';
@@ -33,11 +33,11 @@ export class AuthService {
     private readonly configService: ConfigService<Env, true>,
   ) {}
 
-  async register(email: string, password: string, name: string, deviceContext?: DeviceContext) {
+  async register(email: string, password: string, deviceContext?: DeviceContext) {
     const existing = await this.db
-      .select({ id: usersTable.id })
-      .from(usersTable)
-      .where(eq(usersTable.email, email.toLowerCase()))
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, email.toLowerCase()))
       .limit(1);
 
     if (existing.length > 0) {
@@ -50,9 +50,8 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
 
     const [user] = await this.db
-      .insert(usersTable)
+      .insert(users)
       .values({
-        name,
         email: email.toLowerCase(),
         passwordHash,
         role: 'USER',
@@ -65,13 +64,13 @@ export class AuthService {
   }
 
   async login(email: string, password: string, deviceContext?: DeviceContext) {
-    const users = await this.db
+    const userRows = await this.db
       .select()
-      .from(usersTable)
-      .where(eq(usersTable.email, email.toLowerCase()))
+      .from(users)
+      .where(eq(users.email, email.toLowerCase()))
       .limit(1);
 
-    const user = users[0];
+    const user = userRows[0];
     if (!user) {
       void this.loginLogRepo.create({
         email,
@@ -83,13 +82,6 @@ export class AuthService {
       throw new UnauthorizedException({
         code: ErrorCode.INVALID_CREDENTIALS,
         message: 'Invalid email or password',
-      });
-    }
-
-    if (user.banned) {
-      throw new UnauthorizedException({
-        code: ErrorCode.ACCOUNT_BANNED,
-        message: 'Account is banned',
       });
     }
 
@@ -131,13 +123,13 @@ export class AuthService {
 
     await this.sessionRepo.delete(session.id);
 
-    const users = await this.db
+    const userRows = await this.db
       .select()
-      .from(usersTable)
-      .where(eq(usersTable.id, session.userId))
+      .from(users)
+      .where(eq(users.id, session.userId))
       .limit(1);
 
-    const user = users[0];
+    const user = userRows[0];
     if (!user) {
       throw new UnauthorizedException({ code: ErrorCode.TOKEN_INVALID, message: 'User not found' });
     }

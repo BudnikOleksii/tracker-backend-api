@@ -8,10 +8,10 @@ import * as bcrypt from 'bcrypt';
 
 import { hasRequiredRole } from '@/shared/enums/role.enum.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
+import type { RoleType } from '@/shared/enums/role.enum.js';
 
 import { UserRepository } from './user.repository.js';
 import type { UserInfo, UserListQuery, UserListResult, UserSummary } from './user.repository.js';
-import type { RoleType } from '@/shared/enums/role.enum.js';
 
 const BCRYPT_ROUNDS = 12;
 
@@ -36,7 +36,6 @@ export class UserService {
   }
 
   async create(data: {
-    name: string;
     email: string;
     password: string;
     role?: string;
@@ -52,7 +51,6 @@ export class UserService {
     const passwordHash = await bcrypt.hash(data.password, BCRYPT_ROUNDS);
 
     return this.userRepository.create({
-      name: data.name,
       email: data.email,
       passwordHash,
       role: data.role,
@@ -61,7 +59,7 @@ export class UserService {
 
   async update(
     id: string,
-    data: { name?: string; banned?: boolean; banReason?: string },
+    data: { role?: string },
   ): Promise<UserInfo> {
     const updated = await this.userRepository.update(id, data);
     if (!updated) {

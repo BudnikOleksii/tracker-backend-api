@@ -1,10 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { eq, lt } from 'drizzle-orm';
 
-import { sessionsTable } from '@/database/schemas/index.js';
+import { refreshTokens } from '@/database/schemas/refresh-tokens.js';
 import { DB_TOKEN } from '@/database/types.js';
 import type { DrizzleDb } from '@/database/types.js';
-import type { Session } from '@/database/schemas/index.js';
+
+type RefreshToken = typeof refreshTokens.$inferSelect;
 
 @Injectable()
 export class SessionRepository {
@@ -19,9 +20,9 @@ export class SessionRepository {
     expiresAt: Date;
     ipAddress?: string;
     userAgent?: string;
-  }): Promise<Session> {
+  }): Promise<RefreshToken> {
     const [session] = await this.db
-      .insert(sessionsTable)
+      .insert(refreshTokens)
       .values({
         userId: data.userId,
         token: data.token,
@@ -31,55 +32,55 @@ export class SessionRepository {
       })
       .returning();
 
-    return session as Session;
+    return session as RefreshToken;
   }
 
-  async findById(id: string): Promise<Session | null> {
+  async findById(id: string): Promise<RefreshToken | null> {
     const result = await this.db
       .select()
-      .from(sessionsTable)
-      .where(eq(sessionsTable.id, id))
+      .from(refreshTokens)
+      .where(eq(refreshTokens.id, id))
       .limit(1);
 
     return result[0] ?? null;
   }
 
-  async findByToken(token: string): Promise<Session | null> {
+  async findByToken(token: string): Promise<RefreshToken | null> {
     const result = await this.db
       .select()
-      .from(sessionsTable)
-      .where(eq(sessionsTable.token, token))
+      .from(refreshTokens)
+      .where(eq(refreshTokens.token, token))
       .limit(1);
 
     return result[0] ?? null;
   }
 
-  async findActiveByUserId(userId: string): Promise<Session[]> {
+  async findActiveByUserId(userId: string): Promise<RefreshToken[]> {
     const now = new Date();
     const results = await this.db
       .select()
-      .from(sessionsTable)
-      .where(eq(sessionsTable.userId, userId));
+      .from(refreshTokens)
+      .where(eq(refreshTokens.userId, userId));
 
-    return results.filter((session) => session.expiresAt > now);
+    return results.filter((rt) => rt.expiresAt > now && rt.revokedAt === null);
   }
 
   async delete(id: string): Promise<boolean> {
-    const result = await this.db.delete(sessionsTable).where(eq(sessionsTable.id, id));
+    const result = await this.db.delete(refreshTokens).where(eq(refreshTokens.id, id));
 
     return (result.rowCount ?? 0) > 0;
   }
 
   async deleteAllByUserId(userId: string): Promise<number> {
-    const result = await this.db.delete(sessionsTable).where(eq(sessionsTable.userId, userId));
+    const result = await this.db.delete(refreshTokens).where(eq(refreshTokens.userId, userId));
 
     return result.rowCount ?? 0;
   }
 
   async deleteExpired(): Promise<number> {
     const result = await this.db
-      .delete(sessionsTable)
-      .where(lt(sessionsTable.expiresAt, new Date()));
+      .delete(refreshTokens)
+      .where(lt(refreshTokens.expiresAt, new Date()));
 
     return result.rowCount ?? 0;
   }

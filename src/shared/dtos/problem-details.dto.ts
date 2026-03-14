@@ -24,7 +24,7 @@ export class ProblemDetailsDto {
   @ApiProperty({ example: 422 })
   status: number;
 
-  @ApiPropertyOptional({ example: '/api/users' })
+  @ApiPropertyOptional({ example: '/api/usersOld' })
   instance?: string;
 
   @ApiPropertyOptional({ example: 'req_xyz789' })

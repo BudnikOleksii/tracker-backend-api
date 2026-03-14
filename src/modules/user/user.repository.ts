@@ -2,18 +2,15 @@ import { Inject, Injectable } from '@nestjs/common';
 import { and, count, eq, gte, ilike, inArray } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 
-import { usersTable } from '@/database/schemas/index.js';
+import { users } from '@/database/schemas/index.js';
 import { DB_TOKEN } from '@/database/types.js';
 import type { DrizzleDb } from '@/database/types.js';
 import type { User } from '@/database/schemas/index.js';
 
 export interface UserInfo {
   id: string;
-  name: string;
   email: string;
   role: string;
-  banned: boolean;
-  banReason: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -23,7 +20,6 @@ export interface UserListQuery {
   pageSize: number;
   search?: string;
   role?: string;
-  banned?: boolean;
 }
 
 export interface UserListResult {
@@ -32,22 +28,17 @@ export interface UserListResult {
 }
 
 export interface CreateUserData {
-  name: string;
   email: string;
   passwordHash: string;
   role?: string;
 }
 
 export interface UpdateUserData {
-  name?: string;
-  banned?: boolean;
-  banReason?: string | null;
   role?: string | null;
 }
 
 export interface UserSummary {
   total: number;
-  active: number;
   adminCount: number;
   newToday: number;
 }
@@ -60,35 +51,25 @@ export class UserRepository {
   ) {}
 
   async findAll(query: UserListQuery): Promise<UserListResult> {
-    const { page, pageSize, search, role, banned } = query;
+    const { page, pageSize, search, role } = query;
 
     const conditions: SQL[] = [];
-    if (banned !== undefined) {
-      conditions.push(eq(usersTable.banned, banned));
-    }
     if (role) {
-      conditions.push(eq(usersTable.role, role as 'USER' | 'ADMIN'));
+      conditions.push(eq(users.role, role as 'USER' | 'ADMIN' | 'SUPER_ADMIN'));
     }
 
     if (search) {
-      const nameMatches = await this.db
-        .select({ id: usersTable.id })
-        .from(usersTable)
-        .where(ilike(usersTable.name, `%${search}%`));
-
       const emailMatches = await this.db
-        .select({ id: usersTable.id })
-        .from(usersTable)
-        .where(ilike(usersTable.email, `%${search}%`));
+        .select({ id: users.id })
+        .from(users)
+        .where(ilike(users.email, `%${search}%`));
 
-      const searchUserIds = [
-        ...new Set([...nameMatches.map((p) => p.id), ...emailMatches.map((i) => i.id)]),
-      ];
+      const searchUserIds = emailMatches.map((i) => i.id);
 
       if (searchUserIds.length === 0) {
         return { data: [], total: 0 };
       }
-      conditions.push(inArray(usersTable.id, searchUserIds));
+      conditions.push(inArray(users.id, searchUserIds));
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
@@ -96,12 +77,12 @@ export class UserRepository {
     const [usersData, totalResult] = await Promise.all([
       this.db
         .select()
-        .from(usersTable)
+        .from(users)
         .where(whereClause)
         .limit(pageSize)
         .offset((page - 1) * pageSize)
-        .orderBy(usersTable.createdAt),
-      this.db.select({ count: count() }).from(usersTable).where(whereClause),
+        .orderBy(users.createdAt),
+      this.db.select({ count: count() }).from(users).where(whereClause),
     ]);
 
     const data: UserInfo[] = usersData.map((user) => this.toUserInfo(user));
@@ -113,7 +94,7 @@ export class UserRepository {
   }
 
   async findById(id: string): Promise<UserInfo | null> {
-    const result = await this.db.select().from(usersTable).where(eq(usersTable.id, id)).limit(1);
+    const result = await this.db.select().from(users).where(eq(users.id, id)).limit(1);
 
     if (result.length === 0) {
       return null;
@@ -125,20 +106,19 @@ export class UserRepository {
   async existsByEmail(email: string): Promise<boolean> {
     const result = await this.db
       .select({ count: count() })
-      .from(usersTable)
-      .where(eq(usersTable.email, email.toLowerCase()));
+      .from(users)
+      .where(eq(users.email, email.toLowerCase()));
 
     return (result[0]?.count ?? 0) > 0;
   }
 
   async create(data: CreateUserData): Promise<UserInfo> {
     const [user] = await this.db
-      .insert(usersTable)
+      .insert(users)
       .values({
-        name: data.name,
         email: data.email.toLowerCase(),
         passwordHash: data.passwordHash,
-        role: (data.role as 'USER' | 'ADMIN') ?? 'USER',
+        role: (data.role as 'USER' | 'ADMIN' | 'SUPER_ADMIN') ?? 'USER',
       })
       .returning();
 
@@ -147,24 +127,11 @@ export class UserRepository {
 
   async update(id: string, data: UpdateUserData): Promise<UserInfo | null> {
     const updates: Record<string, unknown> = { updatedAt: new Date() };
-    if (data.name !== undefined) {
-      updates.name = data.name;
-    }
-    if (data.banned !== undefined) {
-      updates.banned = data.banned;
-    }
-    if (data.banReason !== undefined) {
-      updates.banReason = data.banReason;
-    }
     if (data.role !== undefined) {
       updates.role = data.role;
     }
 
-    const result = await this.db
-      .update(usersTable)
-      .set(updates)
-      .where(eq(usersTable.id, id))
-      .returning();
+    const result = await this.db.update(users).set(updates).where(eq(users.id, id)).returning();
 
     if (result.length === 0) {
       return null;
@@ -174,7 +141,7 @@ export class UserRepository {
   }
 
   async hardDelete(id: string): Promise<boolean> {
-    const result = await this.db.delete(usersTable).where(eq(usersTable.id, id));
+    const result = await this.db.delete(users).where(eq(users.id, id));
 
     return (result.rowCount ?? 0) > 0;
   }
@@ -183,16 +150,14 @@ export class UserRepository {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const [totalResult, activeResult, adminResult, newTodayResult] = await Promise.all([
-      this.db.select({ count: count() }).from(usersTable),
-      this.db.select({ count: count() }).from(usersTable).where(eq(usersTable.banned, false)),
-      this.db.select({ count: count() }).from(usersTable).where(eq(usersTable.role, 'ADMIN')),
-      this.db.select({ count: count() }).from(usersTable).where(gte(usersTable.createdAt, today)),
+    const [totalResult, adminResult, newTodayResult] = await Promise.all([
+      this.db.select({ count: count() }).from(users),
+      this.db.select({ count: count() }).from(users).where(eq(users.role, 'ADMIN')),
+      this.db.select({ count: count() }).from(users).where(gte(users.createdAt, today)),
     ]);
 
     return {
       total: totalResult[0]?.count ?? 0,
-      active: activeResult[0]?.count ?? 0,
       adminCount: adminResult[0]?.count ?? 0,
       newToday: newTodayResult[0]?.count ?? 0,
     };
@@ -201,11 +166,8 @@ export class UserRepository {
   private toUserInfo(user: User): UserInfo {
     return {
       id: user.id,
-      name: user.name,
       email: user.email,
       role: user.role,
-      banned: user.banned,
-      banReason: user.banReason,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };

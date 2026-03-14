@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 
-import { loginLogsTable } from '@/database/schemas/index.js';
+import { loginLogs } from '@/database/schemas/index.js';
 import { DB_TOKEN } from '@/database/types.js';
 import type { DrizzleDb } from '@/database/types.js';
 
@@ -21,7 +21,7 @@ export class LoginLogRepository {
   ) {}
 
   async create(entry: LoginLogEntry): Promise<void> {
-    await this.db.insert(loginLogsTable).values({
+    await this.db.insert(loginLogs).values({
       userId: entry.userId ?? null,
       email: entry.email,
       status: entry.status,

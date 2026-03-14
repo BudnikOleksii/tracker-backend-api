@@ -1,29 +1,12 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional } from 'class-validator';
+import { IsIn, IsOptional } from 'class-validator';
 
-import {
-  IsBooleanField,
-  IsStringField,
-  MaxLengthField,
-  MinLengthField,
-} from '@/shared/decorators/validators.js';
+import { IsStringField } from '@/shared/decorators/validators.js';
 
 export class UpdateUserDto {
-  @ApiPropertyOptional({ example: 'John Doe' })
+  @ApiPropertyOptional({ example: 'USER', enum: ['USER', 'ADMIN', 'SUPER_ADMIN'] })
   @IsOptional()
   @IsStringField()
-  @MinLengthField(1)
-  @MaxLengthField(50)
-  name?: string;
-
-  @ApiPropertyOptional({ example: false })
-  @IsOptional()
-  @IsBooleanField()
-  banned?: boolean;
-
-  @ApiPropertyOptional({ example: 'Violated terms of service' })
-  @IsOptional()
-  @IsStringField()
-  @MaxLengthField(500)
-  banReason?: string;
+  @IsIn(['USER', 'ADMIN', 'SUPER_ADMIN'])
+  role?: string;
 }
