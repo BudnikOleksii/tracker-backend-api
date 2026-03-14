@@ -1,0 +1,45 @@
+name: Set up PNPM, Node.js, install dependencies
+
+description: Set up PNPM, Node.js, install dependencies
+
+inputs:
+  node_version:
+    description: Node.js version
+    required: true
+  pnpm_version:
+    description: PNPM version
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Set up PNPM
+      uses: pnpm/action-setup@v4
+      with:
+        version: ${{ inputs.pnpm_version }}
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        cache: pnpm
+        node-version: ${{ inputs.node_version }}
+        cache-dependency-path: ./pnpm-lock.yaml
+
+    - id: pnpm
+      name: Get PNPM store directory
+      shell: bash
+      run: |
+        echo "store_path=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+    - name: Cache PNPM store
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.pnpm.outputs.store_path }}
+        key: "${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}"
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        pnpm install --frozen-lockfile
