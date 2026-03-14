@@ -1,0 +1,20 @@
+name: Env Versions
+
+description: Get single source of truth for Node.js and pnpm versions used in the project.
+
+outputs:
+  node_version:
+    description: The version of Node.js to use
+    value: 22.15.0
+  pnpm_version:
+    description: The version of pnpm to use
+    value: 10.10.0
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set Node.js and pnpm versions
+      id: set-env
+      shell: bash
+      run: |
+        echo "Passing environment Node.js and pnpm versions"

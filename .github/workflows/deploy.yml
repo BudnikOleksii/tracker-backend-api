@@ -1,0 +1,79 @@
+name: Deploy to Railway
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-main
+  cancel-in-progress: false
+
+jobs:
+  init-env:
+    runs-on: ubuntu-latest
+    outputs:
+      node_version: ${{ steps.set-env.outputs.node_version }}
+      pnpm_version: ${{ steps.set-env.outputs.pnpm_version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - id: set-env
+        uses: ./.github/actions/env-versions
+
+  validate:
+    needs: [init-env]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up environment
+        uses: ./.github/actions/setup-pnpm-node-deps
+        with:
+          node_version: ${{ needs.init-env.outputs.node_version }}
+          pnpm_version: ${{ needs.init-env.outputs.pnpm_version }}
+
+      - name: Check types
+        run: pnpm check-types
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Build
+        run: pnpm build
+
+  migrate:
+    needs: [init-env, validate]
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up environment
+        uses: ./.github/actions/setup-pnpm-node-deps
+        with:
+          node_version: ${{ needs.init-env.outputs.node_version }}
+          pnpm_version: ${{ needs.init-env.outputs.pnpm_version }}
+
+      - name: Run database migrations
+        run: pnpm db:migrate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+  deploy:
+    needs: [migrate]
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to Railway
+        run: railway up --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}

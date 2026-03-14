@@ -4,7 +4,7 @@
 FROM node:22-alpine AS builder
 
 RUN apk add --no-cache python3 make g++ && \
-    corepack enable && corepack prepare pnpm@latest --activate
+    corepack enable && corepack prepare pnpm@10.11.0 --activate
 
 WORKDIR /app
 
@@ -25,7 +25,7 @@ ENV NODE_ENV=production
 
 COPY --from=builder /app/package.json /app/pnpm-lock.yaml ./
 
-RUN corepack enable && corepack prepare pnpm@latest --activate && \
+RUN corepack enable && corepack prepare pnpm@10.11.0 --activate && \
     pnpm install --prod --frozen-lockfile
 
 COPY --from=builder /app/dist ./dist

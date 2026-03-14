@@ -1,0 +1,58 @@
+name: Lint and check types on PR
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: pull-request-${{ github.event.number }}
+  cancel-in-progress: true
+
+jobs:
+  init-env:
+    runs-on: ubuntu-latest
+    outputs:
+      node_version: ${{ steps.set-env.outputs.node_version }}
+      pnpm_version: ${{ steps.set-env.outputs.pnpm_version }}
+    steps:
+      - run: echo "Passing environment variables to context"
+
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - id: set-env
+        uses: ./.github/actions/env-versions
+
+  check-types:
+    needs: [init-env]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up environment
+        uses: ./.github/actions/setup-pnpm-node-deps
+        with:
+          node_version: ${{ needs.init-env.outputs.node_version }}
+          pnpm_version: ${{ needs.init-env.outputs.pnpm_version }}
+
+      - name: Run check-types
+        run: |
+          pnpm check-types
+
+  eslint:
+    needs: [init-env]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up environment
+        uses: ./.github/actions/setup-pnpm-node-deps
+        with:
+          node_version: ${{ needs.init-env.outputs.node_version }}
+          pnpm_version: ${{ needs.init-env.outputs.pnpm_version }}
+
+      - name: Run ESLint
+        run: |
+          pnpm lint
