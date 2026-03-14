@@ -1,9 +1,12 @@
+import { createHmac } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { and, eq, gt, isNull, lt } from 'drizzle-orm';
 
 import { refreshTokens } from '@/database/schemas/refresh-tokens.js';
 import { DB_TOKEN } from '@/database/types.js';
 import type { DrizzleDb } from '@/database/types.js';
+import type { Env } from '@/app/config/env.schema.js';
 
 type RefreshToken = typeof refreshTokens.$inferSelect;
 
@@ -12,7 +15,14 @@ export class RefreshTokenRepository {
   constructor(
     @Inject(DB_TOKEN)
     private readonly db: DrizzleDb,
+    private readonly configService: ConfigService<Env, true>,
   ) {}
+
+  private hashToken(token: string): string {
+    const secret = this.configService.get('JWT_SECRET', { infer: true });
+
+    return createHmac('sha256', secret).update(token).digest('hex');
+  }
 
   async create(data: {
     userId: string;
@@ -25,7 +35,7 @@ export class RefreshTokenRepository {
       .insert(refreshTokens)
       .values({
         userId: data.userId,
-        token: data.token,
+        token: this.hashToken(data.token),
         expiresAt: data.expiresAt,
         ipAddress: data.ipAddress ?? null,
         userAgent: data.userAgent ?? null,
@@ -46,10 +56,11 @@ export class RefreshTokenRepository {
   }
 
   async findByToken(token: string): Promise<RefreshToken | null> {
+    const hashedToken = this.hashToken(token);
     const result = await this.db
       .select()
       .from(refreshTokens)
-      .where(and(eq(refreshTokens.token, token), isNull(refreshTokens.revokedAt)))
+      .where(and(eq(refreshTokens.token, hashedToken), isNull(refreshTokens.revokedAt)))
       .limit(1);
 
     return result[0] ?? null;
@@ -66,11 +77,12 @@ export class RefreshTokenRepository {
   }
 
   async consumeToken(token: string): Promise<RefreshToken | null> {
+    const hashedToken = this.hashToken(token);
     const [deleted] = await this.db
       .delete(refreshTokens)
       .where(
         and(
-          eq(refreshTokens.token, token),
+          eq(refreshTokens.token, hashedToken),
           isNull(refreshTokens.revokedAt),
           gt(refreshTokens.expiresAt, new Date()),
         ),
