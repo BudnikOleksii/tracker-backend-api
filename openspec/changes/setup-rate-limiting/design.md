@@ -34,9 +34,9 @@ The tracker backend API has no rate limiting. Redis is already available (used f
 
 ### 2. Global guard with per-route overrides
 
-**Choice**: Register `ThrottlerGuard` globally in `AppModule`, use `@Throttle()` decorator for stricter limits on auth routes, and `@SkipThrottle()` for health checks.
+**Choice**: Register `AppThrottlerGuard` (extends `ThrottlerGuard`) globally in `AppModule`. The custom guard scopes the named "auth" throttler so it only applies to routes explicitly decorated with `@Throttle({ auth: {} })`. Use `@SkipThrottle()` to exclude health checks.
 
-**Rationale**: Ensures every endpoint is protected by default. Auth endpoints get explicit stricter limits. Health/readiness endpoints are excluded to avoid false alerts from monitoring.
+**Rationale**: Ensures every endpoint is protected by the "default" throttler. Auth endpoints opt into the stricter "auth" throttler via decorator. Health/readiness endpoints are excluded to avoid false alerts from monitoring.
 
 ### 3. Redis storage via existing connection
 

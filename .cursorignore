@@ -1,1 +1,3 @@
+"Read(!.env.example)"
+"Read(.env*)"
 .npmrc

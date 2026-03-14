@@ -1,6 +1,6 @@
 {
   "permissions": {
-    "deny": ["Read(.npmrc)"]
+    "deny": ["Read(!.env.example)", "Read(.env*)", "Read(.npmrc)"]
   },
   "hooks": {
     "PostToolUse": [
