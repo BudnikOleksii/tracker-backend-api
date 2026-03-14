@@ -23,7 +23,7 @@ The tracker backend API has no rate limiting. Redis is already available (used f
 
 ### 1. Use `@nestjs/throttler` with Redis storage
 
-**Choice**: `@nestjs/throttler` v6+ with `@nest-lab/throttler-storage-redis`
+**Choice**: `@nestjs/throttler` v6+ with a custom `RedisThrottlerStorage` implementation using `ioredis`
 
 **Alternatives considered**:
 

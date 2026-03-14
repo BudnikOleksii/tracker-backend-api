@@ -1,4 +1,4 @@
-import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Redis } from 'ioredis';
 import type { ThrottlerStorage } from '@nestjs/throttler';
@@ -12,15 +12,23 @@ interface ThrottlerStorageRecord {
   timeToBlockExpire: number;
 }
 
+interface IncrementParams {
+  key: string;
+  ttl: number;
+  limit: number;
+  blockDuration: number;
+}
+
 @Injectable()
 export class RedisThrottlerStorage implements ThrottlerStorage, OnModuleDestroy {
+  private readonly logger = new Logger(RedisThrottlerStorage.name);
   private readonly redis: Redis;
 
   constructor(configService: ConfigService<Env, true>) {
     this.redis = new Redis(configService.get('REDIS_URL', { infer: true }));
   }
 
-  // eslint-disable-next-line @typescript-eslint/max-params
+  // eslint-disable-next-line @typescript-eslint/max-params -- required by ThrottlerStorage interface
   async increment(
     key: string,
     ttl: number,
@@ -28,6 +36,17 @@ export class RedisThrottlerStorage implements ThrottlerStorage, OnModuleDestroy 
     blockDuration: number,
     _throttlerName: string,
   ): Promise<ThrottlerStorageRecord> {
+    try {
+      return await this.performIncrement({ key, ttl, limit, blockDuration });
+    } catch (error) {
+      this.logger.error('Redis throttler storage unavailable, failing open', error);
+
+      return { totalHits: 0, timeToExpire: 0, isBlocked: false, timeToBlockExpire: 0 };
+    }
+  }
+
+  private async performIncrement(params: IncrementParams): Promise<ThrottlerStorageRecord> {
+    const { key, ttl, limit, blockDuration } = params;
     const ttlSeconds = Math.ceil(ttl / 1000);
     const blockKey = `${key}:blocked`;
 

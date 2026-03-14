@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { ClsModule } from 'nestjs-cls';
 
 import type { Env } from './app/config/env.schema.js';
@@ -12,6 +12,7 @@ import { AllExceptionsFilter } from './app/filters/all-exceptions.filter.js';
 import { ProblemDetailsFilter } from './app/filters/problem-details.filter.js';
 import { HealthModule } from './app/health/health.module.js';
 import { RequestContextInterceptor } from './app/interceptors/request-context.interceptor.js';
+import { AppThrottlerGuard } from './app/throttler/app-throttler.guard.js';
 import { RedisThrottlerStorage } from './app/throttler/redis-throttler.storage.js';
 import { LoggerModule } from './app/logger/logger.module.js';
 import { DatabaseModule } from './database/database.module.js';
@@ -40,6 +41,11 @@ import { UserModule } from './modules/user/user.module.js';
             ttl: config.get('THROTTLE_TTL', { infer: true }),
             limit: config.get('THROTTLE_LIMIT', { infer: true }),
           },
+          {
+            name: 'auth',
+            ttl: config.get('THROTTLE_AUTH_TTL', { infer: true }),
+            limit: config.get('THROTTLE_AUTH_LIMIT', { infer: true }),
+          },
         ],
         storage: new RedisThrottlerStorage(config),
       }),
@@ -63,7 +69,7 @@ import { UserModule } from './modules/user/user.module.js';
     },
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: AppThrottlerGuard,
     },
   ],
 })

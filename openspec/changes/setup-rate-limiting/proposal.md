@@ -22,7 +22,7 @@ _(none)_
 
 ## Impact
 
-- **Dependencies**: New packages `@nestjs/throttler` and `@nestjs/throttler/dist/throttler-storage-redis` (or equivalent Redis storage adapter)
+- **Dependencies**: New packages `@nestjs/throttler` and `ioredis`, with a custom `RedisThrottlerStorage` class for Redis-backed storage
 - **App module**: ThrottlerModule registered globally with Redis store
 - **Auth controller**: Decorated with stricter throttle limits
 - **Environment config**: New env vars for default and auth-specific rate limit values (TTL, limit)
