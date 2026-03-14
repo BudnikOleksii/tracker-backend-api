@@ -1,26 +1,43 @@
-import { boolean, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { boolean, index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
 
-export const usersTable = pgTable(
-  'users',
+import { countryCodeEnum, currencyCodeEnum, userRoleEnum } from './enums.js';
+import { refreshTokens } from './refresh-tokens.js';
+import { transactionCategories } from './transaction-categories.js';
+import { transactions } from './transactions.js';
+
+export const users = pgTable(
+  'User',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    name: text('name').notNull(),
-    email: text('email').notNull(),
-    passwordHash: text('password_hash').notNull(),
-    role: text('role', { enum: ['USER', 'ADMIN'] })
-      .notNull()
-      .default('USER'),
-    banned: boolean('banned').notNull().default(false),
-    banReason: text('ban_reason'),
-    banExpires: timestamp('ban_expires', { withTimezone: true }),
-    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true })
+    email: text('email').notNull().unique(),
+    passwordHash: text('passwordHash').notNull(),
+    emailVerified: boolean('emailVerified').notNull().default(false),
+    emailVerificationToken: text('emailVerificationToken'),
+    emailVerificationTokenExpiresAt: timestamp('emailVerificationTokenExpiresAt', {
+      precision: 3,
+      mode: 'date',
+    }),
+    countryCode: countryCodeEnum('countryCode'),
+    baseCurrencyCode: currencyCodeEnum('baseCurrencyCode'),
+    ipAddress: text('ipAddress'),
+    userAgent: text('userAgent'),
+    role: userRoleEnum('role').notNull().default('USER'),
+    createdAt: timestamp('createdAt', { precision: 3, mode: 'date' }).notNull().defaultNow(),
+    updatedAt: timestamp('updatedAt', { precision: 3, mode: 'date' })
       .notNull()
       .defaultNow()
       .$onUpdate(() => new Date()),
+    deletedAt: timestamp('deletedAt', { precision: 3, mode: 'date' }),
   },
-  (table) => [uniqueIndex('users_email_idx').on(table.email)],
+  (table) => [index('User_email_idx').on(table.email)],
 );
 
-export type User = typeof usersTable.$inferSelect;
-export type InsertUser = typeof usersTable.$inferInsert;
+export type User = typeof users.$inferSelect;
+export type InsertUser = typeof users.$inferInsert;
+
+export const usersRelations = relations(users, ({ many }) => ({
+  refreshTokens: many(refreshTokens),
+  transactionCategories: many(transactionCategories),
+  transactions: many(transactions),
+}));

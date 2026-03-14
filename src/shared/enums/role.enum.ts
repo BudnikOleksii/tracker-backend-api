@@ -1,13 +1,12 @@
-export type RoleType = 'ADMIN' | 'USER';
+import { userRoleEnum } from '@/database/schemas/enums.js';
 
-export const ROLES = {
-  ADMIN: 'ADMIN',
-  USER: 'USER',
-} as const;
+export type UserRole = (typeof userRoleEnum.enumValues)[number];
 
-export const ROLE_HIERARCHY: RoleType[] = ['USER', 'ADMIN'];
+export const ROLES = userRoleEnum.enumValues;
 
-export function hasRequiredRole(actorRole: RoleType, requiredRole: RoleType): boolean {
+export const ROLE_HIERARCHY: UserRole[] = ['USER', 'ADMIN', 'SUPER_ADMIN'];
+
+export function hasRequiredRole(actorRole: UserRole, requiredRole: UserRole): boolean {
   const actorIndex = ROLE_HIERARCHY.indexOf(actorRole);
   const requiredIndex = ROLE_HIERARCHY.indexOf(requiredRole);
 

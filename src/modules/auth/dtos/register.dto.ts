@@ -14,13 +14,6 @@ export class RegisterDto {
   @IsEmailField({ message: 'Invalid email format' })
   email: string;
 
-  @ApiProperty({ example: 'John Doe' })
-  @IsStringField()
-  @IsNotEmptyField({ message: 'Name must not be empty' })
-  @MinLengthField(1, { message: 'Name must be at least 1 character long' })
-  @MaxLengthField(50, { message: 'Name must not exceed 50 characters' })
-  name: string;
-
   @ApiProperty({ example: 'Pass123456' })
   @IsStringField()
   @IsNotEmptyField({ message: 'Password must not be empty' })

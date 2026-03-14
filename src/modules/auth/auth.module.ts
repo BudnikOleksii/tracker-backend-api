@@ -5,14 +5,16 @@ import { PassportModule } from '@nestjs/passport';
 
 import type { Env } from '@/app/config/env.schema.js';
 
+import { UserModule } from '../user/user.module.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import { JwtStrategy } from './jwt.strategy.js';
 import { LoginLogRepository } from './login-log.repository.js';
-import { SessionRepository } from './session.repository.js';
+import { RefreshTokenRepository } from './refresh-token.repository.js';
 
 @Module({
   imports: [
+    UserModule,
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -26,7 +28,7 @@ import { SessionRepository } from './session.repository.js';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, SessionRepository, LoginLogRepository],
-  exports: [AuthService, SessionRepository],
+  providers: [AuthService, JwtStrategy, RefreshTokenRepository, LoginLogRepository],
+  exports: [AuthService, RefreshTokenRepository],
 })
 export class AuthModule {}

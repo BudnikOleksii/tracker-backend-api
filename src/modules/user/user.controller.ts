@@ -19,7 +19,7 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 import { Roles } from '@/shared/decorators/roles.decorator.js';
 import { UseEnvelope } from '@/shared/decorators/use-envelope.decorator.js';
 import { JwtAuthGuard, RolesGuard } from '@/shared/guards/index.js';
-import type { RoleType } from '@/shared/enums/role.enum.js';
+import type { UserRole } from '@/shared/enums/role.enum.js';
 
 import { AssignRoleDto } from './dtos/assign-role.dto.js';
 import { CreateUserDto } from './dtos/create-user.dto.js';
@@ -48,7 +48,6 @@ export class UserController {
       pageSize,
       search: query.search,
       role: query.role,
-      banned: query.banned,
     });
 
     const totalPages = Math.ceil(result.total / pageSize);
@@ -82,7 +81,6 @@ export class UserController {
   @ApiResponse({ status: 409, description: 'Email already in use' })
   async create(@Body() dto: CreateUserDto) {
     return this.userService.create({
-      name: dto.name,
       email: dto.email,
       password: dto.password,
       role: dto.role,
@@ -94,9 +92,7 @@ export class UserController {
   @ApiResponse({ status: 404, description: 'User not found' })
   async update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateUserDto) {
     return this.userService.update(id, {
-      name: dto.name,
-      banned: dto.banned,
-      banReason: dto.banReason,
+      role: dto.role,
     });
   }
 
@@ -109,7 +105,7 @@ export class UserController {
   async assignRole(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: AssignRoleDto,
-    @Request() req: { user: { id: string; role: RoleType } },
+    @Request() req: { user: { id: string; role: UserRole } },
   ) {
     return this.userService.assignRole(id, dto.role, req.user.id, req.user.role);
   }

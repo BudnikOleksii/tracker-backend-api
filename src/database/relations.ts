@@ -1,15 +1,5 @@
-import { relations } from 'drizzle-orm';
-
-import { usersTable } from './schemas/users.js';
-import { sessionsTable } from './schemas/sessions.js';
-
-export const usersRelations = relations(usersTable, ({ many }) => ({
-  sessions: many(sessionsTable),
-}));
-
-export const sessionsRelations = relations(sessionsTable, ({ one }) => ({
-  user: one(usersTable, {
-    fields: [sessionsTable.userId],
-    references: [usersTable.id],
-  }),
-}));
+export { usersRelations } from './schemas/users.js';
+export { refreshTokensRelations } from './schemas/refresh-tokens.js';
+export { transactionCategoriesRelations } from './schemas/transaction-categories.js';
+export { transactionsRelations } from './schemas/transactions.js';
+export { knownDevicesRelations } from './schemas/known-devices.js';

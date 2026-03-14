@@ -1,8 +1,9 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
-import { IsBoolean, IsOptional, IsString } from 'class-validator';
+import { IsIn, IsOptional, IsString } from 'class-validator';
 
 import { OffsetPaginationDto } from '@/shared/dtos/pagination.dto.js';
+import { ROLES } from '@/shared/enums/role.enum.js';
+import type { UserRole } from '@/shared/enums/role.enum.js';
 
 export class UserQueryDto extends OffsetPaginationDto {
   @ApiPropertyOptional({ example: 'john' })
@@ -10,23 +11,8 @@ export class UserQueryDto extends OffsetPaginationDto {
   @IsString()
   search?: string;
 
-  @ApiPropertyOptional({ example: 'ADMIN' })
+  @ApiPropertyOptional({ example: 'ADMIN', enum: ROLES })
   @IsOptional()
-  @IsString()
-  role?: string;
-
-  @ApiPropertyOptional({ example: true })
-  @IsOptional()
-  @IsBoolean()
-  @Transform(({ value }: { value: unknown }) => {
-    if (value === 'true') {
-      return true;
-    }
-    if (value === 'false') {
-      return false;
-    }
-
-    return value as boolean | undefined;
-  })
-  banned?: boolean;
+  @IsIn(ROLES)
+  role?: UserRole;
 }

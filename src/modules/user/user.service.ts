@@ -8,16 +8,21 @@ import * as bcrypt from 'bcrypt';
 
 import { hasRequiredRole } from '@/shared/enums/role.enum.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
+import type { UserRole } from '@/shared/enums/role.enum.js';
+import type { User } from '@/database/schemas/users.js';
 
 import { UserRepository } from './user.repository.js';
 import type { UserInfo, UserListQuery, UserListResult, UserSummary } from './user.repository.js';
-import type { RoleType } from '@/shared/enums/role.enum.js';
 
 const BCRYPT_ROUNDS = 12;
 
 @Injectable()
 export class UserService {
   constructor(private readonly userRepository: UserRepository) {}
+
+  async findByEmail(email: string): Promise<User | null> {
+    return this.userRepository.findByEmail(email);
+  }
 
   async findAll(query: UserListQuery): Promise<UserListResult> {
     return this.userRepository.findAll(query);
@@ -35,12 +40,7 @@ export class UserService {
     return user;
   }
 
-  async create(data: {
-    name: string;
-    email: string;
-    password: string;
-    role?: string;
-  }): Promise<UserInfo> {
+  async create(data: { email: string; password: string; role?: UserRole }): Promise<UserInfo> {
     const exists = await this.userRepository.existsByEmail(data.email);
     if (exists) {
       throw new ConflictException({
@@ -52,17 +52,13 @@ export class UserService {
     const passwordHash = await bcrypt.hash(data.password, BCRYPT_ROUNDS);
 
     return this.userRepository.create({
-      name: data.name,
       email: data.email,
       passwordHash,
       role: data.role,
     });
   }
 
-  async update(
-    id: string,
-    data: { name?: string; banned?: boolean; banReason?: string },
-  ): Promise<UserInfo> {
+  async update(id: string, data: { role?: UserRole }): Promise<UserInfo> {
     const updated = await this.userRepository.update(id, data);
     if (!updated) {
       throw new NotFoundException({
@@ -90,9 +86,9 @@ export class UserService {
 
   async assignRole(
     targetUserId: string,
-    newRole: RoleType,
+    newRole: UserRole,
     actorId: string,
-    actorRole: RoleType,
+    actorRole: UserRole,
   ): Promise<UserInfo> {
     if (actorId === targetUserId) {
       throw new ForbiddenException({

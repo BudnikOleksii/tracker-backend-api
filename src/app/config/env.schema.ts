@@ -11,7 +11,7 @@ export const envSchema = z.object({
       message: 'PORT must be between 1 and 65535',
     }),
 
-  DATABASE_URL: z.url().default('postgres://postgres:postgres@localhost:5432/postgres'),
+  DATABASE_URL: z.url().default('postgresql://tracker:tracker123@localhost:5432/tracker'),
 
   DB_POOL_MAX: z
     .string()

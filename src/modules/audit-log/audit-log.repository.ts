@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, count, desc, eq, type SQL } from 'drizzle-orm';
 
-import { auditLogsTable } from '@/database/schemas/index.js';
+import { auditLogs } from '@/database/schemas/index.js';
 import { DB_TOKEN } from '@/database/types.js';
 import type { DrizzleDb } from '@/database/types.js';
 
@@ -51,7 +51,7 @@ export class AuditLogRepository {
   ) {}
 
   async create(data: AuditLogData): Promise<void> {
-    await this.db.insert(auditLogsTable).values({
+    await this.db.insert(auditLogs).values({
       action: data.action,
       actorId: data.actorId ?? null,
       actorEmail: data.actorEmail ?? null,
@@ -69,10 +69,10 @@ export class AuditLogRepository {
 
     const conditions: SQL[] = [];
     if (actorId) {
-      conditions.push(eq(auditLogsTable.actorId, actorId));
+      conditions.push(eq(auditLogs.actorId, actorId));
     }
     if (action) {
-      conditions.push(eq(auditLogsTable.action, action));
+      conditions.push(eq(auditLogs.action, action));
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
@@ -80,12 +80,12 @@ export class AuditLogRepository {
     const [rows, totalResult] = await Promise.all([
       this.db
         .select()
-        .from(auditLogsTable)
+        .from(auditLogs)
         .where(whereClause)
-        .orderBy(desc(auditLogsTable.createdAt))
+        .orderBy(desc(auditLogs.createdAt))
         .limit(pageSize)
         .offset((page - 1) * pageSize),
-      this.db.select({ count: count() }).from(auditLogsTable).where(whereClause),
+      this.db.select({ count: count() }).from(auditLogs).where(whereClause),
     ]);
 
     const data: AuditLogRecord[] = rows.map((row) => ({
