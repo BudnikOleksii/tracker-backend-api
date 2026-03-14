@@ -1,6 +1,7 @@
 import { Controller, Get, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { SkipThrottle } from '@nestjs/throttler';
 import {
   HealthCheck,
   HealthCheckService,
@@ -17,6 +18,7 @@ interface HealthEntry {
   message: string;
 }
 
+@SkipThrottle()
 @Controller('health')
 @ApiTags('health')
 export class HealthController {

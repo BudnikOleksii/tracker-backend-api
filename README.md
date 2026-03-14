@@ -53,6 +53,10 @@ Create a `.env` file in the project root. Available variables:
 | `REDIS_TTL`              | `3600`                                                   | Cache TTL in seconds                       |
 | `ALLOWED_ORIGINS`        | _(optional)_                                             | Comma-separated CORS origins               |
 | `API_BASE_URL`           | `https://api.example.com`                                | Public API base URL                        |
+| `THROTTLE_TTL`           | `60000`                                                  | Rate limit window in ms                    |
+| `THROTTLE_LIMIT`         | `60`                                                     | Max requests per window                    |
+| `THROTTLE_AUTH_TTL`      | `60000`                                                  | Auth endpoint rate limit window in ms      |
+| `THROTTLE_AUTH_LIMIT`    | `5`                                                      | Auth endpoint max requests per window      |
 
 ### 4. Run migrations and seed
 

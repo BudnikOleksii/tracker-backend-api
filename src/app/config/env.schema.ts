@@ -74,6 +74,38 @@ export const envSchema = z.object({
     }),
 
   API_BASE_URL: z.url().default('https://api.example.com'),
+
+  THROTTLE_TTL: z
+    .string()
+    .default('60000')
+    .transform((value) => Number.parseInt(value, 10))
+    .refine((value) => value > 0, {
+      message: 'THROTTLE_TTL must be greater than 0',
+    }),
+
+  THROTTLE_LIMIT: z
+    .string()
+    .default('60')
+    .transform((value) => Number.parseInt(value, 10))
+    .refine((value) => value > 0, {
+      message: 'THROTTLE_LIMIT must be greater than 0',
+    }),
+
+  THROTTLE_AUTH_TTL: z
+    .string()
+    .default('60000')
+    .transform((value) => Number.parseInt(value, 10))
+    .refine((value) => value > 0, {
+      message: 'THROTTLE_AUTH_TTL must be greater than 0',
+    }),
+
+  THROTTLE_AUTH_LIMIT: z
+    .string()
+    .default('5')
+    .transform((value) => Number.parseInt(value, 10))
+    .refine((value) => value > 0, {
+      message: 'THROTTLE_AUTH_LIMIT must be greater than 0',
+    }),
 });
 
 export type Env = z.infer<typeof envSchema>;
