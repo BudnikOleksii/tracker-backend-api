@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { eq, lt } from 'drizzle-orm';
+import { and, eq, isNull, lt } from 'drizzle-orm';
 
 import { refreshTokens } from '@/database/schemas/refresh-tokens.js';
 import { DB_TOKEN } from '@/database/types.js';
@@ -49,7 +49,7 @@ export class SessionRepository {
     const result = await this.db
       .select()
       .from(refreshTokens)
-      .where(eq(refreshTokens.token, token))
+      .where(and(eq(refreshTokens.token, token), isNull(refreshTokens.revokedAt)))
       .limit(1);
 
     return result[0] ?? null;

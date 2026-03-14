@@ -10,7 +10,7 @@ import { DB_TOKEN } from '@/database/types.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 import type { Env } from '@/app/config/env.schema.js';
 import type { DrizzleDb } from '@/database/types.js';
-import type { RoleType } from '@/shared/enums/role.enum.js';
+import type { UserRole } from '@/shared/enums/role.enum.js';
 
 import { SessionRepository } from './session.repository.js';
 import { LoginLogRepository } from './login-log.repository.js';
@@ -60,7 +60,7 @@ export class AuthService {
 
     const created = user as NonNullable<typeof user>;
 
-    return this.generateTokens(created.id, created.email, created.role as RoleType, deviceContext);
+    return this.generateTokens(created.id, created.email, created.role, deviceContext);
   }
 
   async login(email: string, password: string, deviceContext?: DeviceContext) {
@@ -109,7 +109,7 @@ export class AuthService {
       userAgent: deviceContext?.userAgent,
     });
 
-    return this.generateTokens(user.id, user.email, user.role as RoleType, deviceContext);
+    return this.generateTokens(user.id, user.email, user.role, deviceContext);
   }
 
   async refreshToken(refreshToken: string, deviceContext?: DeviceContext) {
@@ -134,7 +134,7 @@ export class AuthService {
       throw new UnauthorizedException({ code: ErrorCode.TOKEN_INVALID, message: 'User not found' });
     }
 
-    return this.generateTokens(user.id, user.email, user.role as RoleType, deviceContext);
+    return this.generateTokens(user.id, user.email, user.role, deviceContext);
   }
 
   async logout(refreshToken: string): Promise<boolean> {
@@ -207,7 +207,7 @@ export class AuthService {
   private async generateTokens(
     userId: string,
     email: string,
-    role: RoleType,
+    role: UserRole,
     deviceContext?: DeviceContext,
   ) {
     const refreshToken = randomUUID();

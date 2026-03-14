@@ -13,7 +13,9 @@ export const auditLogs = pgTable(
     ipAddress: text('ipAddress'),
     userAgent: text('userAgent'),
     requestId: text('requestId'),
-    createdAt: timestamp('createdAt', { precision: 3, mode: 'date' }).notNull().defaultNow(),
+    createdAt: timestamp('createdAt', { precision: 3, mode: 'date', withTimezone: true })
+      .notNull()
+      .defaultNow(),
   },
   (table) => [
     index('AuditLog_actorId_idx').on(table.actorId),

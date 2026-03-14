@@ -5,12 +5,12 @@ import { ClsService } from 'nestjs-cls';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
 import type { Env } from '@/app/config/env.schema.js';
-import type { RoleType } from '@/shared/enums/role.enum.js';
+import type { UserRole } from '@/shared/enums/role.enum.js';
 
 export interface JwtPayload {
   sub: string;
   email: string;
-  role: RoleType;
+  role: UserRole;
   sessionId: string;
 }
 

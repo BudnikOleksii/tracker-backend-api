@@ -4,6 +4,7 @@ import {
   pgTable,
   text,
   timestamp,
+  unique,
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
@@ -43,6 +44,7 @@ export const transactionCategories = pgTable(
     index('TransactionCategory_userId_idx').on(table.userId),
     index('TransactionCategory_parentCategoryId_idx').on(table.parentCategoryId),
     index('TransactionCategory_type_idx').on(table.type),
+    unique('TransactionCategory_userId_id_key').on(table.userId, table.id),
   ],
 );
 

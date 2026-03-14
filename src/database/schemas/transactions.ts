@@ -1,4 +1,4 @@
-import { index, numeric, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { foreignKey, index, numeric, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 import { currencyCodeEnum, transactionTypeEnum } from './enums.js';
@@ -12,9 +12,7 @@ export const transactions = pgTable(
     userId: uuid('userId')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    categoryId: uuid('categoryId')
-      .notNull()
-      .references(() => transactionCategories.id, { onDelete: 'restrict' }),
+    categoryId: uuid('categoryId').notNull(),
     type: transactionTypeEnum('type').notNull(),
     amount: numeric('amount', { precision: 19, scale: 2 }).notNull(),
     currencyCode: currencyCodeEnum('currencyCode').notNull(),
@@ -33,6 +31,10 @@ export const transactions = pgTable(
     index('Transaction_date_idx').on(table.date),
     index('Transaction_type_idx').on(table.type),
     index('Transaction_currencyCode_idx').on(table.currencyCode),
+    foreignKey({
+      columns: [table.userId, table.categoryId],
+      foreignColumns: [transactionCategories.userId, transactionCategories.id],
+    }).onDelete('restrict'),
   ],
 );
 

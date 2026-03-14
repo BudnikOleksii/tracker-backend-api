@@ -19,7 +19,7 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 import { Roles } from '@/shared/decorators/roles.decorator.js';
 import { UseEnvelope } from '@/shared/decorators/use-envelope.decorator.js';
 import { JwtAuthGuard, RolesGuard } from '@/shared/guards/index.js';
-import type { RoleType } from '@/shared/enums/role.enum.js';
+import type { UserRole } from '@/shared/enums/role.enum.js';
 
 import { AssignRoleDto } from './dtos/assign-role.dto.js';
 import { CreateUserDto } from './dtos/create-user.dto.js';
@@ -28,7 +28,7 @@ import { UserQueryDto } from './dtos/user-query.dto.js';
 import { UserService } from './user.service.js';
 
 @ApiTags('Users')
-@Controller('usersOld')
+@Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN')
 @ApiBearerAuth()
@@ -105,7 +105,7 @@ export class UserController {
   async assignRole(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: AssignRoleDto,
-    @Request() req: { user: { id: string; role: RoleType } },
+    @Request() req: { user: { id: string; role: UserRole } },
   ) {
     return this.userService.assignRole(id, dto.role, req.user.id, req.user.role);
   }

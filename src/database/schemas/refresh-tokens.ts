@@ -1,4 +1,4 @@
-import { index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { AnyPgColumn, index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 import { users } from './users.js';
@@ -18,7 +18,9 @@ export const refreshTokens = pgTable(
       precision: 3,
       mode: 'date',
     }).notNull(),
-    replacedByTokenId: uuid('replacedByTokenId').unique(),
+    replacedByTokenId: uuid('replacedByTokenId')
+      .references((): AnyPgColumn => refreshTokens.id, { onDelete: 'set null' })
+      .unique(),
     revokedAt: timestamp('revokedAt', { precision: 3, mode: 'date' }),
     createdAt: timestamp('createdAt', { precision: 3, mode: 'date' }).notNull().defaultNow(),
     updatedAt: timestamp('updatedAt', { precision: 3, mode: 'date' })

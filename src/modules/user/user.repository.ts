@@ -6,6 +6,7 @@ import { users } from '@/database/schemas/index.js';
 import { DB_TOKEN } from '@/database/types.js';
 import type { DrizzleDb } from '@/database/types.js';
 import type { User } from '@/database/schemas/index.js';
+import { UserRole } from '@/shared/enums/role.enum.js';
 
 export interface UserInfo {
   id: string;
@@ -19,7 +20,7 @@ export interface UserListQuery {
   page: number;
   pageSize: number;
   search?: string;
-  role?: string;
+  role?: UserRole;
 }
 
 export interface UserListResult {
@@ -30,11 +31,11 @@ export interface UserListResult {
 export interface CreateUserData {
   email: string;
   passwordHash: string;
-  role?: string;
+  role?: UserRole;
 }
 
 export interface UpdateUserData {
-  role?: string | null;
+  role?: UserRole | null;
 }
 
 export interface UserSummary {
@@ -55,7 +56,7 @@ export class UserRepository {
 
     const conditions: SQL[] = [];
     if (role) {
-      conditions.push(eq(users.role, role as 'USER' | 'ADMIN' | 'SUPER_ADMIN'));
+      conditions.push(eq(users.role, role));
     }
 
     if (search) {

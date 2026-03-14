@@ -1,7 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional } from 'class-validator';
 
-import { ROLES } from '@/shared/enums/role.enum.js';
 import {
   IsEmailField,
   IsInField,
@@ -9,6 +8,7 @@ import {
   MaxLengthField,
   MinLengthField,
 } from '@/shared/decorators/validators.js';
+import { ROLES, UserRole } from '@/shared/enums/role.enum.js';
 
 export class CreateUserDto {
   @ApiProperty({ example: 'John Doe' })
@@ -26,8 +26,8 @@ export class CreateUserDto {
   @MinLengthField(6)
   password: string;
 
-  @ApiPropertyOptional({ example: 'USER', enum: Object.values(ROLES) })
+  @ApiPropertyOptional({ example: 'USER', enum: ROLES })
   @IsOptional()
-  @IsInField(Object.values(ROLES))
-  role?: string;
+  @IsInField(ROLES)
+  role?: UserRole;
 }
