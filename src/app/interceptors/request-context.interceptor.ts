@@ -18,6 +18,10 @@ export class RequestContextInterceptor implements NestInterceptor {
       response.setHeader('X-Request-Id', requestId);
     }
 
-    return next.handle().pipe(tap(() => { /* noop */ }));
+    return next.handle().pipe(
+      tap(() => {
+        /* noop */
+      }),
+    );
   }
 }

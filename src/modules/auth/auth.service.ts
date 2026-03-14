@@ -12,14 +12,16 @@ import { UserService } from '../user/user.service.js';
 import { RefreshTokenRepository } from './refresh-token.repository.js';
 import { LoginLogRepository } from './login-log.repository.js';
 import type { JwtPayload } from './jwt.strategy.js';
-
-interface DeviceContext {
-  ipAddress?: string;
-  userAgent?: string;
-}
+import type {
+  DeviceContext,
+  GenerateTokensParams,
+  GetRefreshTokenParams,
+  RevokeRefreshTokenParams,
+} from './auth.types.js';
 
 @Injectable()
 export class AuthService {
+  // eslint-disable-next-line @typescript-eslint/max-params
   constructor(
     private readonly userService: UserService,
     private readonly refreshTokenRepo: RefreshTokenRepository,
@@ -31,7 +33,12 @@ export class AuthService {
   async register(email: string, password: string, deviceContext?: DeviceContext) {
     const created = await this.userService.create({ email, password });
 
-    return this.generateTokens(created.id, created.email, created.role as UserRole, deviceContext);
+    return this.generateTokens({
+      userId: created.id,
+      email: created.email,
+      role: created.role as UserRole,
+      deviceContext,
+    });
   }
 
   async login(email: string, password: string, deviceContext?: DeviceContext) {
@@ -74,103 +81,111 @@ export class AuthService {
       userAgent: deviceContext?.userAgent,
     });
 
-    return this.generateTokens(user.id, user.email, user.role, deviceContext);
+    return this.generateTokens({
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      deviceContext,
+    });
   }
 
   async refreshToken(refreshToken: string, deviceContext?: DeviceContext) {
-    const session = await this.refreshTokenRepo.consumeToken(refreshToken);
-    if (!session) {
+    const token = await this.refreshTokenRepo.consumeToken(refreshToken);
+    if (!token) {
       throw new UnauthorizedException({
         code: ErrorCode.TOKEN_INVALID,
         message: 'Invalid refresh token',
       });
     }
 
-    const user = await this.userService.findById(session.userId);
+    const user = await this.userService.findById(token.userId);
 
-    return this.generateTokens(user.id, user.email, user.role as UserRole, deviceContext);
+    return this.generateTokens({
+      userId: user.id,
+      email: user.email,
+      role: user.role as UserRole,
+      deviceContext,
+    });
   }
 
   async logout(refreshToken: string): Promise<boolean> {
-    const session = await this.refreshTokenRepo.findByToken(refreshToken);
-    if (!session) {
+    const token = await this.refreshTokenRepo.findByToken(refreshToken);
+    if (!token) {
       return false;
     }
 
-    return this.refreshTokenRepo.delete(session.id);
+    return this.refreshTokenRepo.delete(token.id);
   }
 
-  async revokeAllSessions(userId: string): Promise<number> {
+  async revokeAllRefreshTokens(userId: string): Promise<number> {
     return this.refreshTokenRepo.deleteAllByUserId(userId);
   }
 
-  async revokeSession(
-    sessionId: string,
-    userId: string,
-    currentSessionId: string,
+  async revokeRefreshToken(
+    params: RevokeRefreshTokenParams,
   ): Promise<{ success: boolean; message: string }> {
+    const { sessionId, userId, currentSessionId } = params;
+
     if (sessionId === currentSessionId) {
       return { success: false, message: 'Cannot revoke the current session; use logout instead' };
     }
 
-    const session = await this.refreshTokenRepo.findById(sessionId);
-    if (session?.userId !== userId) {
-      return { success: false, message: 'Session not found or insufficient permissions' };
+    const token = await this.refreshTokenRepo.findById(sessionId);
+    if (token?.userId !== userId) {
+      return { success: false, message: 'Refresh token not found or insufficient permissions' };
     }
 
     const deleted = await this.refreshTokenRepo.delete(sessionId);
 
-    return { success: deleted, message: deleted ? 'Session revoked' : 'Revocation failed' };
+    return { success: deleted, message: deleted ? 'Refresh token revoked' : 'Revocation failed' };
   }
 
-  async getSession(sessionId: string, userId: string, email: string, role: string) {
-    const session = await this.refreshTokenRepo.findById(sessionId);
-    if (session?.userId !== userId) {
+  async getRefreshToken(params: GetRefreshTokenParams) {
+    const { sessionId, id, email, role } = params;
+
+    const token = await this.refreshTokenRepo.findById(sessionId);
+    if (!token || token.userId !== id) {
       throw new UnauthorizedException({
         code: ErrorCode.TOKEN_INVALID,
-        message: 'Session not found or has expired',
+        message: 'Refresh token not found or has expired',
       });
     }
 
     return {
-      user: { id: userId, email, role },
-      session: {
-        id: session.id,
-        expiresAt: session.expiresAt,
-        ipAddress: session.ipAddress,
-        userAgent: session.userAgent,
+      user: { id, email, role },
+      refreshToken: {
+        id: token.id,
+        expiresAt: token.expiresAt,
+        ipAddress: token.ipAddress,
+        userAgent: token.userAgent,
       },
     };
   }
 
-  async listSessions(userId: string, currentSessionId: string) {
-    const sessions = await this.refreshTokenRepo.findActiveByUserId(userId);
+  async listRefreshTokens(userId: string, currentSessionId: string) {
+    const tokens = await this.refreshTokenRepo.findActiveByUserId(userId);
 
     return {
-      sessions: sessions.map((s) => ({
-        id: s.id,
-        ipAddress: s.ipAddress,
-        userAgent: s.userAgent,
-        createdAt: s.createdAt,
-        expiresAt: s.expiresAt,
-        isCurrent: s.id === currentSessionId,
+      refreshTokens: tokens.map((t) => ({
+        id: t.id,
+        ipAddress: t.ipAddress,
+        userAgent: t.userAgent,
+        createdAt: t.createdAt,
+        expiresAt: t.expiresAt,
+        isCurrent: t.id === currentSessionId,
       })),
     };
   }
 
-  private async generateTokens(
-    userId: string,
-    email: string,
-    role: UserRole,
-    deviceContext?: DeviceContext,
-  ) {
+  private async generateTokens(params: GenerateTokensParams) {
+    const { userId, email, role, deviceContext } = params;
     const refreshToken = randomUUID();
 
     const refreshExpiresIn =
       this.configService.get('JWT_REFRESH_EXPIRES_IN', { infer: true }) ?? '7d';
     const expiresAt = this.parseExpiration(refreshExpiresIn);
 
-    const session = await this.refreshTokenRepo.create({
+    const storedToken = await this.refreshTokenRepo.create({
       userId,
       token: refreshToken,
       expiresAt,
@@ -182,7 +197,7 @@ export class AuthService {
       sub: userId,
       email,
       role,
-      sessionId: session.id,
+      sessionId: storedToken.id,
     };
     const accessToken = this.jwtService.sign(payload);
 

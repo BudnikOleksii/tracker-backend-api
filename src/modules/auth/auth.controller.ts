@@ -8,7 +8,8 @@ import { LoginDto, AuthResponseDto } from './dtos/login.dto.js';
 import { LogoutDto } from './dtos/logout.dto.js';
 import { RefreshTokenDto } from './dtos/refresh-token.dto.js';
 import { RegisterDto } from './dtos/register.dto.js';
-import { RevokeSessionDto } from './dtos/revoke-session.dto.js';
+import { RevokeRefreshTokenDto } from './dtos/revoke-refresh-token.dto.js';
+import type { AuthenticatedRequest } from './auth.types.js';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -53,30 +54,20 @@ export class AuthController {
     return this.authService.refreshToken(dto.refreshToken);
   }
 
-  @Get('session')
+  @Get('refresh-token')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get current session info' })
-  async getSession(
-    @Request()
-    req: Express.Request & { user: { id: string; email: string; role: string; sessionId: string } },
-  ) {
-    return this.authService.getSession(
-      req.user.sessionId,
-      req.user.id,
-      req.user.email,
-      req.user.role,
-    );
+  @ApiOperation({ summary: 'Get current refresh token info' })
+  async getRefreshToken(@Request() req: AuthenticatedRequest) {
+    return this.authService.getRefreshToken(req.user);
   }
 
-  @Get('sessions')
+  @Get('refresh-tokens')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'List active sessions' })
-  async listSessions(
-    @Request() req: Express.Request & { user: { id: string; sessionId: string } },
-  ) {
-    return this.authService.listSessions(req.user.id, req.user.sessionId);
+  @ApiOperation({ summary: 'List active refresh tokens' })
+  async listRefreshTokens(@Request() req: AuthenticatedRequest) {
+    return this.authService.listRefreshTokens(req.user.id, req.user.sessionId);
   }
 
   @Post('logout')
@@ -91,33 +82,37 @@ export class AuthController {
       success,
       message: success
         ? 'Logged out successfully'
-        : 'Logout failed: session not found or already expired',
+        : 'Logout failed: refresh token not found or already expired',
     };
   }
 
-  @Post('revoke-session')
+  @Post('revoke-refresh-token')
   @HttpCode(200)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Revoke a specific session' })
-  async revokeSession(
-    @Body() dto: RevokeSessionDto,
-    @Request() req: Express.Request & { user: { id: string; sessionId: string } },
+  @ApiOperation({ summary: 'Revoke a specific refresh token' })
+  async revokeRefreshToken(
+    @Body() dto: RevokeRefreshTokenDto,
+    @Request() req: AuthenticatedRequest,
   ) {
-    return this.authService.revokeSession(dto.sessionId, req.user.id, req.user.sessionId);
+    return this.authService.revokeRefreshToken({
+      sessionId: dto.sessionId,
+      userId: req.user.id,
+      currentSessionId: req.user.sessionId,
+    });
   }
 
-  @Post('revoke-sessions')
+  @Post('revoke-refresh-tokens')
   @HttpCode(200)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Revoke all sessions' })
-  async revokeSessions(@Request() req: Express.Request & { user: { id: string } }) {
-    const revokedCount = await this.authService.revokeAllSessions(req.user.id);
+  @ApiOperation({ summary: 'Revoke all refresh tokens' })
+  async revokeRefreshTokens(@Request() req: AuthenticatedRequest) {
+    const revokedCount = await this.authService.revokeAllRefreshTokens(req.user.id);
 
     return {
       revokedCount,
-      message: `All sessions revoked successfully. Total: ${revokedCount}`,
+      message: `All refresh tokens revoked successfully. Total: ${revokedCount}`,
     };
   }
 }

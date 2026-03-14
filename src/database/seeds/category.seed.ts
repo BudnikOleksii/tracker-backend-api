@@ -10,11 +10,7 @@ type CategorySelect = typeof transactionCategories.$inferSelect;
 
 async function findCategory(
   db: SeedDb,
-  {
-    userId,
-    name,
-    parentCategoryId,
-  }: { userId: string; name: string; parentCategoryId?: string },
+  { userId, name, parentCategoryId }: { userId: string; name: string; parentCategoryId?: string },
 ): Promise<CategorySelect | undefined> {
   const conditions = [
     eq(transactionCategories.userId, userId),
@@ -66,10 +62,7 @@ async function createCategory(
     parentCategoryId: params.parentCategoryId ?? null,
   };
 
-  const [category] = await db
-    .insert(transactionCategories)
-    .values(values)
-    .returning();
+  const [category] = await db.insert(transactionCategories).values(values).returning();
 
   if (!category) {
     throw new Error(`Failed to insert category: ${params.name}`);
@@ -90,17 +83,11 @@ export async function createCategories(
 }> {
   console.log('Creating categories and subcategories...');
 
-  const categoryMap = new Map<
-    string,
-    { type: 'INCOME' | 'EXPENSE'; subcategories: Set<string> }
-  >();
+  const categoryMap = new Map<string, { type: 'INCOME' | 'EXPENSE'; subcategories: Set<string> }>();
 
   transactionsData.forEach((transaction) => {
     const categoryName = transaction.Category;
-    const type =
-      transaction.Type === 'Income'
-        ? ('INCOME' as const)
-        : ('EXPENSE' as const);
+    const type = transaction.Type === 'Income' ? ('INCOME' as const) : ('EXPENSE' as const);
 
     if (!categoryMap.has(categoryName)) {
       categoryMap.set(categoryName, { type, subcategories: new Set() });

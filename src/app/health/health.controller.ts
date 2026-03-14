@@ -20,6 +20,7 @@ interface HealthEntry {
 @Controller('health')
 @ApiTags('health')
 export class HealthController {
+  // eslint-disable-next-line @typescript-eslint/max-params
   constructor(
     private readonly health: HealthCheckService,
     private readonly drizzle: DrizzleHealthIndicator,
