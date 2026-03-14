@@ -1,12 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, eq, gte, ilike, inArray } from 'drizzle-orm';
+import { and, count, eq, gte, ilike } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 
 import { users } from '@/database/schemas/index.js';
 import { DB_TOKEN } from '@/database/types.js';
 import type { DrizzleDb } from '@/database/types.js';
 import type { User } from '@/database/schemas/index.js';
-import { UserRole } from '@/shared/enums/role.enum.js';
+import type { UserRole } from '@/shared/enums/role.enum.js';
 
 export interface UserInfo {
   id: string;
@@ -35,7 +35,7 @@ export interface CreateUserData {
 }
 
 export interface UpdateUserData {
-  role?: UserRole | null;
+  role?: UserRole;
 }
 
 export interface UserSummary {
@@ -60,17 +60,7 @@ export class UserRepository {
     }
 
     if (search) {
-      const emailMatches = await this.db
-        .select({ id: users.id })
-        .from(users)
-        .where(ilike(users.email, `%${search}%`));
-
-      const searchUserIds = emailMatches.map((i) => i.id);
-
-      if (searchUserIds.length === 0) {
-        return { data: [], total: 0 };
-      }
-      conditions.push(inArray(users.id, searchUserIds));
+      conditions.push(ilike(users.email, `%${search}%`));
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
@@ -102,6 +92,16 @@ export class UserRepository {
     }
 
     return this.toUserInfo(result[0] as User);
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    const result = await this.db
+      .select()
+      .from(users)
+      .where(eq(users.email, email.toLowerCase()))
+      .limit(1);
+
+    return result[0] ?? null;
   }
 
   async existsByEmail(email: string): Promise<boolean> {

@@ -1,22 +1,17 @@
 import { randomUUID } from 'node:crypto';
-import { ConflictException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { eq } from 'drizzle-orm';
 
-import { users } from '@/database/schemas/index.js';
-import { DB_TOKEN } from '@/database/types.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 import type { Env } from '@/app/config/env.schema.js';
-import type { DrizzleDb } from '@/database/types.js';
 import type { UserRole } from '@/shared/enums/role.enum.js';
 
-import { SessionRepository } from './session.repository.js';
+import { UserService } from '../user/user.service.js';
+import { RefreshTokenRepository } from './refresh-token.repository.js';
 import { LoginLogRepository } from './login-log.repository.js';
 import type { JwtPayload } from './jwt.strategy.js';
-
-const BCRYPT_ROUNDS = 12;
 
 interface DeviceContext {
   ipAddress?: string;
@@ -26,51 +21,21 @@ interface DeviceContext {
 @Injectable()
 export class AuthService {
   constructor(
-    @Inject(DB_TOKEN) private readonly db: DrizzleDb,
-    private readonly sessionRepo: SessionRepository,
+    private readonly userService: UserService,
+    private readonly refreshTokenRepo: RefreshTokenRepository,
     private readonly loginLogRepo: LoginLogRepository,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService<Env, true>,
   ) {}
 
   async register(email: string, password: string, deviceContext?: DeviceContext) {
-    const existing = await this.db
-      .select({ id: users.id })
-      .from(users)
-      .where(eq(users.email, email.toLowerCase()))
-      .limit(1);
+    const created = await this.userService.create({ email, password });
 
-    if (existing.length > 0) {
-      throw new ConflictException({
-        code: ErrorCode.EMAIL_EXISTS,
-        message: 'This email is already registered',
-      });
-    }
-
-    const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
-
-    const [user] = await this.db
-      .insert(users)
-      .values({
-        email: email.toLowerCase(),
-        passwordHash,
-        role: 'USER',
-      })
-      .returning();
-
-    const created = user as NonNullable<typeof user>;
-
-    return this.generateTokens(created.id, created.email, created.role, deviceContext);
+    return this.generateTokens(created.id, created.email, created.role as UserRole, deviceContext);
   }
 
   async login(email: string, password: string, deviceContext?: DeviceContext) {
-    const userRows = await this.db
-      .select()
-      .from(users)
-      .where(eq(users.email, email.toLowerCase()))
-      .limit(1);
-
-    const user = userRows[0];
+    const user = await this.userService.findByEmail(email);
     if (!user) {
       void this.loginLogRepo.create({
         email,
@@ -113,41 +78,30 @@ export class AuthService {
   }
 
   async refreshToken(refreshToken: string, deviceContext?: DeviceContext) {
-    const session = await this.sessionRepo.findByToken(refreshToken);
-    if (!session || session.expiresAt <= new Date()) {
+    const session = await this.refreshTokenRepo.consumeToken(refreshToken);
+    if (!session) {
       throw new UnauthorizedException({
         code: ErrorCode.TOKEN_INVALID,
         message: 'Invalid refresh token',
       });
     }
 
-    await this.sessionRepo.delete(session.id);
+    const user = await this.userService.findById(session.userId);
 
-    const userRows = await this.db
-      .select()
-      .from(users)
-      .where(eq(users.id, session.userId))
-      .limit(1);
-
-    const user = userRows[0];
-    if (!user) {
-      throw new UnauthorizedException({ code: ErrorCode.TOKEN_INVALID, message: 'User not found' });
-    }
-
-    return this.generateTokens(user.id, user.email, user.role, deviceContext);
+    return this.generateTokens(user.id, user.email, user.role as UserRole, deviceContext);
   }
 
   async logout(refreshToken: string): Promise<boolean> {
-    const session = await this.sessionRepo.findByToken(refreshToken);
+    const session = await this.refreshTokenRepo.findByToken(refreshToken);
     if (!session) {
       return false;
     }
 
-    return this.sessionRepo.delete(session.id);
+    return this.refreshTokenRepo.delete(session.id);
   }
 
   async revokeAllSessions(userId: string): Promise<number> {
-    return this.sessionRepo.deleteAllByUserId(userId);
+    return this.refreshTokenRepo.deleteAllByUserId(userId);
   }
 
   async revokeSession(
@@ -159,18 +113,18 @@ export class AuthService {
       return { success: false, message: 'Cannot revoke the current session; use logout instead' };
     }
 
-    const session = await this.sessionRepo.findById(sessionId);
+    const session = await this.refreshTokenRepo.findById(sessionId);
     if (session?.userId !== userId) {
       return { success: false, message: 'Session not found or insufficient permissions' };
     }
 
-    const deleted = await this.sessionRepo.delete(sessionId);
+    const deleted = await this.refreshTokenRepo.delete(sessionId);
 
     return { success: deleted, message: deleted ? 'Session revoked' : 'Revocation failed' };
   }
 
   async getSession(sessionId: string, userId: string, email: string, role: string) {
-    const session = await this.sessionRepo.findById(sessionId);
+    const session = await this.refreshTokenRepo.findById(sessionId);
     if (session?.userId !== userId) {
       throw new UnauthorizedException({
         code: ErrorCode.TOKEN_INVALID,
@@ -190,7 +144,7 @@ export class AuthService {
   }
 
   async listSessions(userId: string, currentSessionId: string) {
-    const sessions = await this.sessionRepo.findActiveByUserId(userId);
+    const sessions = await this.refreshTokenRepo.findActiveByUserId(userId);
 
     return {
       sessions: sessions.map((s) => ({
@@ -216,7 +170,7 @@ export class AuthService {
       this.configService.get('JWT_REFRESH_EXPIRES_IN', { infer: true }) ?? '7d';
     const expiresAt = this.parseExpiration(refreshExpiresIn);
 
-    const session = await this.sessionRepo.create({
+    const session = await this.refreshTokenRepo.create({
       userId,
       token: refreshToken,
       expiresAt,

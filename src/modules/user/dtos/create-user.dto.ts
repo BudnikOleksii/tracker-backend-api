@@ -8,7 +8,8 @@ import {
   MaxLengthField,
   MinLengthField,
 } from '@/shared/decorators/validators.js';
-import { ROLES, UserRole } from '@/shared/enums/role.enum.js';
+import { ROLES } from '@/shared/enums/role.enum.js';
+import type { UserRole } from '@/shared/enums/role.enum.js';
 
 export class CreateUserDto {
   @ApiProperty({ example: 'John Doe' })

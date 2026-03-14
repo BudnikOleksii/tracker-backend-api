@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, eq, isNull, lt } from 'drizzle-orm';
+import { and, eq, gt, isNull, lt } from 'drizzle-orm';
 
 import { refreshTokens } from '@/database/schemas/refresh-tokens.js';
 import { DB_TOKEN } from '@/database/types.js';
@@ -8,7 +8,7 @@ import type { DrizzleDb } from '@/database/types.js';
 type RefreshToken = typeof refreshTokens.$inferSelect;
 
 @Injectable()
-export class SessionRepository {
+export class RefreshTokenRepository {
   constructor(
     @Inject(DB_TOKEN)
     private readonly db: DrizzleDb,
@@ -63,6 +63,21 @@ export class SessionRepository {
       .where(eq(refreshTokens.userId, userId));
 
     return results.filter((rt) => rt.expiresAt > now && rt.revokedAt === null);
+  }
+
+  async consumeToken(token: string): Promise<RefreshToken | null> {
+    const [deleted] = await this.db
+      .delete(refreshTokens)
+      .where(
+        and(
+          eq(refreshTokens.token, token),
+          isNull(refreshTokens.revokedAt),
+          gt(refreshTokens.expiresAt, new Date()),
+        ),
+      )
+      .returning();
+
+    return deleted ?? null;
   }
 
   async delete(id: string): Promise<boolean> {

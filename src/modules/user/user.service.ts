@@ -9,6 +9,7 @@ import * as bcrypt from 'bcrypt';
 import { hasRequiredRole } from '@/shared/enums/role.enum.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 import type { UserRole } from '@/shared/enums/role.enum.js';
+import type { User } from '@/database/schemas/users.js';
 
 import { UserRepository } from './user.repository.js';
 import type { UserInfo, UserListQuery, UserListResult, UserSummary } from './user.repository.js';
@@ -18,6 +19,10 @@ const BCRYPT_ROUNDS = 12;
 @Injectable()
 export class UserService {
   constructor(private readonly userRepository: UserRepository) {}
+
+  async findByEmail(email: string): Promise<User | null> {
+    return this.userRepository.findByEmail(email);
+  }
 
   async findAll(query: UserListQuery): Promise<UserListResult> {
     return this.userRepository.findAll(query);

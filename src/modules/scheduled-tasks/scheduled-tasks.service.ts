@@ -1,17 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, Interval, Timeout } from '@nestjs/schedule';
 
-import { SessionRepository } from '../auth/session.repository.js';
+import { RefreshTokenRepository } from '../auth/refresh-token.repository.js';
 
 @Injectable()
 export class ScheduledTasksService {
   private readonly logger = new Logger(ScheduledTasksService.name);
 
-  constructor(private readonly sessionRepo: SessionRepository) {}
+  constructor(private readonly refreshTokenRepo: RefreshTokenRepository) {}
 
   @Cron('0 * * * *')
   async cleanExpiredSessions(): Promise<void> {
-    const deleted = await this.sessionRepo.deleteExpired();
+    const deleted = await this.refreshTokenRepo.deleteExpired();
     this.logger.log(`Cleaned ${deleted} expired session(s)`);
   }
 
