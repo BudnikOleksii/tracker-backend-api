@@ -5,9 +5,7 @@ import { eq } from 'drizzle-orm';
 import { users } from '../schemas/index.js';
 import type { SeedDb } from './client.js';
 
-export async function createSuperAdminUser(
-  db: SeedDb,
-): Promise<typeof users.$inferSelect> {
+export async function createSuperAdminUser(db: SeedDb): Promise<typeof users.$inferSelect> {
   console.log('Creating SUPER_ADMIN user...');
 
   const hashedPassword = await bcrypt.hash('admin123', 10);

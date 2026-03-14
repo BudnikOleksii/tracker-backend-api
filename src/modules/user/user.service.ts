@@ -84,6 +84,7 @@ export class UserService {
     return this.userRepository.getSummary();
   }
 
+  // eslint-disable-next-line @typescript-eslint/max-params
   async assignRole(
     targetUserId: string,
     newRole: UserRole,

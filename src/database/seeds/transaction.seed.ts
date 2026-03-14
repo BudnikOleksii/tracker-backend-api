@@ -52,9 +52,7 @@ export async function createTransactions(
     await db.insert(transactions).values(transactionValues);
 
     createdCount += transactionValues.length;
-    console.log(
-      `Processed ${createdCount}/${transactionsData.length} transactions...`,
-    );
+    console.log(`Processed ${createdCount}/${transactionsData.length} transactions...`);
   }
 
   console.log(`Created ${createdCount} transactions`);

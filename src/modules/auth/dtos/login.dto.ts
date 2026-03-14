@@ -1,10 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-import {
-  IsEmailField,
-  IsNotEmptyField,
-  IsStringField,
-} from '@/shared/decorators/validators.js';
+import { IsEmailField, IsNotEmptyField, IsStringField } from '@/shared/decorators/validators.js';
 
 export class LoginDto {
   @ApiProperty({ example: 'user@example.com' })

@@ -82,7 +82,7 @@ export default tseslint.config(
       '@typescript-eslint/no-extraneous-class': 'off',
       '@typescript-eslint/unbound-method': 'off',
       'max-params': 'off',
-      '@typescript-eslint/max-params': ['error', { max: 6, countVoidThis: false }],
+      '@typescript-eslint/max-params': ['error', { max: 3, countVoidThis: false }],
     },
   },
 );
