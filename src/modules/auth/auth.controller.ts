@@ -1,5 +1,6 @@
 import { Body, Controller, Get, HttpCode, Post, Request, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 
 import { JwtAuthGuard } from '@/shared/guards/index.js';
 
@@ -17,6 +18,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @HttpCode(201)
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({ status: 201, type: AuthResponseDto })
@@ -25,6 +27,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @HttpCode(200)
   @ApiOperation({ summary: 'User login' })
   @ApiResponse({ status: 200, type: AuthResponseDto })
@@ -47,6 +50,7 @@ export class AuthController {
   }
 
   @Post('refresh-token')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @HttpCode(200)
   @ApiOperation({ summary: 'Refresh access token' })
   @ApiResponse({ status: 200, type: AuthResponseDto })
