@@ -111,8 +111,13 @@ export class TransactionRepository {
     };
   }
 
-  async findById(id: string, userId: string): Promise<TransactionInfo | null> {
-    const result = await this.db
+  async transaction<T>(callback: (tx: DrizzleDb) => Promise<T>): Promise<T> {
+    return this.db.transaction(callback);
+  }
+
+  async findById(id: string, userId: string, tx?: DrizzleDb): Promise<TransactionInfo | null> {
+    const db = tx ?? this.db;
+    const result = await db
       .select()
       .from(transactions)
       .where(
@@ -131,8 +136,9 @@ export class TransactionRepository {
     return this.toTransactionInfo(result[0] as typeof transactions.$inferSelect);
   }
 
-  async create(data: CreateTransactionData): Promise<TransactionInfo> {
-    const [transaction] = await this.db
+  async create(data: CreateTransactionData, tx?: DrizzleDb): Promise<TransactionInfo> {
+    const db = tx ?? this.db;
+    const [transaction] = await db
       .insert(transactions)
       .values({
         userId: data.userId,
@@ -148,11 +154,14 @@ export class TransactionRepository {
     return this.toTransactionInfo(transaction as typeof transactions.$inferSelect);
   }
 
+  // eslint-disable-next-line @typescript-eslint/max-params
   async update(
     id: string,
     userId: string,
     data: UpdateTransactionData,
+    tx?: DrizzleDb,
   ): Promise<TransactionInfo | null> {
+    const db = tx ?? this.db;
     const updates: Record<string, unknown> = {};
 
     if (data.categoryId !== undefined) {
@@ -179,7 +188,7 @@ export class TransactionRepository {
       updates.description = data.description;
     }
 
-    const result = await this.db
+    const result = await db
       .update(transactions)
       .set(updates)
       .where(
@@ -217,8 +226,10 @@ export class TransactionRepository {
   async findCategoryByIdAndUserId(
     categoryId: string,
     userId: string,
+    tx?: DrizzleDb,
   ): Promise<CategoryValidationInfo | null> {
-    const result = await this.db
+    const db = tx ?? this.db;
+    const result = await db
       .select({
         id: transactionCategories.id,
         type: transactionCategories.type,
