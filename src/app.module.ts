@@ -22,6 +22,7 @@ import { AuthModule } from './modules/auth/auth.module.js';
 import { CacheModule } from './modules/cache/cache.module.js';
 import { ScheduledTasksModule } from './modules/scheduled-tasks/scheduled-tasks.module.js';
 import { TransactionCategoriesModule } from './modules/transaction-categories/transaction-categories.module.js';
+import { TransactionsModule } from './modules/transactions/transactions.module.js';
 import { UserModule } from './modules/user/user.module.js';
 
 @Module({
@@ -59,6 +60,7 @@ import { UserModule } from './modules/user/user.module.js';
     AuthModule,
     UserModule,
     TransactionCategoriesModule,
+    TransactionsModule,
     ScheduledTasksModule,
   ],
   providers: [
