@@ -92,6 +92,27 @@ export class TransactionCategoriesService {
       }
     }
 
+    if (data.name !== undefined || data.parentCategoryId !== undefined) {
+      const existing = await this.categoryRepository.findById(id, userId);
+      if (!existing) {
+        throw new NotFoundException({
+          code: ErrorCode.RESOURCE_NOT_FOUND,
+          message: `Category ${id} not found`,
+        });
+      }
+
+      const resolvedParentId =
+        data.parentCategoryId !== undefined ? data.parentCategoryId : existing.parentCategoryId;
+
+      await this.checkDuplicateCategory({
+        userId,
+        name: data.name ?? existing.name,
+        type: existing.type,
+        parentCategoryId: resolvedParentId ?? null,
+        excludeId: id,
+      });
+    }
+
     try {
       const updated = await this.categoryRepository.update(id, userId, data);
       if (!updated) {
@@ -138,12 +159,14 @@ export class TransactionCategoriesService {
     name: string;
     type: string;
     parentCategoryId: string | null;
+    excludeId?: string;
   }): Promise<void> {
     const exists = await this.categoryRepository.existsByNameTypeAndParent({
       userId: params.userId,
       name: params.name,
       type: params.type as 'EXPENSE' | 'INCOME',
       parentCategoryId: params.parentCategoryId,
+      excludeId: params.excludeId,
     });
 
     if (exists) {

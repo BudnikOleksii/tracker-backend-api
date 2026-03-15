@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, eq, isNull } from 'drizzle-orm';
+import { and, count, eq, isNull, ne } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 
 import { transactionCategories, transactions } from '@/database/schemas/index.js';
@@ -114,8 +114,9 @@ export class TransactionCategoryRepository {
     name: string;
     type: TransactionType;
     parentCategoryId: string | null;
+    excludeId?: string;
   }): Promise<boolean> {
-    const { userId, name, type, parentCategoryId } = params;
+    const { userId, name, type, parentCategoryId, excludeId } = params;
     const conditions: SQL[] = [
       eq(transactionCategories.userId, userId),
       eq(transactionCategories.name, name),
@@ -127,6 +128,10 @@ export class TransactionCategoryRepository {
       conditions.push(eq(transactionCategories.parentCategoryId, parentCategoryId));
     } else {
       conditions.push(isNull(transactionCategories.parentCategoryId));
+    }
+
+    if (excludeId) {
+      conditions.push(ne(transactionCategories.id, excludeId));
     }
 
     const result = await this.db
