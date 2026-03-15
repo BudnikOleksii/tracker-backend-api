@@ -23,7 +23,6 @@ export const transactions = pgTable(
       .notNull()
       .defaultNow()
       .$onUpdate(() => new Date()),
-    deletedAt: timestamp('deletedAt', { precision: 3, mode: 'date' }),
   },
   (table) => [
     index('Transaction_userId_idx').on(table.userId),

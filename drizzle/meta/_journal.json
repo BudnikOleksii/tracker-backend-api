@@ -15,6 +15,13 @@
       "when": 1773497856165,
       "tag": "0001_blushing_jocasta",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1773568226677,
+      "tag": "0002_bumpy_skrulls",
+      "breakpoints": true
     }
   ]
 }

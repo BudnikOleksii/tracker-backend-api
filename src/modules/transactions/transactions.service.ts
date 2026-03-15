@@ -82,7 +82,7 @@ export class TransactionsService {
   }
 
   async delete(id: string, userId: string): Promise<void> {
-    const wasDeleted = await this.transactionRepository.softDelete(id, userId);
+    const wasDeleted = await this.transactionRepository.delete(id, userId);
     if (!wasDeleted) {
       throw new NotFoundException({
         code: ErrorCode.RESOURCE_NOT_FOUND,

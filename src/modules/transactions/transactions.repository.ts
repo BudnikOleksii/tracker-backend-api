@@ -70,7 +70,7 @@ export class TransactionRepository {
   async findAll(query: TransactionListQuery): Promise<TransactionListResult> {
     const { userId, page, pageSize, type, categoryId, currencyCode, dateFrom, dateTo } = query;
 
-    const conditions: SQL[] = [eq(transactions.userId, userId), isNull(transactions.deletedAt)];
+    const conditions: SQL[] = [eq(transactions.userId, userId)];
 
     if (type) {
       conditions.push(eq(transactions.type, type));
@@ -120,13 +120,7 @@ export class TransactionRepository {
     const result = await db
       .select()
       .from(transactions)
-      .where(
-        and(
-          eq(transactions.id, id),
-          eq(transactions.userId, userId),
-          isNull(transactions.deletedAt),
-        ),
-      )
+      .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
       .limit(1);
 
     if (result.length === 0) {
@@ -191,13 +185,7 @@ export class TransactionRepository {
     const result = await db
       .update(transactions)
       .set(updates)
-      .where(
-        and(
-          eq(transactions.id, id),
-          eq(transactions.userId, userId),
-          isNull(transactions.deletedAt),
-        ),
-      )
+      .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
       .returning();
 
     if (result.length === 0) {
@@ -207,17 +195,10 @@ export class TransactionRepository {
     return this.toTransactionInfo(result[0] as typeof transactions.$inferSelect);
   }
 
-  async softDelete(id: string, userId: string): Promise<boolean> {
+  async delete(id: string, userId: string): Promise<boolean> {
     const result = await this.db
-      .update(transactions)
-      .set({ deletedAt: new Date() })
-      .where(
-        and(
-          eq(transactions.id, id),
-          eq(transactions.userId, userId),
-          isNull(transactions.deletedAt),
-        ),
-      )
+      .delete(transactions)
+      .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
       .returning();
 
     return result.length > 0;
