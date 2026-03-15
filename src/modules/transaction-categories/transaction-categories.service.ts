@@ -75,10 +75,25 @@ export class TransactionCategoriesService {
   }
 
   async update(id: string, userId: string, data: UpdateCategoryData): Promise<CategoryInfo> {
+    if (data.name === undefined && data.parentCategoryId === undefined) {
+      throw new BadRequestException({
+        code: ErrorCode.BAD_REQUEST,
+        message: 'At least one field must be provided for update',
+      });
+    }
+
     if (data.parentCategoryId === id) {
       throw new ConflictException({
         code: ErrorCode.RESOURCE_CONFLICT,
         message: 'A category cannot be its own parent',
+      });
+    }
+
+    const existing = await this.categoryRepository.findById(id, userId);
+    if (!existing) {
+      throw new NotFoundException({
+        code: ErrorCode.RESOURCE_NOT_FOUND,
+        message: `Category ${id} not found`,
       });
     }
 
@@ -90,28 +105,26 @@ export class TransactionCategoriesService {
           message: `Parent category ${data.parentCategoryId} not found`,
         });
       }
-    }
 
-    if (data.name !== undefined || data.parentCategoryId !== undefined) {
-      const existing = await this.categoryRepository.findById(id, userId);
-      if (!existing) {
-        throw new NotFoundException({
-          code: ErrorCode.RESOURCE_NOT_FOUND,
-          message: `Category ${id} not found`,
+      const wouldCycle = await this.categoryRepository.isDescendantOf(data.parentCategoryId, id);
+      if (wouldCycle) {
+        throw new ConflictException({
+          code: ErrorCode.RESOURCE_CONFLICT,
+          message: 'Cannot set parent to a descendant category (would create a cycle)',
         });
       }
-
-      const resolvedParentId =
-        data.parentCategoryId !== undefined ? data.parentCategoryId : existing.parentCategoryId;
-
-      await this.checkDuplicateCategory({
-        userId,
-        name: data.name ?? existing.name,
-        type: existing.type,
-        parentCategoryId: resolvedParentId ?? null,
-        excludeId: id,
-      });
     }
+
+    const resolvedParentId =
+      data.parentCategoryId !== undefined ? data.parentCategoryId : existing.parentCategoryId;
+
+    await this.checkDuplicateCategory({
+      userId,
+      name: data.name ?? existing.name,
+      type: existing.type,
+      parentCategoryId: resolvedParentId ?? null,
+      excludeId: id,
+    });
 
     try {
       const updated = await this.categoryRepository.update(id, userId, data);
@@ -140,6 +153,14 @@ export class TransactionCategoriesService {
       throw new NotFoundException({
         code: ErrorCode.RESOURCE_NOT_FOUND,
         message: `Category ${id} not found`,
+      });
+    }
+
+    const hasChildren = await this.categoryRepository.hasActiveChildren(id);
+    if (hasChildren) {
+      throw new ConflictException({
+        code: ErrorCode.RESOURCE_CONFLICT,
+        message: 'Cannot delete category that has active subcategories',
       });
     }
 

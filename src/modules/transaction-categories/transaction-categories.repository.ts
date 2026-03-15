@@ -211,6 +211,42 @@ export class TransactionCategoryRepository {
     return (result[0]?.count ?? 0) > 0;
   }
 
+  async hasActiveChildren(categoryId: string): Promise<boolean> {
+    const result = await this.db
+      .select({ count: count() })
+      .from(transactionCategories)
+      .where(
+        and(
+          eq(transactionCategories.parentCategoryId, categoryId),
+          isNull(transactionCategories.deletedAt),
+        ),
+      );
+
+    return (result[0]?.count ?? 0) > 0;
+  }
+
+  async isDescendantOf(categoryId: string, potentialAncestorId: string): Promise<boolean> {
+    let currentId: string | null = categoryId;
+
+    while (currentId) {
+      if (currentId === potentialAncestorId) {
+        return true;
+      }
+
+      const result = await this.db
+        .select({ parentCategoryId: transactionCategories.parentCategoryId })
+        .from(transactionCategories)
+        .where(
+          and(eq(transactionCategories.id, currentId), isNull(transactionCategories.deletedAt)),
+        )
+        .limit(1);
+
+      currentId = result[0]?.parentCategoryId ?? null;
+    }
+
+    return false;
+  }
+
   private toCategoryInfo(row: typeof transactionCategories.$inferSelect): CategoryInfo {
     return {
       id: row.id,
