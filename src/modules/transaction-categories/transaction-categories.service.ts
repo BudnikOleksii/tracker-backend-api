@@ -1,4 +1,9 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 
@@ -16,6 +21,13 @@ export class TransactionCategoriesService {
   constructor(private readonly categoryRepository: TransactionCategoryRepository) {}
 
   async findAll(query: CategoryListQuery): Promise<CategoryListResult> {
+    if (query.root && query.parentCategoryId) {
+      throw new BadRequestException({
+        code: ErrorCode.BAD_REQUEST,
+        message: 'Cannot use both root and parentCategoryId filters simultaneously',
+      });
+    }
+
     return this.categoryRepository.findAll(query);
   }
 
@@ -42,6 +54,13 @@ export class TransactionCategoriesService {
       }
     }
 
+    await this.checkDuplicateCategory({
+      userId: data.userId,
+      name: data.name,
+      type: data.type,
+      parentCategoryId: data.parentCategoryId ?? null,
+    });
+
     try {
       return await this.categoryRepository.create(data);
     } catch (error) {
@@ -56,6 +75,13 @@ export class TransactionCategoriesService {
   }
 
   async update(id: string, userId: string, data: UpdateCategoryData): Promise<CategoryInfo> {
+    if (data.parentCategoryId === id) {
+      throw new ConflictException({
+        code: ErrorCode.RESOURCE_CONFLICT,
+        message: 'A category cannot be its own parent',
+      });
+    }
+
     if (data.parentCategoryId) {
       const parent = await this.categoryRepository.findById(data.parentCategoryId, userId);
       if (!parent) {
@@ -88,6 +114,14 @@ export class TransactionCategoriesService {
   }
 
   async delete(id: string, userId: string): Promise<void> {
+    const category = await this.categoryRepository.findById(id, userId);
+    if (!category) {
+      throw new NotFoundException({
+        code: ErrorCode.RESOURCE_NOT_FOUND,
+        message: `Category ${id} not found`,
+      });
+    }
+
     const hasTransactions = await this.categoryRepository.hasTransactions(id);
     if (hasTransactions) {
       throw new ConflictException({
@@ -96,11 +130,26 @@ export class TransactionCategoriesService {
       });
     }
 
-    const deleted = await this.categoryRepository.softDelete(id, userId);
-    if (!deleted) {
-      throw new NotFoundException({
-        code: ErrorCode.RESOURCE_NOT_FOUND,
-        message: `Category ${id} not found`,
+    await this.categoryRepository.softDelete(id, userId);
+  }
+
+  private async checkDuplicateCategory(params: {
+    userId: string;
+    name: string;
+    type: string;
+    parentCategoryId: string | null;
+  }): Promise<void> {
+    const exists = await this.categoryRepository.existsByNameTypeAndParent({
+      userId: params.userId,
+      name: params.name,
+      type: params.type as 'EXPENSE' | 'INCOME',
+      parentCategoryId: params.parentCategoryId,
+    });
+
+    if (exists) {
+      throw new ConflictException({
+        code: ErrorCode.RESOURCE_CONFLICT,
+        message: 'A category with this name, type, and parent already exists',
       });
     }
   }

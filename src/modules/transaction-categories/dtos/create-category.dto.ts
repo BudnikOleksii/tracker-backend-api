@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import { IsIn, IsOptional } from 'class-validator';
 
 import {
@@ -13,6 +14,7 @@ import type { TransactionType } from '../transaction-categories.constants.js';
 
 export class CreateCategoryDto {
   @ApiProperty({ example: 'Groceries' })
+  @Transform(({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value))
   @IsStringField()
   @IsNotEmptyField()
   @MaxLengthField(100)

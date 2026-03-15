@@ -109,6 +109,34 @@ export class TransactionCategoryRepository {
     return this.toCategoryInfo(result[0] as typeof transactionCategories.$inferSelect);
   }
 
+  async existsByNameTypeAndParent(params: {
+    userId: string;
+    name: string;
+    type: TransactionType;
+    parentCategoryId: string | null;
+  }): Promise<boolean> {
+    const { userId, name, type, parentCategoryId } = params;
+    const conditions: SQL[] = [
+      eq(transactionCategories.userId, userId),
+      eq(transactionCategories.name, name),
+      eq(transactionCategories.type, type),
+      isNull(transactionCategories.deletedAt),
+    ];
+
+    if (parentCategoryId) {
+      conditions.push(eq(transactionCategories.parentCategoryId, parentCategoryId));
+    } else {
+      conditions.push(isNull(transactionCategories.parentCategoryId));
+    }
+
+    const result = await this.db
+      .select({ count: count() })
+      .from(transactionCategories)
+      .where(and(...conditions));
+
+    return (result[0]?.count ?? 0) > 0;
+  }
+
   async create(data: CreateCategoryData): Promise<CategoryInfo> {
     const [category] = await this.db
       .insert(transactionCategories)
