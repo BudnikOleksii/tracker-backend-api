@@ -40,9 +40,9 @@ The `transactionCategories` table already exists with columns: `id`, `userId`, `
 
 ### 3. Soft delete with cascade protection
 
-**Choice**: Set `deletedAt` timestamp on delete. Reject deletion if the category has active transactions (due to the `restrict` foreign key constraint on the transactions table).
+**Choice**: Set `deletedAt` timestamp on delete. Reject deletion if the category has active transactions. Because soft delete is an UPDATE (not a DELETE), the database-level `ON DELETE RESTRICT` foreign key does not apply; the guard is enforced at the application level via `hasTransactions(categoryId)` in the service layer before the soft-delete is performed.
 
-**Rationale**: Preserves referential integrity. The database-level restrict constraint already prevents deleting categories with transactions, so the service layer should handle this gracefully with a clear error message.
+**Rationale**: Preserves referential integrity at the application layer. The service explicitly checks for active transactions and returns a 409 Conflict error before issuing the soft-delete.
 
 ### 4. Flat list with parent reference
 
