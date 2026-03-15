@@ -10,6 +10,7 @@ import { CacheService } from './cache.service.js';
 
 @Module({
   imports: [
+    ConfigModule,
     NestCacheModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService<Env, true>) => {

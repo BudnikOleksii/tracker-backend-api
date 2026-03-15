@@ -6,30 +6,50 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 
-import { hasRequiredRole } from '@/shared/enums/role.enum.js';
-import { ErrorCode } from '@/shared/enums/error-code.enum.js';
-import type { UserRole } from '@/shared/enums/role.enum.js';
 import type { User } from '@/database/schemas/users.js';
+import { buildCacheKey, buildCachePrefix } from '@/modules/cache/cache-key.utils.js';
+import { CacheService } from '@/modules/cache/cache.service.js';
+import { ErrorCode } from '@/shared/enums/error-code.enum.js';
+import { hasRequiredRole } from '@/shared/enums/role.enum.js';
+import type { UserRole } from '@/shared/enums/role.enum.js';
 
 import { UserRepository } from './user.repository.js';
 import type { UserInfo, UserListQuery, UserListResult, UserSummary } from './user.repository.js';
 
 const BCRYPT_ROUNDS = 12;
+const CACHE_MODULE = 'users';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly userRepository: UserRepository) {}
+  constructor(
+    private readonly userRepository: UserRepository,
+    private readonly cacheService: CacheService,
+  ) {}
 
   async findByEmail(email: string): Promise<User | null> {
     return this.userRepository.findByEmail(email);
   }
 
   async findAll(query: UserListQuery): Promise<UserListResult> {
-    return this.userRepository.findAll(query);
+    const key = buildCacheKey({
+      module: CACHE_MODULE,
+      userId: 'admin',
+      operation: 'list',
+      params: query,
+    });
+
+    return this.cacheService.wrap(key, () => this.userRepository.findAll(query));
   }
 
   async findById(id: string): Promise<UserInfo> {
-    const user = await this.userRepository.findById(id);
+    const key = buildCacheKey({
+      module: CACHE_MODULE,
+      userId: 'admin',
+      operation: 'detail',
+      params: { id },
+    });
+    const user = await this.cacheService.wrap(key, () => this.userRepository.findById(id));
+
     if (!user) {
       throw new NotFoundException({
         code: ErrorCode.USER_NOT_FOUND,
@@ -51,11 +71,15 @@ export class UserService {
 
     const passwordHash = await bcrypt.hash(data.password, BCRYPT_ROUNDS);
 
-    return this.userRepository.create({
+    const result = await this.userRepository.create({
       email: data.email,
       passwordHash,
       role: data.role,
     });
+
+    await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE));
+
+    return result;
   }
 
   async update(id: string, data: { role?: UserRole }): Promise<UserInfo> {
@@ -66,6 +90,8 @@ export class UserService {
         message: `User ${id} not found`,
       });
     }
+
+    await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE));
 
     return updated;
   }
@@ -78,10 +104,14 @@ export class UserService {
         message: `User ${id} not found`,
       });
     }
+
+    await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE));
   }
 
   async getSummary(): Promise<UserSummary> {
-    return this.userRepository.getSummary();
+    const key = buildCacheKey({ module: CACHE_MODULE, userId: 'admin', operation: 'summary' });
+
+    return this.cacheService.wrap(key, () => this.userRepository.getSummary());
   }
 
   // eslint-disable-next-line @typescript-eslint/max-params
@@ -112,6 +142,8 @@ export class UserService {
         message: `User ${targetUserId} not found`,
       });
     }
+
+    await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE));
 
     return updated;
   }
