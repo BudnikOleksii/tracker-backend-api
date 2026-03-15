@@ -8,6 +8,7 @@ import {
 import type { DrizzleDb } from '@/database/types.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 
+import type { TransactionType } from './transaction-categories.constants.js';
 import { TransactionCategoryRepository } from './transaction-categories.repository.js';
 import type {
   CategoryInfo,
@@ -137,7 +138,7 @@ export class TransactionCategoriesService {
         {
           userId,
           name: data.name ?? existing.name,
-          type: existing.type,
+          type: existing.type as TransactionType,
           parentCategoryId: resolvedParentId ?? null,
           excludeId: id,
         },
@@ -145,7 +146,7 @@ export class TransactionCategoriesService {
       );
 
       try {
-        const updated = await this.categoryRepository.update(id, userId, data, tx);
+        const updated = await this.categoryRepository.update({ id, userId, data, tx });
         if (!updated) {
           throw new NotFoundException({
             code: ErrorCode.RESOURCE_NOT_FOUND,
@@ -200,7 +201,7 @@ export class TransactionCategoriesService {
     params: {
       userId: string;
       name: string;
-      type: string;
+      type: TransactionType;
       parentCategoryId: string | null;
       excludeId?: string;
     },
@@ -210,7 +211,7 @@ export class TransactionCategoriesService {
       {
         userId: params.userId,
         name: params.name,
-        type: params.type as 'EXPENSE' | 'INCOME',
+        type: params.type,
         parentCategoryId: params.parentCategoryId,
         excludeId: params.excludeId,
       },

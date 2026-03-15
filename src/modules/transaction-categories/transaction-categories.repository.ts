@@ -166,13 +166,13 @@ export class TransactionCategoryRepository {
     return this.toCategoryInfo(category as typeof transactionCategories.$inferSelect);
   }
 
-  // eslint-disable-next-line @typescript-eslint/max-params
-  async update(
-    id: string,
-    userId: string,
-    data: UpdateCategoryData,
-    tx?: DrizzleDb,
-  ): Promise<CategoryInfo | null> {
+  async update(params: {
+    id: string;
+    userId: string;
+    data: UpdateCategoryData;
+    tx?: DrizzleDb;
+  }): Promise<CategoryInfo | null> {
+    const { id, userId, data, tx } = params;
     const db = tx ?? this.db;
     const updates: Record<string, unknown> = {};
 

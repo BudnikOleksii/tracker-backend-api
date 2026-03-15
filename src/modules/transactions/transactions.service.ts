@@ -69,7 +69,7 @@ export class TransactionsService {
         await this.validateCategory({ categoryId, userId, transactionType: type, tx });
       }
 
-      const updated = await this.transactionRepository.update(id, userId, data, tx);
+      const updated = await this.transactionRepository.update({ id, userId, data, tx });
       if (!updated) {
         throw new NotFoundException({
           code: ErrorCode.RESOURCE_NOT_FOUND,

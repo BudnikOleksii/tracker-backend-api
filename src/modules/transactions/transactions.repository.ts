@@ -154,13 +154,13 @@ export class TransactionRepository {
     return this.toTransactionInfo(transaction as typeof transactions.$inferSelect);
   }
 
-  // eslint-disable-next-line @typescript-eslint/max-params
-  async update(
-    id: string,
-    userId: string,
-    data: UpdateTransactionData,
-    tx?: DrizzleDb,
-  ): Promise<TransactionInfo | null> {
+  async update(params: {
+    id: string;
+    userId: string;
+    data: UpdateTransactionData;
+    tx?: DrizzleDb;
+  }): Promise<TransactionInfo | null> {
+    const { id, userId, data, tx } = params;
     const db = tx ?? this.db;
     const updates: Record<string, unknown> = {};
 
