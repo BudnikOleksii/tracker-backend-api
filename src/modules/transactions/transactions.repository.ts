@@ -70,7 +70,7 @@ export class TransactionRepository {
   async findAll(query: TransactionListQuery): Promise<TransactionListResult> {
     const { userId, page, pageSize, type, categoryId, currencyCode, dateFrom, dateTo } = query;
 
-    const conditions: SQL[] = [eq(transactions.userId, userId), isNull(transactions.deletedAt)];
+    const conditions: SQL[] = [eq(transactions.userId, userId)];
 
     if (type) {
       conditions.push(eq(transactions.type, type));
@@ -111,17 +111,16 @@ export class TransactionRepository {
     };
   }
 
-  async findById(id: string, userId: string): Promise<TransactionInfo | null> {
-    const result = await this.db
+  async transaction<T>(callback: (tx: DrizzleDb) => Promise<T>): Promise<T> {
+    return this.db.transaction(callback);
+  }
+
+  async findById(id: string, userId: string, tx?: DrizzleDb): Promise<TransactionInfo | null> {
+    const db = tx ?? this.db;
+    const result = await db
       .select()
       .from(transactions)
-      .where(
-        and(
-          eq(transactions.id, id),
-          eq(transactions.userId, userId),
-          isNull(transactions.deletedAt),
-        ),
-      )
+      .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
       .limit(1);
 
     if (result.length === 0) {
@@ -131,8 +130,9 @@ export class TransactionRepository {
     return this.toTransactionInfo(result[0] as typeof transactions.$inferSelect);
   }
 
-  async create(data: CreateTransactionData): Promise<TransactionInfo> {
-    const [transaction] = await this.db
+  async create(data: CreateTransactionData, tx?: DrizzleDb): Promise<TransactionInfo> {
+    const db = tx ?? this.db;
+    const [transaction] = await db
       .insert(transactions)
       .values({
         userId: data.userId,
@@ -148,11 +148,14 @@ export class TransactionRepository {
     return this.toTransactionInfo(transaction as typeof transactions.$inferSelect);
   }
 
-  async update(
-    id: string,
-    userId: string,
-    data: UpdateTransactionData,
-  ): Promise<TransactionInfo | null> {
+  async update(params: {
+    id: string;
+    userId: string;
+    data: UpdateTransactionData;
+    tx?: DrizzleDb;
+  }): Promise<TransactionInfo | null> {
+    const { id, userId, data, tx } = params;
+    const db = tx ?? this.db;
     const updates: Record<string, unknown> = {};
 
     if (data.categoryId !== undefined) {
@@ -179,16 +182,10 @@ export class TransactionRepository {
       updates.description = data.description;
     }
 
-    const result = await this.db
+    const result = await db
       .update(transactions)
       .set(updates)
-      .where(
-        and(
-          eq(transactions.id, id),
-          eq(transactions.userId, userId),
-          isNull(transactions.deletedAt),
-        ),
-      )
+      .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
       .returning();
 
     if (result.length === 0) {
@@ -198,17 +195,10 @@ export class TransactionRepository {
     return this.toTransactionInfo(result[0] as typeof transactions.$inferSelect);
   }
 
-  async softDelete(id: string, userId: string): Promise<boolean> {
+  async delete(id: string, userId: string): Promise<boolean> {
     const result = await this.db
-      .update(transactions)
-      .set({ deletedAt: new Date() })
-      .where(
-        and(
-          eq(transactions.id, id),
-          eq(transactions.userId, userId),
-          isNull(transactions.deletedAt),
-        ),
-      )
+      .delete(transactions)
+      .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
       .returning();
 
     return result.length > 0;
@@ -217,8 +207,10 @@ export class TransactionRepository {
   async findCategoryByIdAndUserId(
     categoryId: string,
     userId: string,
+    tx?: DrizzleDb,
   ): Promise<CategoryValidationInfo | null> {
-    const result = await this.db
+    const db = tx ?? this.db;
+    const result = await db
       .select({
         id: transactionCategories.id,
         type: transactionCategories.type,

@@ -89,8 +89,13 @@ export class TransactionCategoryRepository {
     };
   }
 
-  async findById(id: string, userId: string): Promise<CategoryInfo | null> {
-    const result = await this.db
+  async transaction<T>(callback: (tx: DrizzleDb) => Promise<T>): Promise<T> {
+    return this.db.transaction(callback);
+  }
+
+  async findById(id: string, userId: string, tx?: DrizzleDb): Promise<CategoryInfo | null> {
+    const db = tx ?? this.db;
+    const result = await db
       .select()
       .from(transactionCategories)
       .where(
@@ -109,13 +114,17 @@ export class TransactionCategoryRepository {
     return this.toCategoryInfo(result[0] as typeof transactionCategories.$inferSelect);
   }
 
-  async existsByNameTypeAndParent(params: {
-    userId: string;
-    name: string;
-    type: TransactionType;
-    parentCategoryId: string | null;
-    excludeId?: string;
-  }): Promise<boolean> {
+  async existsByNameTypeAndParent(
+    params: {
+      userId: string;
+      name: string;
+      type: TransactionType;
+      parentCategoryId: string | null;
+      excludeId?: string;
+    },
+    tx?: DrizzleDb,
+  ): Promise<boolean> {
+    const db = tx ?? this.db;
     const { userId, name, type, parentCategoryId, excludeId } = params;
     const conditions: SQL[] = [
       eq(transactionCategories.userId, userId),
@@ -134,7 +143,7 @@ export class TransactionCategoryRepository {
       conditions.push(ne(transactionCategories.id, excludeId));
     }
 
-    const result = await this.db
+    const result = await db
       .select({ count: count() })
       .from(transactionCategories)
       .where(and(...conditions));
@@ -142,8 +151,9 @@ export class TransactionCategoryRepository {
     return (result[0]?.count ?? 0) > 0;
   }
 
-  async create(data: CreateCategoryData): Promise<CategoryInfo> {
-    const [category] = await this.db
+  async create(data: CreateCategoryData, tx?: DrizzleDb): Promise<CategoryInfo> {
+    const db = tx ?? this.db;
+    const [category] = await db
       .insert(transactionCategories)
       .values({
         userId: data.userId,
@@ -156,7 +166,14 @@ export class TransactionCategoryRepository {
     return this.toCategoryInfo(category as typeof transactionCategories.$inferSelect);
   }
 
-  async update(id: string, userId: string, data: UpdateCategoryData): Promise<CategoryInfo | null> {
+  async update(params: {
+    id: string;
+    userId: string;
+    data: UpdateCategoryData;
+    tx?: DrizzleDb;
+  }): Promise<CategoryInfo | null> {
+    const { id, userId, data, tx } = params;
+    const db = tx ?? this.db;
     const updates: Record<string, unknown> = {};
 
     if (data.name !== undefined) {
@@ -167,7 +184,7 @@ export class TransactionCategoryRepository {
       updates.parentCategoryId = data.parentCategoryId;
     }
 
-    const result = await this.db
+    const result = await db
       .update(transactionCategories)
       .set(updates)
       .where(
@@ -186,8 +203,9 @@ export class TransactionCategoryRepository {
     return this.toCategoryInfo(result[0] as typeof transactionCategories.$inferSelect);
   }
 
-  async softDelete(id: string, userId: string): Promise<boolean> {
-    const result = await this.db
+  async softDelete(id: string, userId: string, tx?: DrizzleDb): Promise<boolean> {
+    const db = tx ?? this.db;
+    const result = await db
       .update(transactionCategories)
       .set({ deletedAt: new Date() })
       .where(
@@ -202,8 +220,9 @@ export class TransactionCategoryRepository {
     return result.length > 0;
   }
 
-  async hasTransactions(categoryId: string): Promise<boolean> {
-    const result = await this.db
+  async hasTransactions(categoryId: string, tx?: DrizzleDb): Promise<boolean> {
+    const db = tx ?? this.db;
+    const result = await db
       .select({ count: count() })
       .from(transactions)
       .where(eq(transactions.categoryId, categoryId));
@@ -211,8 +230,9 @@ export class TransactionCategoryRepository {
     return (result[0]?.count ?? 0) > 0;
   }
 
-  async hasActiveChildren(categoryId: string): Promise<boolean> {
-    const result = await this.db
+  async hasActiveChildren(categoryId: string, tx?: DrizzleDb): Promise<boolean> {
+    const db = tx ?? this.db;
+    const result = await db
       .select({ count: count() })
       .from(transactionCategories)
       .where(
@@ -225,7 +245,12 @@ export class TransactionCategoryRepository {
     return (result[0]?.count ?? 0) > 0;
   }
 
-  async isDescendantOf(categoryId: string, potentialAncestorId: string): Promise<boolean> {
+  async isDescendantOf(
+    categoryId: string,
+    potentialAncestorId: string,
+    tx?: DrizzleDb,
+  ): Promise<boolean> {
+    const db = tx ?? this.db;
     let currentId: string | null = categoryId;
 
     while (currentId) {
@@ -233,7 +258,7 @@ export class TransactionCategoryRepository {
         return true;
       }
 
-      const result = await this.db
+      const result = await db
         .select({ parentCategoryId: transactionCategories.parentCategoryId })
         .from(transactionCategories)
         .where(
