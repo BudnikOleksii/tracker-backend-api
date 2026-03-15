@@ -21,6 +21,7 @@ import { AuditLogModule } from './modules/audit-log/audit-log.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { CacheModule } from './modules/cache/cache.module.js';
 import { ScheduledTasksModule } from './modules/scheduled-tasks/scheduled-tasks.module.js';
+import { TransactionCategoriesModule } from './modules/transaction-categories/transaction-categories.module.js';
 import { UserModule } from './modules/user/user.module.js';
 
 @Module({
@@ -57,6 +58,7 @@ import { UserModule } from './modules/user/user.module.js';
     CacheModule,
     AuthModule,
     UserModule,
+    TransactionCategoriesModule,
     ScheduledTasksModule,
   ],
   providers: [
