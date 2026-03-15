@@ -76,7 +76,7 @@ The system SHALL return a single transaction by its ID, scoped to the authentica
 
 ### Requirement: Update a transaction
 
-The system SHALL allow an authenticated user to update their transaction's categoryId, amount, currencyCode, date, and/or description. All fields are optional. If categoryId is updated, the same validation rules as creation apply (ownership, not soft-deleted, type match).
+The system SHALL allow an authenticated user to update their transaction's categoryId, type, amount, currencyCode, date, and/or description. All fields are optional. If categoryId or type is updated, the same validation rules as creation apply (ownership, not soft-deleted, type match between category and transaction type).
 
 #### Scenario: Successful partial update
 
