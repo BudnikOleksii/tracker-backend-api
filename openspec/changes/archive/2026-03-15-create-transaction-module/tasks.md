@@ -7,7 +7,7 @@
 ## 2. DTOs
 
 - [x] 2.1 Create `create-transaction.dto.ts` with fields: categoryId (UUID), type (EXPENSE/INCOME), amount (string), currencyCode, date (ISO string), description (optional string)
-- [x] 2.2 Create `update-transaction.dto.ts` with all fields optional: categoryId, amount, currencyCode, date, description
+- [x] 2.2 Create `update-transaction.dto.ts` with all fields optional: categoryId, type, amount, currencyCode, date, description
 - [x] 2.3 Create `transaction-query.dto.ts` extending `OffsetPaginationDto` with optional filters: type, categoryId, currencyCode, dateFrom, dateTo
 
 ## 3. Repository
