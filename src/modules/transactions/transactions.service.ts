@@ -38,6 +38,14 @@ export class TransactionsService {
   }
 
   async update(id: string, userId: string, data: UpdateTransactionData): Promise<TransactionInfo> {
+    const hasUpdates = Object.values(data).some((value) => value !== undefined);
+    if (!hasUpdates) {
+      throw new BadRequestException({
+        code: ErrorCode.BAD_REQUEST,
+        message: 'At least one field must be provided for update',
+      });
+    }
+
     const existing = await this.transactionRepository.findById(id, userId);
     if (!existing) {
       throw new NotFoundException({
@@ -64,15 +72,13 @@ export class TransactionsService {
   }
 
   async delete(id: string, userId: string): Promise<void> {
-    const transaction = await this.transactionRepository.findById(id, userId);
-    if (!transaction) {
+    const wasDeleted = await this.transactionRepository.softDelete(id, userId);
+    if (!wasDeleted) {
       throw new NotFoundException({
         code: ErrorCode.RESOURCE_NOT_FOUND,
         message: `Transaction ${id} not found`,
       });
     }
-
-    await this.transactionRepository.softDelete(id, userId);
   }
 
   private async validateCategory(

@@ -2,6 +2,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsIn, IsOptional } from 'class-validator';
 
 import {
+  IsISO8601Field,
   IsNotEmptyField,
   IsStringField,
   IsUUIDField,
@@ -37,8 +38,7 @@ export class UpdateTransactionDto {
 
   @ApiPropertyOptional({ example: '2026-03-15T00:00:00.000Z' })
   @IsOptional()
-  @IsStringField()
-  @IsNotEmptyField()
+  @IsISO8601Field()
   date?: string;
 
   @ApiPropertyOptional({ example: 'Weekly grocery shopping' })

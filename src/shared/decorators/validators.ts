@@ -3,6 +3,7 @@ import {
   IsBoolean,
   IsEmail,
   IsIn,
+  IsISO8601,
   IsInt,
   IsNotEmpty,
   IsString,
@@ -71,4 +72,10 @@ export function IsInField(values: unknown[], options?: ValidationOptions) {
 
 export function IsBooleanField(options?: ValidationOptions) {
   return applyDecorators(IsBoolean({ ...options, context: { code: ErrorCode.INVALID_FORMAT } }));
+}
+
+export function IsISO8601Field(options?: ValidationOptions) {
+  return applyDecorators(
+    IsISO8601({ strict: true }, { ...options, context: { code: ErrorCode.INVALID_FORMAT } }),
+  );
 }

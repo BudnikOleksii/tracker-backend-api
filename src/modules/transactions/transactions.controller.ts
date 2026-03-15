@@ -90,6 +90,7 @@ export class TransactionsController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update a transaction' })
   @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 400, description: 'Category type mismatch' })
   @ApiResponse({ status: 404, description: 'Transaction not found' })
   async update(
     @Param('id', ParseUUIDPipe) id: string,
