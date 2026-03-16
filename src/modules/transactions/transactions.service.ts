@@ -68,6 +68,7 @@ export class TransactionsService {
     });
 
     await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE, data.userId));
+    await this.cacheService.delByPrefix(buildCachePrefix('transactions-analytics', data.userId));
 
     return result;
   }
@@ -108,6 +109,7 @@ export class TransactionsService {
     });
 
     await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE, userId));
+    await this.cacheService.delByPrefix(buildCachePrefix('transactions-analytics', userId));
 
     return result;
   }
@@ -122,6 +124,7 @@ export class TransactionsService {
     }
 
     await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE, userId));
+    await this.cacheService.delByPrefix(buildCachePrefix('transactions-analytics', userId));
   }
 
   private async validateCategory(params: {

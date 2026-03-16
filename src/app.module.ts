@@ -17,6 +17,7 @@ import { RedisThrottlerStorage } from './app/throttler/redis-throttler.storage.j
 import { LoggerModule } from './app/logger/logger.module.js';
 import { DatabaseModule } from './database/database.module.js';
 import { AuditLogInterceptor } from './modules/audit-log/audit-log.interceptor.js';
+import { TransactionsAnalyticsModule } from './modules/transactions-analytics/transactions-analytics.module.js';
 import { AuditLogModule } from './modules/audit-log/audit-log.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { CacheModule } from './modules/cache/cache.module.js';
@@ -55,6 +56,7 @@ import { UserModule } from './modules/user/user.module.js';
     LoggerModule,
     DatabaseModule.forRoot(),
     HealthModule,
+    TransactionsAnalyticsModule,
     AuditLogModule,
     CacheModule,
     AuthModule,
