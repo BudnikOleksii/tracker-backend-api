@@ -130,4 +130,3 @@ Generate code, corrections, and refactorings that comply with the following guid
 - Use the standard Jest framework for testing.
 - Write tests for each controller and service.
 - Write end to end tests for each api module.
-- Add a admin/test method to each controller as a smoke test.
