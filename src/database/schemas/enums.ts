@@ -256,6 +256,19 @@ export const countryCodeEnum = pgEnum('CountryCode', [
   'ZW',
 ]);
 
+export const recurringFrequencyEnum = pgEnum('RecurringFrequency', [
+  'DAILY',
+  'WEEKLY',
+  'MONTHLY',
+  'YEARLY',
+]);
+
+export const recurringTransactionStatusEnum = pgEnum('RecurringTransactionStatus', [
+  'ACTIVE',
+  'PAUSED',
+  'CANCELLED',
+]);
+
 export const currencyCodeEnum = pgEnum('CurrencyCode', [
   'AED',
   'AFN',
