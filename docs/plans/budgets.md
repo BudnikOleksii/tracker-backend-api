@@ -109,7 +109,7 @@ Service layer computes: remainingAmount, percentUsed, isOverThreshold, isOverBud
 
 ## Module Structure
 
-```
+```text
 src/modules/budgets/
   budgets.module.ts
   budgets.controller.ts        # Route /budgets/summary BEFORE /budgets/:id

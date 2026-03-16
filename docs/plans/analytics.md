@@ -8,9 +8,9 @@ Aggregate endpoints that power charts and summaries on the frontend. No new data
 
 ## API Endpoints
 
-All under `/analytics`, protected by `JwtAuthGuard`. `currencyCode` is **required** on all endpoints (can't sum across currencies without exchange rates).
+All under `/transactions-analytics`, protected by `JwtAuthGuard`. `currencyCode` is **required** on all endpoints (can't sum across currencies without exchange rates).
 
-### GET `/analytics/summary`
+### GET `/transactions-analytics/summary`
 
 Total income, total expenses, net balance for a date range.
 
@@ -28,7 +28,7 @@ Query params: `currencyCode` (required), `dateFrom` (optional, defaults to start
 }
 ```
 
-### GET `/analytics/category-breakdown`
+### GET `/transactions-analytics/category-breakdown`
 
 Spending/income grouped by category (pie chart data).
 
@@ -52,7 +52,7 @@ Additional query: `type` (optional — EXPENSE or INCOME)
 }
 ```
 
-### GET `/analytics/trends`
+### GET `/transactions-analytics/trends`
 
 Monthly or weekly totals over time (line chart data).
 
@@ -75,7 +75,7 @@ Additional query: `granularity` (required — `weekly` or `monthly`)
 }
 ```
 
-### GET `/analytics/top-categories`
+### GET `/transactions-analytics/top-categories`
 
 Top N spending/income categories for a period.
 
@@ -97,7 +97,7 @@ Additional query: `limit` (optional, default 5, max 20), `type` (optional, defau
 }
 ```
 
-### GET `/analytics/daily-spending`
+### GET `/transactions-analytics/daily-spending`
 
 Daily totals for a given month (calendar view).
 
@@ -172,10 +172,10 @@ GROUP BY `date::date`. Service fills missing days with zeros.
 | Top categories     | 300s          | Same as summary                |
 | Daily spending     | 300s          | Same as summary                |
 
-**Invalidation:** Add `analytics` prefix invalidation in `TransactionsService.create/update/delete`:
+**Invalidation:** Add `transactions-analytics` prefix invalidation in `TransactionsService.create/update/delete`:
 
 ```ts
-await this.cacheService.delByPrefix(buildCachePrefix('analytics', userId));
+await this.cacheService.delByPrefix(buildCachePrefix('transactions-analytics', userId));
 ```
 
 ---
@@ -191,12 +191,12 @@ await this.cacheService.delByPrefix(buildCachePrefix('analytics', userId));
 
 ## Module Structure
 
-```
-src/modules/analytics/
-  analytics.module.ts
-  analytics.controller.ts
-  analytics.service.ts
-  analytics.repository.ts
+```text
+src/modules/transactions-analytics/
+  transactions-analytics.module.ts
+  transactions-analytics.controller.ts
+  transactions-analytics.service.ts
+  transactions-analytics.repository.ts
   dtos/
     analytics-query.dto.ts        # Base: currencyCode (required), dateFrom, dateTo, type, categoryId
     trends-query.dto.ts           # Extends base + granularity (required)
@@ -206,5 +206,5 @@ src/modules/analytics/
 
 ## Files to Modify
 
-- `src/app.module.ts` — import AnalyticsModule
-- `src/modules/transactions/transactions.service.ts` — add analytics cache invalidation
+- `src/app.module.ts` — import TransactionsAnalyticsModule
+- `src/modules/transactions/transactions.service.ts` — add transactions-analytics cache invalidation

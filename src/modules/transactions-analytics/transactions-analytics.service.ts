@@ -48,7 +48,6 @@ export class TransactionsAnalyticsService {
   ) {}
 
   async getSummary(params: BaseParams) {
-    const query = this.buildQuery(params);
     const key = buildCacheKey({
       module: CACHE_MODULE,
       userId: params.userId,
@@ -56,22 +55,24 @@ export class TransactionsAnalyticsService {
       params,
     });
 
-    const result = await this.cacheService.wrap(
+    return this.cacheService.wrap(
       key,
-      () => this.transactionsAnalyticsRepository.getSummary(query),
+      async () => {
+        const query = this.buildQuery(params);
+        const result = await this.transactionsAnalyticsRepository.getSummary(query);
+
+        return {
+          ...result,
+          currencyCode: params.currencyCode,
+          dateFrom: query.dateFrom.toISOString(),
+          dateTo: query.dateTo.toISOString(),
+        };
+      },
       TTL_DEFAULT,
     );
-
-    return {
-      ...result,
-      currencyCode: params.currencyCode,
-      dateFrom: query.dateFrom.toISOString(),
-      dateTo: query.dateTo.toISOString(),
-    };
   }
 
   async getCategoryBreakdown(params: BaseParams) {
-    const query = this.buildQuery(params);
     const key = buildCacheKey({
       module: CACHE_MODULE,
       userId: params.userId,
@@ -79,23 +80,26 @@ export class TransactionsAnalyticsService {
       params,
     });
 
-    const rows = await this.cacheService.wrap(
+    return this.cacheService.wrap(
       key,
-      () => this.transactionsAnalyticsRepository.getCategoryBreakdown(query),
+      async () => {
+        const query = this.buildQuery(params);
+        const rows = await this.transactionsAnalyticsRepository.getCategoryBreakdown(query);
+        const grandTotal = rows.reduce((sum, row) => sum + Number(row.total), 0);
+
+        return {
+          currencyCode: params.currencyCode,
+          dateFrom: query.dateFrom.toISOString(),
+          dateTo: query.dateTo.toISOString(),
+          breakdown: rows.map((row) => ({
+            ...row,
+            percentage:
+              grandTotal > 0 ? this.roundPercent((Number(row.total) / grandTotal) * 100) : 0,
+          })),
+        };
+      },
       TTL_DEFAULT,
     );
-
-    const grandTotal = rows.reduce((sum, row) => sum + Number(row.total), 0);
-
-    return {
-      currencyCode: params.currencyCode,
-      dateFrom: query.dateFrom.toISOString(),
-      dateTo: query.dateTo.toISOString(),
-      breakdown: rows.map((row) => ({
-        ...row,
-        percentage: grandTotal > 0 ? this.roundPercent((Number(row.total) / grandTotal) * 100) : 0,
-      })),
-    };
   }
 
   async getTrends(params: TrendsParams) {

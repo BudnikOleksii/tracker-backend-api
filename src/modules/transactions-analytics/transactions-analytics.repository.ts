@@ -224,8 +224,9 @@ export class TransactionsAnalyticsRepository {
   }
 
   private formatAmount(value: string): string {
-    const num = Number(value);
+    const [integerPart, fractionalPart = ''] = value.split('.');
+    const normalizedFractionalPart = `${fractionalPart}00`.slice(0, 2);
 
-    return num.toFixed(2);
+    return `${integerPart}.${normalizedFractionalPart}`;
   }
 }
