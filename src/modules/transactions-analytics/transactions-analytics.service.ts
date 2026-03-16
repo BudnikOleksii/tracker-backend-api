@@ -7,9 +7,11 @@ import type {
   TransactionType,
 } from '@/modules/transactions/transactions.constants.js';
 
-import { TransactionsAnalyticsRepository } from './transactions-analytics.repository.js';
-import type { AnalyticsBaseQuery } from './transactions-analytics.repository.js';
-import type { Granularity } from './dtos/trends-query.dto.js';
+import {
+  TransactionsAnalyticsRepository,
+  type AnalyticsBaseQuery,
+} from '@/modules/transactions-analytics/transactions-analytics.repository.js';
+import type { Granularity } from '@/modules/transactions-analytics/dtos/trends-query.dto.js';
 
 const CACHE_MODULE = 'transactions-analytics';
 const TTL_DEFAULT = 300;
