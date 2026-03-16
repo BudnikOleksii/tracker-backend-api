@@ -1,6 +1,8 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 
 import type { DrizzleDb } from '@/database/types.js';
+import { buildCacheKey, buildCachePrefix } from '@/modules/cache/cache-key.utils.js';
+import { CacheService } from '@/modules/cache/cache.service.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 
 import { TransactionRepository } from './transactions.repository.js';
@@ -12,16 +14,37 @@ import type {
   UpdateTransactionData,
 } from './transactions.repository.js';
 
+const CACHE_MODULE = 'transactions';
+
 @Injectable()
 export class TransactionsService {
-  constructor(private readonly transactionRepository: TransactionRepository) {}
+  constructor(
+    private readonly transactionRepository: TransactionRepository,
+    private readonly cacheService: CacheService,
+  ) {}
 
   async findAll(query: TransactionListQuery): Promise<TransactionListResult> {
-    return this.transactionRepository.findAll(query);
+    const key = buildCacheKey({
+      module: CACHE_MODULE,
+      userId: query.userId,
+      operation: 'list',
+      params: query,
+    });
+
+    return this.cacheService.wrap(key, () => this.transactionRepository.findAll(query));
   }
 
   async findById(id: string, userId: string): Promise<TransactionInfo> {
-    const transaction = await this.transactionRepository.findById(id, userId);
+    const key = buildCacheKey({
+      module: CACHE_MODULE,
+      userId,
+      operation: 'detail',
+      params: { id },
+    });
+    const transaction = await this.cacheService.wrap(key, () =>
+      this.transactionRepository.findById(id, userId),
+    );
+
     if (!transaction) {
       throw new NotFoundException({
         code: ErrorCode.RESOURCE_NOT_FOUND,
@@ -33,7 +56,7 @@ export class TransactionsService {
   }
 
   async create(data: CreateTransactionData): Promise<TransactionInfo> {
-    return this.transactionRepository.transaction(async (tx) => {
+    const result = await this.transactionRepository.transaction(async (tx) => {
       await this.validateCategory({
         categoryId: data.categoryId,
         userId: data.userId,
@@ -43,6 +66,10 @@ export class TransactionsService {
 
       return this.transactionRepository.create(data, tx);
     });
+
+    await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE, data.userId));
+
+    return result;
   }
 
   async update(id: string, userId: string, data: UpdateTransactionData): Promise<TransactionInfo> {
@@ -54,7 +81,7 @@ export class TransactionsService {
       });
     }
 
-    return this.transactionRepository.transaction(async (tx) => {
+    const result = await this.transactionRepository.transaction(async (tx) => {
       const existing = await this.transactionRepository.findById(id, userId, tx);
       if (!existing) {
         throw new NotFoundException({
@@ -79,6 +106,10 @@ export class TransactionsService {
 
       return updated;
     });
+
+    await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE, userId));
+
+    return result;
   }
 
   async delete(id: string, userId: string): Promise<void> {
@@ -89,6 +120,8 @@ export class TransactionsService {
         message: `Transaction ${id} not found`,
       });
     }
+
+    await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE, userId));
   }
 
   private async validateCategory(params: {

@@ -6,6 +6,8 @@ import {
 } from '@nestjs/common';
 
 import type { DrizzleDb } from '@/database/types.js';
+import { buildCacheKey, buildCachePrefix } from '@/modules/cache/cache-key.utils.js';
+import { CacheService } from '@/modules/cache/cache.service.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 
 import type { TransactionType } from './transaction-categories.constants.js';
@@ -18,9 +20,14 @@ import type {
   UpdateCategoryData,
 } from './transaction-categories.repository.js';
 
+const CACHE_MODULE = 'categories';
+
 @Injectable()
 export class TransactionCategoriesService {
-  constructor(private readonly categoryRepository: TransactionCategoryRepository) {}
+  constructor(
+    private readonly categoryRepository: TransactionCategoryRepository,
+    private readonly cacheService: CacheService,
+  ) {}
 
   async findAll(query: CategoryListQuery): Promise<CategoryListResult> {
     if (query.root && query.parentCategoryId) {
@@ -30,11 +37,27 @@ export class TransactionCategoriesService {
       });
     }
 
-    return this.categoryRepository.findAll(query);
+    const key = buildCacheKey({
+      module: CACHE_MODULE,
+      userId: query.userId,
+      operation: 'list',
+      params: query,
+    });
+
+    return this.cacheService.wrap(key, () => this.categoryRepository.findAll(query));
   }
 
   async findById(id: string, userId: string): Promise<CategoryInfo> {
-    const category = await this.categoryRepository.findById(id, userId);
+    const key = buildCacheKey({
+      module: CACHE_MODULE,
+      userId,
+      operation: 'detail',
+      params: { id },
+    });
+    const category = await this.cacheService.wrap(key, () =>
+      this.categoryRepository.findById(id, userId),
+    );
+
     if (!category) {
       throw new NotFoundException({
         code: ErrorCode.RESOURCE_NOT_FOUND,
@@ -46,7 +69,7 @@ export class TransactionCategoriesService {
   }
 
   async create(data: CreateCategoryData): Promise<CategoryInfo> {
-    return this.categoryRepository.transaction(async (tx) => {
+    const result = await this.categoryRepository.transaction(async (tx) => {
       if (data.parentCategoryId) {
         const parent = await this.categoryRepository.findById(
           data.parentCategoryId,
@@ -83,6 +106,10 @@ export class TransactionCategoriesService {
         throw error;
       }
     });
+
+    await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE, data.userId));
+
+    return result;
   }
 
   async update(id: string, userId: string, data: UpdateCategoryData): Promise<CategoryInfo> {
@@ -100,7 +127,7 @@ export class TransactionCategoriesService {
       });
     }
 
-    return this.categoryRepository.transaction(async (tx) => {
+    const result = await this.categoryRepository.transaction(async (tx) => {
       const existing = await this.categoryRepository.findById(id, userId, tx);
       if (!existing) {
         throw new NotFoundException({
@@ -165,10 +192,14 @@ export class TransactionCategoriesService {
         throw error;
       }
     });
+
+    await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE, userId));
+
+    return result;
   }
 
   async delete(id: string, userId: string): Promise<void> {
-    return this.categoryRepository.transaction(async (tx) => {
+    await this.categoryRepository.transaction(async (tx) => {
       const category = await this.categoryRepository.findById(id, userId, tx);
       if (!category) {
         throw new NotFoundException({
@@ -195,6 +226,8 @@ export class TransactionCategoriesService {
 
       await this.categoryRepository.softDelete(id, userId, tx);
     });
+
+    await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE, userId));
   }
 
   private async checkDuplicateCategory(
