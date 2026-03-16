@@ -6,7 +6,6 @@ import type {
   CurrencyCode,
   TransactionType,
 } from '@/modules/transactions/transactions.constants.js';
-
 import {
   TransactionsAnalyticsRepository,
   type AnalyticsBaseQuery,
