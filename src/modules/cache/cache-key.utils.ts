@@ -13,10 +13,11 @@ export function buildCacheKey(options: CacheKeyOptions): string {
     return base;
   }
 
-  const hash = createHash('sha256')
-    .update(JSON.stringify(options.params))
-    .digest('hex')
-    .slice(0, 12);
+  const sortedParams = JSON.stringify(
+    options.params,
+    Object.keys(options.params as Record<string, unknown>).sort(),
+  );
+  const hash = createHash('sha256').update(sortedParams).digest('hex').slice(0, 12);
 
   return `${base}:${hash}`;
 }

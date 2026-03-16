@@ -7,7 +7,7 @@ The API has a Redis-backed cache module already wired up (`CacheService`, `Cache
 - Inject `CacheService` into service layers for transactions, transaction-categories, and users modules
 - Cache results of `findAll` and `findById` operations with user-scoped cache keys
 - Automatically invalidate relevant cache entries on create, update, and delete operations
-- Add configurable per-module TTLs using cache key prefixes and conventions
+- Use a single global TTL (`REDIS_TTL`) for all cached entries, with user-scoped cache key prefixes for targeted invalidation
 
 ## Capabilities
 
