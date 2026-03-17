@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression, Interval, Timeout } from '@nestjs/schedule';
 
 import { RefreshTokenRepository } from '../auth/refresh-token.repository.js';
+import { BudgetsService } from '../budgets/budgets.service.js';
 import { RecurringTransactionsService } from '../recurring-transactions/recurring-transactions.service.js';
 
 const HEARTBEAT_INTERVAL = 30_000;
@@ -14,6 +15,7 @@ export class ScheduledTasksService {
   constructor(
     private readonly refreshTokenRepo: RefreshTokenRepository,
     private readonly recurringTransactionsService: RecurringTransactionsService,
+    private readonly budgetsService: BudgetsService,
   ) {}
 
   @Cron(CronExpression.EVERY_HOUR)
@@ -29,6 +31,13 @@ export class ScheduledTasksService {
     this.logger.log(
       `Processed ${result.processedCount} recurring transaction(s), created ${result.transactionsCreated} transaction(s)`,
     );
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_1AM)
+  async checkBudgetOverspend(): Promise<void> {
+    this.logger.log('Checking budget overspend...');
+    const result = await this.budgetsService.checkOverspendForAllBudgets();
+    this.logger.log(`Checked ${result.checked} budget(s), updated ${result.updated} status(es)`);
   }
 
   @Interval(HEARTBEAT_INTERVAL)
