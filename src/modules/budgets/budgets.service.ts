@@ -79,7 +79,15 @@ export class BudgetsService {
   }
 
   async create(data: CreateBudgetInput): Promise<BudgetInfo> {
+    if (data.period === 'CUSTOM' && !data.endDate) {
+      throw new BadRequestException({
+        code: ErrorCode.BAD_REQUEST,
+        message: 'endDate is required for CUSTOM period',
+      });
+    }
+
     const endDate = data.endDate ?? this.computeEndDate(data.startDate, data.period);
+    this.assertValidDateRange(data.startDate, endDate);
 
     const result = await this.budgetRepository.transaction(async (tx) => {
       if (data.categoryId) {
@@ -130,11 +138,12 @@ export class BudgetsService {
       if (data.categoryId !== undefined || data.endDate !== undefined) {
         const categoryId = data.categoryId !== undefined ? data.categoryId : existing.categoryId;
         const endDate = data.endDate ?? existing.endDate;
+        this.assertValidDateRange(existing.startDate, endDate);
 
         await this.checkOverlap({
           userId,
           categoryId: categoryId ?? null,
-          currencyCode: existing.currencyCode as CurrencyCode,
+          currencyCode: existing.currencyCode,
           startDate: existing.startDate,
           endDate,
           excludeId: id,
@@ -190,7 +199,7 @@ export class BudgetsService {
       const spentAmount = await this.budgetRepository.getSpentAmount({
         userId,
         categoryId: budget.categoryId,
-        currencyCode: budget.currencyCode as CurrencyCode,
+        currencyCode: budget.currencyCode,
         startDate: budget.startDate,
         endDate: budget.endDate,
       });
@@ -217,7 +226,7 @@ export class BudgetsService {
       const spentAmount = await this.budgetRepository.getSpentAmount({
         userId: budget.userId,
         categoryId: budget.categoryId,
-        currencyCode: budget.currencyCode as CurrencyCode,
+        currencyCode: budget.currencyCode,
         startDate: budget.startDate,
         endDate: budget.endDate,
       });
@@ -247,30 +256,31 @@ export class BudgetsService {
     return { checked: activeBudgets.length, updated: statusUpdates.length };
   }
 
+  private assertValidDateRange(startDate: Date, endDate: Date): void {
+    if (endDate < startDate) {
+      throw new BadRequestException({
+        code: ErrorCode.BAD_REQUEST,
+        message: 'endDate must be on or after startDate',
+      });
+    }
+  }
+
   private computeEndDate(startDate: Date, period: BudgetPeriod): Date {
-    const end = new Date(startDate);
+    const year = startDate.getFullYear();
+    const month = startDate.getMonth();
 
     switch (period) {
       case 'WEEKLY':
-        end.setDate(end.getDate() + 6);
-        break;
+        return new Date(year, month, startDate.getDate() + 6);
       case 'MONTHLY':
-        end.setMonth(end.getMonth() + 1);
-        end.setDate(end.getDate() - 1);
-        break;
+        return new Date(year, month + 2, 0);
       case 'QUARTERLY':
-        end.setMonth(end.getMonth() + 3);
-        end.setDate(end.getDate() - 1);
-        break;
+        return new Date(year, month + 4, 0);
       case 'YEARLY':
-        end.setFullYear(end.getFullYear() + 1);
-        end.setDate(end.getDate() - 1);
-        break;
+        return new Date(year + 1, month + 1, 0);
       default:
-        break;
+        return new Date(startDate);
     }
-
-    return end;
   }
 
   private async validateCategory(

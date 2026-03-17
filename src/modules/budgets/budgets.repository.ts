@@ -13,7 +13,7 @@ export interface BudgetInfo {
   userId: string;
   categoryId: string | null;
   amount: string;
-  currencyCode: string;
+  currencyCode: CurrencyCode;
   period: string;
   startDate: Date;
   endDate: Date;
@@ -53,7 +53,7 @@ export interface UpdateBudgetData {
   amount?: string;
   categoryId?: string | null;
   endDate?: Date;
-  description?: string;
+  description?: string | null;
 }
 
 export interface CategoryValidationInfo {
@@ -303,6 +303,7 @@ export class BudgetRepository {
       .where(
         and(
           or(eq(budgets.status, 'ACTIVE'), eq(budgets.status, 'EXCEEDED')),
+          lte(budgets.startDate, now),
           gte(budgets.endDate, now),
         ),
       );

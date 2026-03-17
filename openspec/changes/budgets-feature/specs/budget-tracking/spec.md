@@ -35,7 +35,7 @@ The system SHALL cache budget progress responses. The system SHALL invalidate bu
 
 ### Requirement: Overspend detection cron
 
-The system SHALL run a periodic scheduled task that checks all ACTIVE budgets and updates status to EXCEEDED for any budget where the spent amount exceeds the budget amount. The cron SHALL run daily.
+The system SHALL run a periodic scheduled task that checks all ACTIVE and EXCEEDED budgets whose period has started and not yet ended. For ACTIVE budgets, it SHALL update status to EXCEEDED when spentAmount > amount. For EXCEEDED budgets, it SHALL update status back to ACTIVE when spentAmount <= amount. The cron SHALL run daily.
 
 #### Scenario: Budget exceeds limit
 

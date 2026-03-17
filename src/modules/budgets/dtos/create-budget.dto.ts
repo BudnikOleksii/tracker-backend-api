@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsIn, IsOptional, ValidateIf } from 'class-validator';
+import { IsIn, IsOptional } from 'class-validator';
 
 import {
   IsISO8601Field,
@@ -33,7 +33,7 @@ export class CreateBudgetDto {
   startDate!: string;
 
   @ApiPropertyOptional({ example: '2026-03-31T23:59:59.999Z' })
-  @ValidateIf((o: CreateBudgetDto) => o.period === 'CUSTOM')
+  @IsOptional()
   @IsISO8601Field()
   endDate?: string;
 
