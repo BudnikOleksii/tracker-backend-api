@@ -16,6 +16,7 @@ export interface TransactionInfo {
   currencyCode: string;
   date: Date;
   description: string | null;
+  recurringTransactionId: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -241,6 +242,7 @@ export class TransactionRepository {
       currencyCode: row.currencyCode,
       date: row.date,
       description: row.description,
+      recurringTransactionId: row.recurringTransactionId,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     };

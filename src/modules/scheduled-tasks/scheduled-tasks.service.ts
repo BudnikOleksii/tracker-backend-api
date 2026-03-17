@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression, Interval, Timeout } from '@nestjs/schedule';
 
 import { RefreshTokenRepository } from '../auth/refresh-token.repository.js';
+import { RecurringTransactionsService } from '../recurring-transactions/recurring-transactions.service.js';
 
 const HEARTBEAT_INTERVAL = 30_000;
 const ON_START_TIMEOUT = 5000;
@@ -10,12 +11,24 @@ const ON_START_TIMEOUT = 5000;
 export class ScheduledTasksService {
   private readonly logger = new Logger(ScheduledTasksService.name);
 
-  constructor(private readonly refreshTokenRepo: RefreshTokenRepository) {}
+  constructor(
+    private readonly refreshTokenRepo: RefreshTokenRepository,
+    private readonly recurringTransactionsService: RecurringTransactionsService,
+  ) {}
 
   @Cron(CronExpression.EVERY_HOUR)
   async cleanExpiredSessions(): Promise<void> {
     const deleted = await this.refreshTokenRepo.deleteExpired();
     this.logger.log(`Cleaned ${deleted} expired session(s)`);
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async processRecurringTransactions(): Promise<void> {
+    this.logger.log('Processing recurring transactions...');
+    const result = await this.recurringTransactionsService.processAllRecurringTransactions();
+    this.logger.log(
+      `Processed ${result.processedCount} recurring transaction(s), created ${result.transactionsCreated} transaction(s)`,
+    );
   }
 
   @Interval(HEARTBEAT_INTERVAL)

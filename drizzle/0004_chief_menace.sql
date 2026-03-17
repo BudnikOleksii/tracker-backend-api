@@ -1,0 +1,1 @@
+ALTER TABLE "RecurringTransaction" ADD CONSTRAINT "RecurringTransaction_interval_gt_0_chk" CHECK ("RecurringTransaction"."interval" > 0);

@@ -22,6 +22,20 @@
       "when": 1773568226677,
       "tag": "0002_bumpy_skrulls",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1773687540065,
+      "tag": "0003_fat_sir_ram",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1773723753298,
+      "tag": "0004_chief_menace",
+      "breakpoints": true
     }
   ]
 }

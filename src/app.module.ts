@@ -23,6 +23,7 @@ import { AuthModule } from './modules/auth/auth.module.js';
 import { CacheModule } from './modules/cache/cache.module.js';
 import { ScheduledTasksModule } from './modules/scheduled-tasks/scheduled-tasks.module.js';
 import { TransactionCategoriesModule } from './modules/transaction-categories/transaction-categories.module.js';
+import { RecurringTransactionsModule } from './modules/recurring-transactions/recurring-transactions.module.js';
 import { TransactionsModule } from './modules/transactions/transactions.module.js';
 import { UserModule } from './modules/user/user.module.js';
 
@@ -63,6 +64,7 @@ import { UserModule } from './modules/user/user.module.js';
     UserModule,
     TransactionCategoriesModule,
     TransactionsModule,
+    RecurringTransactionsModule,
     ScheduledTasksModule,
   ],
   providers: [

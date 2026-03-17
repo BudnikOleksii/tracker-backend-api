@@ -4,6 +4,7 @@ export * from './refresh-tokens.js';
 export * from './known-devices.js';
 export * from './transaction-categories.js';
 export * from './transactions.js';
+export * from './recurring-transactions.js';
 export * from './verifications.js';
 export * from './login-logs.js';
 export * from './audit-logs.js';

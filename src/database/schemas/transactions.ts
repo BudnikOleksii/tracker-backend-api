@@ -4,6 +4,7 @@ import { relations } from 'drizzle-orm';
 import { currencyCodeEnum, transactionTypeEnum } from './enums.js';
 import { users } from './users.js';
 import { transactionCategories } from './transaction-categories.js';
+import { recurringTransactions } from './recurring-transactions.js';
 
 export const transactions = pgTable(
   'Transaction',
@@ -18,6 +19,10 @@ export const transactions = pgTable(
     currencyCode: currencyCodeEnum('currencyCode').notNull(),
     date: timestamp('date', { precision: 3, mode: 'date' }).notNull(),
     description: text('description'),
+    recurringTransactionId: uuid('recurringTransactionId').references(
+      () => recurringTransactions.id,
+      { onDelete: 'set null' },
+    ),
     createdAt: timestamp('createdAt', { precision: 3, mode: 'date' }).notNull().defaultNow(),
     updatedAt: timestamp('updatedAt', { precision: 3, mode: 'date' })
       .notNull()
@@ -30,6 +35,7 @@ export const transactions = pgTable(
     index('Transaction_date_idx').on(table.date),
     index('Transaction_type_idx').on(table.type),
     index('Transaction_currencyCode_idx').on(table.currencyCode),
+    index('Transaction_recurringTransactionId_idx').on(table.recurringTransactionId),
     foreignKey({
       columns: [table.userId, table.categoryId],
       foreignColumns: [transactionCategories.userId, transactionCategories.id],
@@ -45,5 +51,9 @@ export const transactionsRelations = relations(transactions, ({ one }) => ({
   category: one(transactionCategories, {
     fields: [transactions.categoryId],
     references: [transactionCategories.id],
+  }),
+  recurringTransaction: one(recurringTransactions, {
+    fields: [transactions.recurringTransactionId],
+    references: [recurringTransactions.id],
   }),
 }));
