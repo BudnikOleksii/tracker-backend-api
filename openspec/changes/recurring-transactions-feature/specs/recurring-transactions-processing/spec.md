@@ -2,11 +2,11 @@
 
 ### Requirement: Automatically process due recurring transactions via cron
 
-The system SHALL run a daily scheduled task (via `@nestjs/schedule` `@Cron`) that processes all users' ACTIVE recurring transactions whose `nextOccurrenceDate` is on or before today's date. For each due recurring transaction, the system SHALL create a transaction with the recurring transaction's categoryId, type, amount, currencyCode, and description, with the transaction date set to the `nextOccurrenceDate`. The materialized transaction SHALL have its `recurringTransactionId` set to the source recurring transaction's ID.
+The system SHALL run a daily scheduled task (via `@nestjs/schedule` `@Cron`) at 00:00 UTC that processes all users' ACTIVE recurring transactions whose `nextOccurrenceDate` is on or before the current date in UTC. For each due recurring transaction, the system SHALL create a transaction with the recurring transaction's categoryId, type, amount, currencyCode, and description, with the transaction date set to the `nextOccurrenceDate`. The materialized transaction SHALL have its `recurringTransactionId` set to the source recurring transaction's ID.
 
 #### Scenario: Daily cron processes all users
 
-- **WHEN** the daily cron fires at midnight
+- **WHEN** the daily cron fires at 00:00 UTC
 - **THEN** the system finds all ACTIVE recurring transactions across all users with nextOccurrenceDate <= today and materializes them
 
 #### Scenario: Process recurring transaction with multiple missed occurrences

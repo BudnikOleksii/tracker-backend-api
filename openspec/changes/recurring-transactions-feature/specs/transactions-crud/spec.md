@@ -26,7 +26,7 @@ The system SHALL allow an authenticated user to create a transaction by providin
 
 ### Requirement: Get a transaction by ID
 
-The system SHALL return a single transaction by its ID, scoped to the authenticated user. Soft-deleted transactions SHALL NOT be returned. The response SHALL include the `recurringTransactionId` field if the transaction was materialized from a recurring transaction.
+The system SHALL return a single transaction by its ID, scoped to the authenticated user. The response SHALL include the `recurringTransactionId` field if the transaction was materialized from a recurring transaction.
 
 #### Scenario: Transaction found
 
@@ -35,5 +35,5 @@ The system SHALL return a single transaction by its ID, scoped to the authentica
 
 #### Scenario: Transaction not found
 
-- **WHEN** the user requests a transaction that does not exist, is soft-deleted, or belongs to another user
+- **WHEN** the user requests a transaction that does not exist or belongs to another user
 - **THEN** the system returns HTTP 404 with error code RESOURCE_NOT_FOUND

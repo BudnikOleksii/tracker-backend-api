@@ -14,14 +14,14 @@ If the app scales to multiple instances, each instance runs its own `@nestjs/sch
 
 Add a Redis-based distributed lock so only one instance processes at a time.
 
-1. Before processing, acquire a Redis lock with a TTL (e.g., `SETNX recurring-tx-lock <instance-id> EX 300`)
+1. Before processing, acquire a Redis lock with a TTL (e.g., `SET recurring-tx-lock <instance-id> NX EX 300`)
 2. Only the instance that acquires the lock proceeds
 3. Lock auto-expires after TTL as a safety net
 
 **Pros:** Minimal code change, uses existing Redis infrastructure
 **Cons:** Still runs cron on all instances (most just no-op), lock contention at scale
 
-### Option B: Dedicated Worker Process (Recommended for 3+ instances)
+### Option B: Dedicated Worker Process (Recommended for 4+ instances)
 
 Separate the cron into a standalone worker process.
 

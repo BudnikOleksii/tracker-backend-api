@@ -291,10 +291,13 @@ export class RecurringTransactionsService {
       }
     }
 
+    if (processedCount > 0) {
+      await this.invalidateCache(userId);
+    }
+
     if (totalTransactionsCreated > 0) {
       await this.cacheService.delByPrefix(buildCachePrefix('transactions', userId));
       await this.cacheService.delByPrefix(buildCachePrefix('transactions-analytics', userId));
-      await this.invalidateCache(userId);
     }
 
     return { processedCount, transactionsCreated: totalTransactionsCreated };
@@ -427,17 +430,18 @@ export class RecurringTransactionsService {
     frequency: RecurringFrequency,
     interval: number,
   ): Date {
-    const now = new Date();
+    const todayCutoff = new Date();
+    todayCutoff.setHours(0, 0, 0, 0);
+
     let next = new Date(startDate);
 
-    // Advance until next is in the future or equal to now
-    while (next < now) {
-      next = this.advanceDate(next, frequency, interval);
+    if (next >= todayCutoff) {
+      return startDate;
     }
 
-    // If startDate is in the future, just use it
-    if (startDate >= now) {
-      return startDate;
+    // Advance until next is on or after today (same cutoff as processors use)
+    while (next < todayCutoff) {
+      next = this.advanceDate(next, frequency, interval);
     }
 
     return next;

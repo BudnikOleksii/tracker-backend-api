@@ -1,4 +1,5 @@
 import {
+  check,
   foreignKey,
   index,
   integer,
@@ -8,7 +9,7 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 
 import {
   currencyCodeEnum,
@@ -45,6 +46,7 @@ export const recurringTransactions = pgTable(
       .$onUpdate(() => new Date()),
   },
   (table) => [
+    check('RecurringTransaction_interval_gt_0_chk', sql`${table.interval} > 0`),
     index('RecurringTransaction_userId_idx').on(table.userId),
     index('RecurringTransaction_categoryId_idx').on(table.categoryId),
     index('RecurringTransaction_status_idx').on(table.status),
