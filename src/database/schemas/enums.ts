@@ -269,6 +269,16 @@ export const recurringTransactionStatusEnum = pgEnum('RecurringTransactionStatus
   'CANCELLED',
 ]);
 
+export const budgetPeriodEnum = pgEnum('BudgetPeriod', [
+  'WEEKLY',
+  'MONTHLY',
+  'QUARTERLY',
+  'YEARLY',
+  'CUSTOM',
+]);
+
+export const budgetStatusEnum = pgEnum('BudgetStatus', ['ACTIVE', 'EXCEEDED']);
+
 export const currencyCodeEnum = pgEnum('CurrencyCode', [
   'AED',
   'AFN',
