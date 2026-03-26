@@ -8,7 +8,7 @@ import { CURRENCY_CODES, TRANSACTION_TYPES } from '../transactions.constants.js'
 import type { CurrencyCode, TransactionType } from '../transactions.constants.js';
 
 export class TransactionQueryDto extends OffsetPaginationDto {
-  @ApiPropertyOptional({ example: 'EXPENSE', enum: TRANSACTION_TYPES })
+  @ApiPropertyOptional({ example: 'EXPENSE', enum: TRANSACTION_TYPES, enumName: 'TransactionType' })
   @IsOptional()
   @IsIn(TRANSACTION_TYPES)
   type?: TransactionType;
@@ -18,7 +18,7 @@ export class TransactionQueryDto extends OffsetPaginationDto {
   @IsUUIDField()
   categoryId?: string;
 
-  @ApiPropertyOptional({ example: 'USD', enum: CURRENCY_CODES })
+  @ApiPropertyOptional({ example: 'USD', enum: CURRENCY_CODES, enumName: 'CurrencyCode' })
   @IsOptional()
   @IsIn(CURRENCY_CODES)
   currencyCode?: CurrencyCode;

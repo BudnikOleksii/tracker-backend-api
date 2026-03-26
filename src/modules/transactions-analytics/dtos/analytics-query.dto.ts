@@ -12,7 +12,7 @@ import type {
 } from '@/modules/transactions/transactions.constants.js';
 
 export class AnalyticsQueryDto {
-  @ApiProperty({ example: 'USD', enum: CURRENCY_CODES })
+  @ApiProperty({ example: 'USD', enum: CURRENCY_CODES, enumName: 'CurrencyCode' })
   @IsIn(CURRENCY_CODES)
   currencyCode!: CurrencyCode;
 
@@ -26,7 +26,7 @@ export class AnalyticsQueryDto {
   @IsISO8601Field()
   dateTo?: string;
 
-  @ApiPropertyOptional({ example: 'EXPENSE', enum: TRANSACTION_TYPES })
+  @ApiPropertyOptional({ example: 'EXPENSE', enum: TRANSACTION_TYPES, enumName: 'TransactionType' })
   @IsOptional()
   @IsIn(TRANSACTION_TYPES)
   type?: TransactionType;

@@ -8,12 +8,12 @@ import { BUDGET_PERIODS, BUDGET_STATUSES, CURRENCY_CODES } from '../budgets.cons
 import type { BudgetPeriod, BudgetStatus, CurrencyCode } from '../budgets.constants.js';
 
 export class BudgetQueryDto extends OffsetPaginationDto {
-  @ApiPropertyOptional({ example: 'ACTIVE', enum: BUDGET_STATUSES })
+  @ApiPropertyOptional({ example: 'ACTIVE', enum: BUDGET_STATUSES, enumName: 'BudgetStatus' })
   @IsOptional()
   @IsIn(BUDGET_STATUSES)
   status?: BudgetStatus;
 
-  @ApiPropertyOptional({ example: 'MONTHLY', enum: BUDGET_PERIODS })
+  @ApiPropertyOptional({ example: 'MONTHLY', enum: BUDGET_PERIODS, enumName: 'BudgetPeriod' })
   @IsOptional()
   @IsIn(BUDGET_PERIODS)
   period?: BudgetPeriod;
@@ -23,7 +23,7 @@ export class BudgetQueryDto extends OffsetPaginationDto {
   @IsUUIDField()
   categoryId?: string;
 
-  @ApiPropertyOptional({ example: 'USD', enum: CURRENCY_CODES })
+  @ApiPropertyOptional({ example: 'USD', enum: CURRENCY_CODES, enumName: 'CurrencyCode' })
   @IsOptional()
   @IsIn(CURRENCY_CODES)
   currencyCode?: CurrencyCode;

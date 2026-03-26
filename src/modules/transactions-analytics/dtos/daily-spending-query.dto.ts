@@ -26,11 +26,11 @@ export class DailySpendingQueryDto {
   @Max(12)
   month!: number;
 
-  @ApiProperty({ example: 'USD', enum: CURRENCY_CODES })
+  @ApiProperty({ example: 'USD', enum: CURRENCY_CODES, enumName: 'CurrencyCode' })
   @IsIn(CURRENCY_CODES)
   currencyCode!: CurrencyCode;
 
-  @ApiPropertyOptional({ example: 'EXPENSE', enum: TRANSACTION_TYPES })
+  @ApiPropertyOptional({ example: 'EXPENSE', enum: TRANSACTION_TYPES, enumName: 'TransactionType' })
   @IsOptional()
   @IsIn(TRANSACTION_TYPES)
   type?: TransactionType;

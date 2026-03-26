@@ -11,7 +11,7 @@ export class UserQueryDto extends OffsetPaginationDto {
   @IsString()
   search?: string;
 
-  @ApiPropertyOptional({ example: 'ADMIN', enum: ROLES })
+  @ApiPropertyOptional({ example: 'ADMIN', enum: ROLES, enumName: 'UserRole' })
   @IsOptional()
   @IsIn(ROLES)
   role?: UserRole;

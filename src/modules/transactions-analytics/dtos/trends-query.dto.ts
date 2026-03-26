@@ -8,7 +8,7 @@ export const GRANULARITY_VALUES = ['weekly', 'monthly'] as const;
 export type Granularity = (typeof GRANULARITY_VALUES)[number];
 
 export class TrendsQueryDto extends AnalyticsQueryDto {
-  @ApiProperty({ example: 'monthly', enum: GRANULARITY_VALUES })
+  @ApiProperty({ example: 'monthly', enum: GRANULARITY_VALUES, enumName: 'Granularity' })
   @IsIn(GRANULARITY_VALUES)
   granularity!: Granularity;
 }
