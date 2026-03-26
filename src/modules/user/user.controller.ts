@@ -25,6 +25,7 @@ import { AssignRoleDto } from './dtos/assign-role.dto.js';
 import { CreateUserDto } from './dtos/create-user.dto.js';
 import { UpdateUserDto } from './dtos/update-user.dto.js';
 import { UserQueryDto } from './dtos/user-query.dto.js';
+import { UserSummaryResponseDto } from './dtos/user-summary-response.dto.js';
 import { UserService } from './user.service.js';
 
 @ApiTags('Users')
@@ -64,6 +65,7 @@ export class UserController {
 
   @Get('summary')
   @ApiOperation({ summary: 'Get user summary statistics' })
+  @ApiResponse({ status: 200, type: UserSummaryResponseDto })
   async getSummary() {
     return this.userService.getSummary();
   }
