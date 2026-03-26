@@ -7,12 +7,17 @@ import { JwtAuthGuard } from '@/shared/guards/index.js';
 import { AuthService } from './auth.service.js';
 import { LoginDto, AuthResponseDto } from './dtos/login.dto.js';
 import { LogoutDto } from './dtos/logout.dto.js';
+import { LogoutResponseDto } from './dtos/logout-response.dto.js';
 import { RefreshTokenDto } from './dtos/refresh-token.dto.js';
+import { RefreshTokenInfoDto } from './dtos/refresh-token-info.dto.js';
+import { RefreshTokenListDto } from './dtos/refresh-token-list.dto.js';
 import { RegisterDto } from './dtos/register.dto.js';
 import { RevokeRefreshTokenDto } from './dtos/revoke-refresh-token.dto.js';
+import { RevokeAllTokensResponseDto } from './dtos/revoke-all-tokens-response.dto.js';
+import { RevokeTokenResponseDto } from './dtos/revoke-token-response.dto.js';
 import type { AuthenticatedRequest } from './auth.types.js';
 
-@ApiTags('auth')
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -62,6 +67,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current refresh token info' })
+  @ApiResponse({ status: 200, type: RefreshTokenInfoDto })
   async getRefreshToken(@Request() req: AuthenticatedRequest) {
     return this.authService.getRefreshToken(req.user);
   }
@@ -70,6 +76,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'List active refresh tokens' })
+  @ApiResponse({ status: 200, type: RefreshTokenListDto })
   async listRefreshTokens(@Request() req: AuthenticatedRequest) {
     return this.authService.listRefreshTokens(req.user.id, req.user.sessionId);
   }
@@ -79,6 +86,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Logout (single device)' })
+  @ApiResponse({ status: 200, type: LogoutResponseDto })
   async logout(@Body() dto: LogoutDto) {
     const success = await this.authService.logout(dto.refreshToken);
 
@@ -95,6 +103,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Revoke a specific refresh token' })
+  @ApiResponse({ status: 200, type: RevokeTokenResponseDto })
   async revokeRefreshToken(
     @Body() dto: RevokeRefreshTokenDto,
     @Request() req: AuthenticatedRequest,
@@ -111,6 +120,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Revoke all refresh tokens' })
+  @ApiResponse({ status: 200, type: RevokeAllTokensResponseDto })
   async revokeRefreshTokens(@Request() req: AuthenticatedRequest) {
     const revokedCount = await this.authService.revokeAllRefreshTokens(req.user.id);
 

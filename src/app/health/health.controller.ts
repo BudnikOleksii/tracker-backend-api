@@ -20,7 +20,7 @@ interface HealthEntry {
 
 @SkipThrottle()
 @Controller('health')
-@ApiTags('health')
+@ApiTags('Health')
 export class HealthController {
   // eslint-disable-next-line @typescript-eslint/max-params
   constructor(
