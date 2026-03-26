@@ -27,7 +27,7 @@ export class CreateUserDto {
   @MinLengthField(6)
   password: string;
 
-  @ApiPropertyOptional({ example: 'USER', enum: ROLES })
+  @ApiPropertyOptional({ example: 'USER', enum: ROLES, enumName: 'UserRole' })
   @IsOptional()
   @IsInField(ROLES)
   role?: UserRole;

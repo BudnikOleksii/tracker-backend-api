@@ -18,7 +18,7 @@ export class CreateTransactionDto {
   @IsUUIDField()
   categoryId!: string;
 
-  @ApiProperty({ example: 'EXPENSE', enum: TRANSACTION_TYPES })
+  @ApiProperty({ example: 'EXPENSE', enum: TRANSACTION_TYPES, enumName: 'TransactionType' })
   @IsIn(TRANSACTION_TYPES)
   type!: TransactionType;
 
@@ -28,7 +28,7 @@ export class CreateTransactionDto {
   @MatchesField(/^\d{1,17}(\.\d{1,2})?$/)
   amount!: string;
 
-  @ApiProperty({ example: 'USD', enum: CURRENCY_CODES })
+  @ApiProperty({ example: 'USD', enum: CURRENCY_CODES, enumName: 'CurrencyCode' })
   @IsIn(CURRENCY_CODES)
   currencyCode!: CurrencyCode;
 

@@ -18,12 +18,16 @@ import type {
 } from '../recurring-transactions.constants.js';
 
 export class RecurringTransactionQueryDto extends OffsetPaginationDto {
-  @ApiPropertyOptional({ example: 'ACTIVE', enum: RECURRING_TRANSACTION_STATUSES })
+  @ApiPropertyOptional({
+    example: 'ACTIVE',
+    enum: RECURRING_TRANSACTION_STATUSES,
+    enumName: 'RecurringTransactionStatus',
+  })
   @IsOptional()
   @IsIn(RECURRING_TRANSACTION_STATUSES)
   status?: RecurringTransactionStatus;
 
-  @ApiPropertyOptional({ example: 'EXPENSE', enum: TRANSACTION_TYPES })
+  @ApiPropertyOptional({ example: 'EXPENSE', enum: TRANSACTION_TYPES, enumName: 'TransactionType' })
   @IsOptional()
   @IsIn(TRANSACTION_TYPES)
   type?: TransactionType;
@@ -33,12 +37,16 @@ export class RecurringTransactionQueryDto extends OffsetPaginationDto {
   @IsUUIDField()
   categoryId?: string;
 
-  @ApiPropertyOptional({ example: 'USD', enum: CURRENCY_CODES })
+  @ApiPropertyOptional({ example: 'USD', enum: CURRENCY_CODES, enumName: 'CurrencyCode' })
   @IsOptional()
   @IsIn(CURRENCY_CODES)
   currencyCode?: CurrencyCode;
 
-  @ApiPropertyOptional({ example: 'MONTHLY', enum: RECURRING_FREQUENCIES })
+  @ApiPropertyOptional({
+    example: 'MONTHLY',
+    enum: RECURRING_FREQUENCIES,
+    enumName: 'RecurringFrequency',
+  })
   @IsOptional()
   @IsIn(RECURRING_FREQUENCIES)
   frequency?: RecurringFrequency;

@@ -5,7 +5,7 @@ import { ROLES } from '@/shared/enums/role.enum.js';
 import type { UserRole } from '@/shared/enums/role.enum.js';
 
 export class AssignRoleDto {
-  @ApiProperty({ enum: ROLES, example: 'USER' })
+  @ApiProperty({ enum: ROLES, example: 'USER', enumName: 'UserRole' })
   @IsIn(ROLES)
   role!: UserRole;
 }

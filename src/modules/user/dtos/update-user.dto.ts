@@ -6,7 +6,7 @@ import { ROLES } from '@/shared/enums/role.enum.js';
 import type { UserRole } from '@/shared/enums/role.enum.js';
 
 export class UpdateUserDto {
-  @ApiPropertyOptional({ example: 'USER', enum: ROLES })
+  @ApiPropertyOptional({ example: 'USER', enum: ROLES, enumName: 'UserRole' })
   @IsOptional()
   @IsStringField()
   @IsIn(ROLES)
