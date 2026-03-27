@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class TopCategoryItemDto {
+class TopCategoryItemDto {
   @ApiProperty({ description: 'Category rank', example: 1 })
   rank: number;
 
@@ -24,6 +24,19 @@ export class TopCategoriesResponseDto {
   @ApiProperty({ description: 'Currency code', example: 'USD' })
   currencyCode: string;
 
-  @ApiProperty({ description: 'Top categories data', type: [TopCategoryItemDto] })
+  @ApiProperty({
+    description: 'Top categories data',
+    type: [TopCategoryItemDto],
+    example: [
+      {
+        rank: 1,
+        categoryId: '550e8400-e29b-41d4-a716-446655440000',
+        categoryName: 'Groceries',
+        total: '450.25',
+        percentage: 28.5,
+        transactionCount: 12,
+      },
+    ],
+  })
   categories: TopCategoryItemDto[];
 }
