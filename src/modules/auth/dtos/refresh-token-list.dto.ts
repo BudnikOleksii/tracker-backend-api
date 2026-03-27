@@ -10,6 +10,7 @@ class RefreshTokenItemDto {
   @ApiProperty({
     description: 'IP address that created the token',
     example: '192.168.1.1',
+    type: String,
     nullable: true,
   })
   ipAddress: string | null;
@@ -17,6 +18,7 @@ class RefreshTokenItemDto {
   @ApiProperty({
     description: 'User agent that created the token',
     example: 'Mozilla/5.0',
+    type: String,
     nullable: true,
   })
   userAgent: string | null;

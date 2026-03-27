@@ -16,10 +16,13 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { UseEnvelope } from '@/shared/decorators/use-envelope.decorator.js';
+import { MessageResponseDto } from '@/shared/dtos/message-response.dto.js';
 import { JwtAuthGuard } from '@/shared/guards/index.js';
 
 import { CreateTransactionDto } from './dtos/create-transaction.dto.js';
+import { TransactionListResponseDto } from './dtos/transaction-list-response.dto.js';
 import { TransactionQueryDto } from './dtos/transaction-query.dto.js';
+import { TransactionResponseDto } from './dtos/transaction-response.dto.js';
 import { UpdateTransactionDto } from './dtos/update-transaction.dto.js';
 import { TransactionsService } from './transactions.service.js';
 
@@ -33,7 +36,7 @@ export class TransactionsController {
   @Get()
   @UseEnvelope()
   @ApiOperation({ summary: 'List transactions' })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 200, type: TransactionListResponseDto })
   async findAll(@Query() query: TransactionQueryDto, @Request() req: { user: { id: string } }) {
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 20;
@@ -63,7 +66,7 @@ export class TransactionsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a transaction' })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 200, type: TransactionResponseDto })
   @ApiResponse({ status: 404, description: 'Transaction not found' })
   async findById(@Param('id', ParseUUIDPipe) id: string, @Request() req: { user: { id: string } }) {
     return this.transactionsService.findById(id, req.user.id);
@@ -72,7 +75,7 @@ export class TransactionsController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a transaction' })
-  @ApiResponse({ status: 201 })
+  @ApiResponse({ status: 201, type: TransactionResponseDto })
   @ApiResponse({ status: 400, description: 'Category type mismatch' })
   @ApiResponse({ status: 404, description: 'Category not found' })
   async create(@Body() dto: CreateTransactionDto, @Request() req: { user: { id: string } }) {
@@ -89,7 +92,7 @@ export class TransactionsController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a transaction' })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 200, type: TransactionResponseDto })
   @ApiResponse({ status: 400, description: 'Category type mismatch' })
   @ApiResponse({ status: 404, description: 'Transaction not found' })
   async update(
@@ -110,7 +113,7 @@ export class TransactionsController {
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Delete a transaction' })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 200, type: MessageResponseDto })
   @ApiResponse({ status: 404, description: 'Transaction not found' })
   async delete(@Param('id', ParseUUIDPipe) id: string, @Request() req: { user: { id: string } }) {
     await this.transactionsService.delete(id, req.user.id);

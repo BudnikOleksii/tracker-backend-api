@@ -24,7 +24,9 @@ import type { UserRole } from '@/shared/enums/role.enum.js';
 import { AssignRoleDto } from './dtos/assign-role.dto.js';
 import { CreateUserDto } from './dtos/create-user.dto.js';
 import { UpdateUserDto } from './dtos/update-user.dto.js';
+import { UserListResponseDto } from './dtos/user-list-response.dto.js';
 import { UserQueryDto } from './dtos/user-query.dto.js';
+import { UserResponseDto } from './dtos/user-response.dto.js';
 import { UserSummaryResponseDto } from './dtos/user-summary-response.dto.js';
 import { UserService } from './user.service.js';
 
@@ -39,7 +41,7 @@ export class UserController {
   @Get()
   @UseEnvelope()
   @ApiOperation({ summary: 'Get user list' })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 200, type: UserListResponseDto })
   async findAll(@Query() query: UserQueryDto) {
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 20;
@@ -72,6 +74,7 @@ export class UserController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get user details' })
+  @ApiResponse({ status: 200, type: UserResponseDto })
   @ApiResponse({ status: 404, description: 'User not found' })
   async findById(@Param('id', ParseUUIDPipe) id: string) {
     return this.userService.findById(id);
@@ -80,6 +83,7 @@ export class UserController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create user' })
+  @ApiResponse({ status: 201, type: UserResponseDto })
   @ApiResponse({ status: 409, description: 'Email already in use' })
   async create(@Body() dto: CreateUserDto) {
     return this.userService.create({
@@ -91,6 +95,7 @@ export class UserController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update user' })
+  @ApiResponse({ status: 200, type: UserResponseDto })
   @ApiResponse({ status: 404, description: 'User not found' })
   async update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateUserDto) {
     return this.userService.update(id, {
@@ -102,6 +107,7 @@ export class UserController {
   @Roles('ADMIN')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Assign user role (ADMIN only)' })
+  @ApiResponse({ status: 200, type: UserResponseDto })
   @ApiResponse({ status: 403, description: 'Insufficient permissions' })
   @ApiResponse({ status: 404, description: 'User not found' })
   async assignRole(
