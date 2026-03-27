@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+import { BUDGET_PERIODS, BUDGET_STATUSES, CURRENCY_CODES } from '../budgets.constants.js';
+
 export class BudgetResponseDto {
   @ApiProperty({ description: 'Budget ID', example: '550e8400-e29b-41d4-a716-446655440000' })
   id: string;
@@ -18,13 +20,19 @@ export class BudgetResponseDto {
   @ApiProperty({ description: 'Budget amount', example: '500.00' })
   amount: string;
 
-  @ApiProperty({ description: 'Currency code', example: 'USD' })
+  @ApiProperty({
+    description: 'Currency code',
+    example: 'USD',
+    enum: CURRENCY_CODES,
+    enumName: 'CurrencyCode',
+  })
   currencyCode: string;
 
   @ApiProperty({
     description: 'Budget period',
     example: 'MONTHLY',
-    enum: ['DAILY', 'WEEKLY', 'MONTHLY', 'QUARTERLY', 'YEARLY', 'CUSTOM'],
+    enum: BUDGET_PERIODS,
+    enumName: 'BudgetPeriod',
   })
   period: string;
 
@@ -34,7 +42,12 @@ export class BudgetResponseDto {
   @ApiProperty({ description: 'Budget end date', example: '2026-03-31T23:59:59.999Z' })
   endDate: Date;
 
-  @ApiProperty({ description: 'Budget status', example: 'ACTIVE', enum: ['ACTIVE', 'EXCEEDED'] })
+  @ApiProperty({
+    description: 'Budget status',
+    example: 'ACTIVE',
+    enum: BUDGET_STATUSES,
+    enumName: 'BudgetStatus',
+  })
   status: string;
 
   @ApiProperty({

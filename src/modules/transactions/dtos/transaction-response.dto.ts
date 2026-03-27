@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+import { CURRENCY_CODES, TRANSACTION_TYPES } from '../transactions.constants.js';
+
 export class TransactionResponseDto {
   @ApiProperty({ description: 'Transaction ID', example: '550e8400-e29b-41d4-a716-446655440000' })
   id: string;
@@ -7,13 +9,23 @@ export class TransactionResponseDto {
   @ApiProperty({ description: 'Category ID', example: '550e8400-e29b-41d4-a716-446655440001' })
   categoryId: string;
 
-  @ApiProperty({ description: 'Transaction type', example: 'EXPENSE', enum: ['INCOME', 'EXPENSE'] })
+  @ApiProperty({
+    description: 'Transaction type',
+    example: 'EXPENSE',
+    enum: TRANSACTION_TYPES,
+    enumName: 'TransactionType',
+  })
   type: string;
 
   @ApiProperty({ description: 'Transaction amount', example: '49.99' })
   amount: string;
 
-  @ApiProperty({ description: 'Currency code', example: 'USD' })
+  @ApiProperty({
+    description: 'Currency code',
+    example: 'USD',
+    enum: CURRENCY_CODES,
+    enumName: 'CurrencyCode',
+  })
   currencyCode: string;
 
   @ApiProperty({ description: 'Transaction date', example: '2026-03-15T00:00:00.000Z' })

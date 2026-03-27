@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+import { CURRENCY_CODES } from '@/modules/transactions/transactions.constants.js';
+
 export class TrendPeriodDto {
   @ApiProperty({ description: 'Period start date', example: '2026-03-01' })
   periodStart: string;
@@ -21,10 +23,20 @@ export class TrendPeriodDto {
 }
 
 export class TrendsResponseDto {
-  @ApiProperty({ description: 'Currency code', example: 'USD' })
+  @ApiProperty({
+    description: 'Currency code',
+    example: 'USD',
+    enum: CURRENCY_CODES,
+    enumName: 'CurrencyCode',
+  })
   currencyCode: string;
 
-  @ApiProperty({ description: 'Time granularity', example: 'monthly', enum: ['weekly', 'monthly'] })
+  @ApiProperty({
+    description: 'Time granularity',
+    example: 'monthly',
+    enum: ['weekly', 'monthly'],
+    enumName: 'TrendsGranularity',
+  })
   granularity: string;
 
   @ApiProperty({ description: 'Trend periods data', type: [TrendPeriodDto] })

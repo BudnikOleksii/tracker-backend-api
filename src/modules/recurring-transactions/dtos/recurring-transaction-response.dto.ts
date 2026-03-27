@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+import {
+  CURRENCY_CODES,
+  RECURRING_FREQUENCIES,
+  RECURRING_TRANSACTION_STATUSES,
+  TRANSACTION_TYPES,
+} from '../recurring-transactions.constants.js';
+
 export class RecurringTransactionResponseDto {
   @ApiProperty({
     description: 'Recurring transaction ID',
@@ -13,13 +20,23 @@ export class RecurringTransactionResponseDto {
   @ApiProperty({ description: 'Category ID', example: '550e8400-e29b-41d4-a716-446655440002' })
   categoryId: string;
 
-  @ApiProperty({ description: 'Transaction type', example: 'EXPENSE', enum: ['INCOME', 'EXPENSE'] })
+  @ApiProperty({
+    description: 'Transaction type',
+    example: 'EXPENSE',
+    enum: TRANSACTION_TYPES,
+    enumName: 'TransactionType',
+  })
   type: string;
 
   @ApiProperty({ description: 'Transaction amount', example: '49.99' })
   amount: string;
 
-  @ApiProperty({ description: 'Currency code', example: 'USD' })
+  @ApiProperty({
+    description: 'Currency code',
+    example: 'USD',
+    enum: CURRENCY_CODES,
+    enumName: 'CurrencyCode',
+  })
   currencyCode: string;
 
   @ApiProperty({
@@ -33,7 +50,8 @@ export class RecurringTransactionResponseDto {
   @ApiProperty({
     description: 'Recurrence frequency',
     example: 'MONTHLY',
-    enum: ['DAILY', 'WEEKLY', 'BIWEEKLY', 'MONTHLY', 'QUARTERLY', 'SEMIANNUALLY', 'YEARLY'],
+    enum: RECURRING_FREQUENCIES,
+    enumName: 'RecurringFrequency',
   })
   frequency: string;
 
@@ -57,7 +75,8 @@ export class RecurringTransactionResponseDto {
   @ApiProperty({
     description: 'Recurring transaction status',
     example: 'ACTIVE',
-    enum: ['ACTIVE', 'PAUSED', 'COMPLETED'],
+    enum: RECURRING_TRANSACTION_STATUSES,
+    enumName: 'RecurringTransactionStatus',
   })
   status: string;
 
