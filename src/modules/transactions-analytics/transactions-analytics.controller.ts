@@ -4,9 +4,14 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 import { JwtAuthGuard } from '@/shared/guards/index.js';
 
 import { AnalyticsQueryDto } from './dtos/analytics-query.dto.js';
+import { CategoryBreakdownResponseDto } from './dtos/category-breakdown-response.dto.js';
 import { DailySpendingQueryDto } from './dtos/daily-spending-query.dto.js';
+import { DailySpendingResponseDto } from './dtos/daily-spending-response.dto.js';
+import { SummaryResponseDto } from './dtos/summary-response.dto.js';
 import { TopCategoriesQueryDto } from './dtos/top-categories-query.dto.js';
+import { TopCategoriesResponseDto } from './dtos/top-categories-response.dto.js';
 import { TrendsQueryDto } from './dtos/trends-query.dto.js';
+import { TrendsResponseDto } from './dtos/trends-response.dto.js';
 import { TransactionsAnalyticsService } from './transactions-analytics.service.js';
 
 @ApiTags('Transactions Analytics')
@@ -18,7 +23,7 @@ export class TransactionsAnalyticsController {
 
   @Get('summary')
   @ApiOperation({ summary: 'Get financial summary' })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 200, type: SummaryResponseDto })
   async getSummary(@Query() query: AnalyticsQueryDto, @Request() req: { user: { id: string } }) {
     return this.transactionsAnalyticsService.getSummary({
       userId: req.user.id,
@@ -32,7 +37,7 @@ export class TransactionsAnalyticsController {
 
   @Get('category-breakdown')
   @ApiOperation({ summary: 'Get spending/income by category' })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 200, type: CategoryBreakdownResponseDto })
   async getCategoryBreakdown(
     @Query() query: AnalyticsQueryDto,
     @Request() req: { user: { id: string } },
@@ -49,7 +54,7 @@ export class TransactionsAnalyticsController {
 
   @Get('trends')
   @ApiOperation({ summary: 'Get income/expense trends over time' })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 200, type: TrendsResponseDto })
   async getTrends(@Query() query: TrendsQueryDto, @Request() req: { user: { id: string } }) {
     return this.transactionsAnalyticsService.getTrends({
       userId: req.user.id,
@@ -64,7 +69,7 @@ export class TransactionsAnalyticsController {
 
   @Get('top-categories')
   @ApiOperation({ summary: 'Get top spending/income categories' })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 200, type: TopCategoriesResponseDto })
   async getTopCategories(
     @Query() query: TopCategoriesQueryDto,
     @Request() req: { user: { id: string } },
@@ -82,7 +87,7 @@ export class TransactionsAnalyticsController {
 
   @Get('daily-spending')
   @ApiOperation({ summary: 'Get daily spending totals for a month' })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 200, type: DailySpendingResponseDto })
   async getDailySpending(
     @Query() query: DailySpendingQueryDto,
     @Request() req: { user: { id: string } },

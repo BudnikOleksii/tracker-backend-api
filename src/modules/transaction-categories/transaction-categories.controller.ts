@@ -16,9 +16,12 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { UseEnvelope } from '@/shared/decorators/use-envelope.decorator.js';
+import { MessageResponseDto } from '@/shared/dtos/message-response.dto.js';
 import { JwtAuthGuard } from '@/shared/guards/index.js';
 
+import { CategoryListResponseDto } from './dtos/category-list-response.dto.js';
 import { CategoryQueryDto } from './dtos/category-query.dto.js';
+import { CategoryResponseDto } from './dtos/category-response.dto.js';
 import { CreateCategoryDto } from './dtos/create-category.dto.js';
 import { UpdateCategoryDto } from './dtos/update-category.dto.js';
 import { TransactionCategoriesService } from './transaction-categories.service.js';
@@ -33,7 +36,7 @@ export class TransactionCategoriesController {
   @Get()
   @UseEnvelope()
   @ApiOperation({ summary: 'List transaction categories' })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 200, type: CategoryListResponseDto })
   async findAll(@Query() query: CategoryQueryDto, @Request() req: { user: { id: string } }) {
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 20;
@@ -61,7 +64,7 @@ export class TransactionCategoriesController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a transaction category' })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 200, type: CategoryResponseDto })
   @ApiResponse({ status: 404, description: 'Category not found' })
   async findById(@Param('id', ParseUUIDPipe) id: string, @Request() req: { user: { id: string } }) {
     return this.categoriesService.findById(id, req.user.id);
@@ -70,7 +73,7 @@ export class TransactionCategoriesController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a transaction category' })
-  @ApiResponse({ status: 201 })
+  @ApiResponse({ status: 201, type: CategoryResponseDto })
   @ApiResponse({ status: 409, description: 'Duplicate category' })
   async create(@Body() dto: CreateCategoryDto, @Request() req: { user: { id: string } }) {
     return this.categoriesService.create({
@@ -83,7 +86,7 @@ export class TransactionCategoriesController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a transaction category' })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 200, type: CategoryResponseDto })
   @ApiResponse({ status: 404, description: 'Category not found' })
   @ApiResponse({ status: 409, description: 'Duplicate category' })
   async update(
@@ -100,7 +103,7 @@ export class TransactionCategoriesController {
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Delete a transaction category' })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 200, type: MessageResponseDto })
   @ApiResponse({ status: 404, description: 'Category not found' })
   @ApiResponse({ status: 409, description: 'Category has transactions' })
   async delete(@Param('id', ParseUUIDPipe) id: string, @Request() req: { user: { id: string } }) {

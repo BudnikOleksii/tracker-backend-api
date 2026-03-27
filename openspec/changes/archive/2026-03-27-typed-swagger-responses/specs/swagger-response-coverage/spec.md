@@ -1,4 +1,4 @@
-## ADDED Requirements
+## MODIFIED Requirements
 
 ### Requirement: All auth endpoints have typed ApiResponse decorators
 
@@ -56,6 +56,8 @@ All newly created response DTOs SHALL have `@ApiProperty` decorators with both `
 
 - **WHEN** `UserSummaryResponseDto` is inspected
 - **THEN** every property SHALL have an `@ApiProperty` decorator with a non-empty `description` and an `example` value
+
+## ADDED Requirements
 
 ### Requirement: All controller endpoints have typed ApiResponse decorators
 

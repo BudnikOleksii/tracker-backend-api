@@ -16,10 +16,14 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { UseEnvelope } from '@/shared/decorators/use-envelope.decorator.js';
+import { MessageResponseDto } from '@/shared/dtos/message-response.dto.js';
 import { JwtAuthGuard } from '@/shared/guards/index.js';
 
 import { CreateRecurringTransactionDto } from './dtos/create-recurring-transaction.dto.js';
+import { ProcessResultResponseDto } from './dtos/process-result-response.dto.js';
+import { RecurringTransactionListResponseDto } from './dtos/recurring-transaction-list-response.dto.js';
 import { RecurringTransactionQueryDto } from './dtos/recurring-transaction-query.dto.js';
+import { RecurringTransactionResponseDto } from './dtos/recurring-transaction-response.dto.js';
 import { UpdateRecurringTransactionDto } from './dtos/update-recurring-transaction.dto.js';
 import { RecurringTransactionsService } from './recurring-transactions.service.js';
 
@@ -33,7 +37,7 @@ export class RecurringTransactionsController {
   @Get()
   @UseEnvelope()
   @ApiOperation({ summary: 'List recurring transactions' })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 200, type: RecurringTransactionListResponseDto })
   async findAll(
     @Query() query: RecurringTransactionQueryDto,
     @Request() req: { user: { id: string } },
@@ -66,7 +70,7 @@ export class RecurringTransactionsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a recurring transaction' })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 200, type: RecurringTransactionResponseDto })
   @ApiResponse({ status: 404, description: 'Recurring transaction not found' })
   async findById(@Param('id', ParseUUIDPipe) id: string, @Request() req: { user: { id: string } }) {
     return this.recurringTransactionsService.findById(id, req.user.id);
@@ -75,7 +79,7 @@ export class RecurringTransactionsController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a recurring transaction' })
-  @ApiResponse({ status: 201 })
+  @ApiResponse({ status: 201, type: RecurringTransactionResponseDto })
   @ApiResponse({ status: 400, description: 'Validation error' })
   @ApiResponse({ status: 404, description: 'Category not found' })
   async create(
@@ -98,7 +102,7 @@ export class RecurringTransactionsController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a recurring transaction' })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 200, type: RecurringTransactionResponseDto })
   @ApiResponse({ status: 400, description: 'Validation error' })
   @ApiResponse({ status: 404, description: 'Recurring transaction not found' })
   async update(
@@ -122,7 +126,7 @@ export class RecurringTransactionsController {
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Delete (cancel) a recurring transaction' })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 200, type: MessageResponseDto })
   @ApiResponse({ status: 404, description: 'Recurring transaction not found' })
   async delete(@Param('id', ParseUUIDPipe) id: string, @Request() req: { user: { id: string } }) {
     await this.recurringTransactionsService.delete(id, req.user.id);
@@ -132,7 +136,7 @@ export class RecurringTransactionsController {
 
   @Patch(':id/pause')
   @ApiOperation({ summary: 'Pause a recurring transaction' })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 200, type: RecurringTransactionResponseDto })
   @ApiResponse({ status: 400, description: 'Not active' })
   @ApiResponse({ status: 404, description: 'Recurring transaction not found' })
   async pause(@Param('id', ParseUUIDPipe) id: string, @Request() req: { user: { id: string } }) {
@@ -141,7 +145,7 @@ export class RecurringTransactionsController {
 
   @Patch(':id/resume')
   @ApiOperation({ summary: 'Resume a recurring transaction' })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 200, type: RecurringTransactionResponseDto })
   @ApiResponse({ status: 400, description: 'Not paused' })
   @ApiResponse({ status: 404, description: 'Recurring transaction not found' })
   async resume(@Param('id', ParseUUIDPipe) id: string, @Request() req: { user: { id: string } }) {
@@ -151,7 +155,7 @@ export class RecurringTransactionsController {
   @Post('process')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Process due recurring transactions' })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 200, type: ProcessResultResponseDto })
   async process(@Request() req: { user: { id: string } }) {
     return this.recurringTransactionsService.processRecurringTransactions(req.user.id);
   }

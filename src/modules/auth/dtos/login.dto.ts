@@ -13,6 +13,20 @@ export class LoginDto {
   password: string;
 }
 
+export class AuthUserDto {
+  @ApiProperty({
+    description: 'Unique user identifier',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  id: string;
+
+  @ApiProperty({ description: 'User email address', example: 'user@example.com' })
+  email: string;
+
+  @ApiProperty({ description: 'User role', example: 'user' })
+  role: string;
+}
+
 export class AuthResponseDto {
   @ApiProperty({ example: 'eyJhbGciOiJIUzI1NiJ9...' })
   accessToken: string;
@@ -20,10 +34,6 @@ export class AuthResponseDto {
   @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440000' })
   refreshToken: string;
 
-  @ApiProperty()
-  user: {
-    id: string;
-    email: string;
-    role: string;
-  };
+  @ApiProperty({ type: AuthUserDto })
+  user: AuthUserDto;
 }

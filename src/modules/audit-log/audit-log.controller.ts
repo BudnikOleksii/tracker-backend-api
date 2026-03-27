@@ -14,6 +14,7 @@ import { UseEnvelope } from '@/shared/decorators/use-envelope.decorator.js';
 import { JwtAuthGuard, RolesGuard } from '@/shared/guards/index.js';
 
 import { AuditLogService } from './audit-log.service.js';
+import { AuditLogListResponseDto } from './dtos/audit-log-list-response.dto.js';
 
 export class AuditLogQueryDto extends OffsetPaginationDto {
   @ApiPropertyOptional({ example: '550e8400-e29b-41d4-a716-446655440000' })
@@ -38,7 +39,7 @@ export class AuditLogController {
   @Get()
   @UseEnvelope()
   @ApiOperation({ summary: 'Query audit log list' })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 200, type: AuditLogListResponseDto })
   async findAll(@Query() query: AuditLogQueryDto) {
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 20;

@@ -1,23 +1,23 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class ListResponseDto<T> {
-  @ApiProperty({ example: 'list', enum: ['list'] })
+  @ApiProperty({ description: 'Object type', example: 'list', enum: ['list'] })
   readonly object = 'list' as const;
 
-  @ApiProperty({ isArray: true })
+  @ApiProperty({ description: 'List of items', isArray: true })
   data: T[];
 }
 
 export class OffsetListResponseDto<T> extends ListResponseDto<T> {
-  @ApiProperty({ example: 1 })
+  @ApiProperty({ description: 'Current page number', example: 1 })
   page: number;
 
-  @ApiProperty({ example: 20 })
+  @ApiProperty({ description: 'Number of items per page', example: 20 })
   pageSize: number;
 
-  @ApiProperty({ example: 100 })
+  @ApiProperty({ description: 'Total number of matching records', example: 100 })
   total: number;
 
-  @ApiProperty({ example: true })
+  @ApiProperty({ description: 'Whether more pages are available', example: true })
   hasMore: boolean;
 }
