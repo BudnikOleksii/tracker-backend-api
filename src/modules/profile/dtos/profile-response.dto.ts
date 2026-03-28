@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 
 import { COUNTRY_CODES } from '@/shared/enums/country-code.enum.js';
 import { CURRENCY_CODES } from '@/shared/enums/currency-code.enum.js';
@@ -14,25 +14,27 @@ export class ProfileResponseDto {
   @ApiProperty({ description: 'User email address', example: 'user@example.com' })
   email: string;
 
-  @ApiPropertyOptional({ description: 'First name', example: 'John' })
+  @ApiProperty({ description: 'First name', example: 'John', nullable: true })
   firstName: string | null;
 
-  @ApiPropertyOptional({ description: 'Last name', example: 'Doe' })
+  @ApiProperty({ description: 'Last name', example: 'Doe', nullable: true })
   lastName: string | null;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     description: 'Country code (ISO 3166-1 alpha-2)',
     example: 'US',
     enum: COUNTRY_CODES,
     enumName: 'CountryCode',
+    nullable: true,
   })
   countryCode: CountryCode | null;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     description: 'Base currency code (ISO 4217)',
     example: 'USD',
     enum: CURRENCY_CODES,
     enumName: 'CurrencyCode',
+    nullable: true,
   })
   baseCurrencyCode: CurrencyCode | null;
 

@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, eq, gte, ilike } from 'drizzle-orm';
+import { and, count, eq, gte, ilike, isNull } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 
 import { users } from '@/database/schemas/index.js';
@@ -51,6 +51,8 @@ export interface CreateUserData {
   email: string;
   passwordHash: string;
   role?: UserRole;
+  firstName?: string;
+  lastName?: string;
 }
 
 export interface UpdateUserData {
@@ -139,6 +141,8 @@ export class UserRepository {
         email: data.email.toLowerCase(),
         passwordHash: data.passwordHash,
         role: (data.role as 'USER' | 'ADMIN' | 'SUPER_ADMIN') ?? 'USER',
+        firstName: data.firstName,
+        lastName: data.lastName,
       })
       .returning();
 
@@ -184,7 +188,11 @@ export class UserRepository {
   }
 
   async findProfileById(id: string): Promise<ProfileInfo | null> {
-    const result = await this.db.select().from(users).where(eq(users.id, id)).limit(1);
+    const result = await this.db
+      .select()
+      .from(users)
+      .where(and(eq(users.id, id), isNull(users.deletedAt)))
+      .limit(1);
 
     if (result.length === 0) {
       return null;
@@ -204,7 +212,7 @@ export class UserRepository {
   }
 
   async updateProfile(id: string, data: UpdateProfileData): Promise<ProfileInfo | null> {
-    const updates: Record<string, unknown> = { updatedAt: new Date() };
+    const updates: Record<string, unknown> = {};
 
     if (data.firstName !== undefined) {
       updates.firstName = data.firstName;
@@ -218,6 +226,12 @@ export class UserRepository {
     if (data.baseCurrencyCode !== undefined) {
       updates.baseCurrencyCode = data.baseCurrencyCode;
     }
+
+    if (Object.keys(updates).length === 0) {
+      return this.findProfileById(id);
+    }
+
+    updates.updatedAt = new Date();
 
     const result = await this.db.update(users).set(updates).where(eq(users.id, id)).returning();
 

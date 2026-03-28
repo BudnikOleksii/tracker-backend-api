@@ -30,8 +30,17 @@ export class AuthService {
     private readonly configService: ConfigService<Env, true>,
   ) {}
 
-  async register(email: string, password: string, deviceContext?: DeviceContext) {
-    const created = await this.userService.create({ email, password });
+  async register(
+    email: string,
+    password: string,
+    deviceContext?: DeviceContext & { firstName?: string; lastName?: string },
+  ) {
+    const created = await this.userService.create({
+      email,
+      password,
+      firstName: deviceContext?.firstName,
+      lastName: deviceContext?.lastName,
+    });
 
     return this.generateTokens({
       userId: created.id,
