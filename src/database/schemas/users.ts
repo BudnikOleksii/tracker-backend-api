@@ -24,7 +24,7 @@ export const users = pgTable(
     baseCurrencyCode: currencyCodeEnum('baseCurrencyCode'),
     ipAddress: text('ipAddress'),
     userAgent: text('userAgent'),
-    onboardingCompleted: boolean('onboardingCompleted').notNull().default(false),
+    onboardingCompleted: boolean('onboardingCompleted').notNull().default(true),
     role: userRoleEnum('role').notNull().default('USER'),
     createdAt: timestamp('createdAt', { precision: 3, mode: 'date' }).notNull().defaultNow(),
     updatedAt: timestamp('updatedAt', { precision: 3, mode: 'date' })
