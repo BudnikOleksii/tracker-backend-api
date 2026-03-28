@@ -8,7 +8,6 @@ import type { Env } from '@/app/config/env.schema.js';
 
 import type { CachePort } from './cache.port.js';
 
-const KEYV_PREFIX = 'keyv:';
 const SCAN_BATCH_SIZE = 100;
 
 @Injectable()
@@ -37,7 +36,7 @@ export class CacheService implements CachePort, OnModuleDestroy {
   }
 
   async delByPrefix(prefix: string): Promise<void> {
-    const pattern = `${KEYV_PREFIX}${prefix}*`;
+    const pattern = `${prefix}*`;
     let cursor = '0';
 
     do {
