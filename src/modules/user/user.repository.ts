@@ -16,6 +16,25 @@ export interface UserInfo {
   updatedAt: Date;
 }
 
+export interface ProfileInfo {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  countryCode: string | null;
+  baseCurrencyCode: string | null;
+  role: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface UpdateProfileData {
+  firstName?: string;
+  lastName?: string;
+  countryCode?: string;
+  baseCurrencyCode?: string;
+}
+
 export interface UserListQuery {
   page: number;
   pageSize: number;
@@ -161,6 +180,82 @@ export class UserRepository {
       total: totalResult[0]?.count ?? 0,
       adminCount: adminResult[0]?.count ?? 0,
       newToday: newTodayResult[0]?.count ?? 0,
+    };
+  }
+
+  async findProfileById(id: string): Promise<ProfileInfo | null> {
+    const result = await this.db.select().from(users).where(eq(users.id, id)).limit(1);
+
+    if (result.length === 0) {
+      return null;
+    }
+
+    return this.toProfileInfo(result[0] as User);
+  }
+
+  async findWithPasswordHash(id: string): Promise<{ id: string; passwordHash: string } | null> {
+    const result = await this.db
+      .select({ id: users.id, passwordHash: users.passwordHash })
+      .from(users)
+      .where(eq(users.id, id))
+      .limit(1);
+
+    return result[0] ?? null;
+  }
+
+  async updateProfile(id: string, data: UpdateProfileData): Promise<ProfileInfo | null> {
+    const updates: Record<string, unknown> = { updatedAt: new Date() };
+
+    if (data.firstName !== undefined) {
+      updates.firstName = data.firstName;
+    }
+    if (data.lastName !== undefined) {
+      updates.lastName = data.lastName;
+    }
+    if (data.countryCode !== undefined) {
+      updates.countryCode = data.countryCode;
+    }
+    if (data.baseCurrencyCode !== undefined) {
+      updates.baseCurrencyCode = data.baseCurrencyCode;
+    }
+
+    const result = await this.db.update(users).set(updates).where(eq(users.id, id)).returning();
+
+    if (result.length === 0) {
+      return null;
+    }
+
+    return this.toProfileInfo(result[0] as User);
+  }
+
+  async updatePasswordHash(id: string, passwordHash: string): Promise<void> {
+    await this.db
+      .update(users)
+      .set({ passwordHash, updatedAt: new Date() })
+      .where(eq(users.id, id));
+  }
+
+  async softDelete(id: string): Promise<boolean> {
+    const result = await this.db
+      .update(users)
+      .set({ deletedAt: new Date(), updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+
+    return result.length > 0;
+  }
+
+  private toProfileInfo(user: User): ProfileInfo {
+    return {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      countryCode: user.countryCode,
+      baseCurrencyCode: user.baseCurrencyCode,
+      role: user.role,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
     };
   }
 

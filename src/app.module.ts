@@ -26,6 +26,7 @@ import { TransactionCategoriesModule } from './modules/transaction-categories/tr
 import { RecurringTransactionsModule } from './modules/recurring-transactions/recurring-transactions.module.js';
 import { TransactionsModule } from './modules/transactions/transactions.module.js';
 import { BudgetsModule } from './modules/budgets/budgets.module.js';
+import { ProfileModule } from './modules/profile/profile.module.js';
 import { UserModule } from './modules/user/user.module.js';
 
 @Module({
@@ -63,6 +64,7 @@ import { UserModule } from './modules/user/user.module.js';
     CacheModule,
     AuthModule,
     UserModule,
+    ProfileModule,
     TransactionCategoriesModule,
     TransactionsModule,
     RecurringTransactionsModule,
