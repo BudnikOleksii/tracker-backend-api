@@ -119,12 +119,11 @@ export class TransactionsAnalyticsRepository {
   ): Promise<TrendRow[]> {
     const conditions = this.buildBaseConditions(query);
     const truncUnit = granularity === 'weekly' ? 'week' : 'month';
+    const periodExpr = sql`date_trunc(${sql.raw(`'${truncUnit}'`)}, ${transactions.date})`;
 
     const rows = await this.db
       .select({
-        periodStart: sql<string>`date_trunc(${sql.raw(`'${truncUnit}'`)}, ${transactions.date})`.as(
-          'periodStart',
-        ),
+        periodStart: sql<string>`${periodExpr}`.as('periodStart'),
         totalIncome:
           sql<string>`COALESCE(SUM(CASE WHEN ${transactions.type} = 'INCOME' THEN ${transactions.amount} ELSE 0 END), 0)`.as(
             'totalIncome',
@@ -141,8 +140,8 @@ export class TransactionsAnalyticsRepository {
       })
       .from(transactions)
       .where(and(...conditions))
-      .groupBy(sql`periodStart`)
-      .orderBy(sql`periodStart`);
+      .groupBy(periodExpr)
+      .orderBy(periodExpr);
 
     return rows.map((row) => ({
       periodStart: row.periodStart,
