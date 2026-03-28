@@ -38,6 +38,9 @@ export class ProfileResponseDto {
   })
   baseCurrencyCode: CurrencyCode | null;
 
+  @ApiProperty({ description: 'Whether the user has completed onboarding', example: false })
+  onboardingCompleted: boolean;
+
   @ApiProperty({
     description: 'User role',
     example: 'USER',

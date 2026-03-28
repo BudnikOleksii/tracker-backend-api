@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional } from 'class-validator';
+import { IsOptional, IsBoolean } from 'class-validator';
 
 import {
   IsInField,
@@ -44,4 +44,9 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsInField(CURRENCY_CODES)
   baseCurrencyCode?: CurrencyCode;
+
+  @ApiPropertyOptional({ description: 'Whether the user has completed onboarding', example: true })
+  @IsOptional()
+  @IsBoolean()
+  onboardingCompleted?: boolean;
 }
