@@ -60,7 +60,13 @@ export class UserService {
     return user;
   }
 
-  async create(data: { email: string; password: string; role?: UserRole }): Promise<UserInfo> {
+  async create(data: {
+    email: string;
+    password: string;
+    role?: UserRole;
+    firstName?: string;
+    lastName?: string;
+  }): Promise<UserInfo> {
     const exists = await this.userRepository.existsByEmail(data.email);
     if (exists) {
       throw new ConflictException({
@@ -75,6 +81,8 @@ export class UserService {
       email: data.email,
       passwordHash,
       role: data.role,
+      firstName: data.firstName,
+      lastName: data.lastName,
     });
 
     await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE));
