@@ -23,6 +23,7 @@ export interface ProfileInfo {
   lastName: string | null;
   countryCode: string | null;
   baseCurrencyCode: string | null;
+  onboardingCompleted: boolean;
   role: string;
   createdAt: Date;
   updatedAt: Date;
@@ -33,6 +34,7 @@ export interface UpdateProfileData {
   lastName?: string;
   countryCode?: string;
   baseCurrencyCode?: string;
+  onboardingCompleted?: boolean;
 }
 
 export interface UserListQuery {
@@ -141,6 +143,7 @@ export class UserRepository {
         email: data.email.toLowerCase(),
         passwordHash: data.passwordHash,
         role: (data.role as 'USER' | 'ADMIN' | 'SUPER_ADMIN') ?? 'USER',
+        onboardingCompleted: false,
         firstName: data.firstName,
         lastName: data.lastName,
       })
@@ -226,6 +229,9 @@ export class UserRepository {
     if (data.baseCurrencyCode !== undefined) {
       updates.baseCurrencyCode = data.baseCurrencyCode;
     }
+    if (data.onboardingCompleted !== undefined) {
+      updates.onboardingCompleted = data.onboardingCompleted;
+    }
 
     if (Object.keys(updates).length === 0) {
       return this.findProfileById(id);
@@ -267,6 +273,7 @@ export class UserRepository {
       lastName: user.lastName,
       countryCode: user.countryCode,
       baseCurrencyCode: user.baseCurrencyCode,
+      onboardingCompleted: user.onboardingCompleted,
       role: user.role,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
