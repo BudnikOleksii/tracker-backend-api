@@ -14,10 +14,10 @@ export class ProfileResponseDto {
   @ApiProperty({ description: 'User email address', example: 'user@example.com' })
   email: string;
 
-  @ApiProperty({ description: 'First name', example: 'John', nullable: true })
+  @ApiProperty({ description: 'First name', example: 'John', type: String, nullable: true })
   firstName: string | null;
 
-  @ApiProperty({ description: 'Last name', example: 'Doe', nullable: true })
+  @ApiProperty({ description: 'Last name', example: 'Doe', type: String, nullable: true })
   lastName: string | null;
 
   @ApiProperty({
