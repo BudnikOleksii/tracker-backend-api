@@ -18,7 +18,11 @@ export class UpdateCategoryDto {
   @MaxLengthField(100)
   name?: string;
 
-  @ApiPropertyOptional({ example: '550e8400-e29b-41d4-a716-446655440000', nullable: true })
+  @ApiPropertyOptional({
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    type: String,
+    nullable: true,
+  })
   @IsOptional()
   @IsUUIDField()
   parentCategoryId?: string | null;
