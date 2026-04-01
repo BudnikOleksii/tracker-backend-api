@@ -9,8 +9,8 @@ import type { DrizzleDb } from '@/database/types.js';
 import { buildCacheKey, buildCachePrefix } from '@/modules/cache/cache-key.utils.js';
 import { CacheService } from '@/modules/cache/cache.service.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
+import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
 
-import type { TransactionType } from './transaction-categories.constants.js';
 import { TransactionCategoryRepository } from './transaction-categories.repository.js';
 import type {
   CategoryInfo,
@@ -165,7 +165,7 @@ export class TransactionCategoriesService {
         {
           userId,
           name: data.name ?? existing.name,
-          type: existing.type as TransactionType,
+          type: existing.type,
           parentCategoryId: resolvedParentId ?? null,
           excludeId: id,
         },

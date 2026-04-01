@@ -6,12 +6,14 @@ import { users } from '@/database/schemas/index.js';
 import { DB_TOKEN } from '@/database/types.js';
 import type { DrizzleDb } from '@/database/types.js';
 import type { User } from '@/database/schemas/index.js';
+import type { CountryCode } from '@/shared/enums/country-code.enum.js';
+import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 import type { UserRole } from '@/shared/enums/role.enum.js';
 
 export interface UserInfo {
   id: string;
   email: string;
-  role: string;
+  role: UserRole;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -21,10 +23,10 @@ export interface ProfileInfo {
   email: string;
   firstName: string | null;
   lastName: string | null;
-  countryCode: string | null;
-  baseCurrencyCode: string | null;
+  countryCode: CountryCode | null;
+  baseCurrencyCode: CurrencyCode | null;
   onboardingCompleted: boolean;
-  role: string;
+  role: UserRole;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -32,8 +34,8 @@ export interface ProfileInfo {
 export interface UpdateProfileData {
   firstName?: string;
   lastName?: string;
-  countryCode?: string;
-  baseCurrencyCode?: string;
+  countryCode?: CountryCode;
+  baseCurrencyCode?: CurrencyCode;
   onboardingCompleted?: boolean;
 }
 
@@ -142,7 +144,7 @@ export class UserRepository {
       .values({
         email: data.email.toLowerCase(),
         passwordHash: data.passwordHash,
-        role: (data.role as 'USER' | 'ADMIN' | 'SUPER_ADMIN') ?? 'USER',
+        role: data.role ?? 'USER',
         onboardingCompleted: false,
         firstName: data.firstName,
         lastName: data.lastName,

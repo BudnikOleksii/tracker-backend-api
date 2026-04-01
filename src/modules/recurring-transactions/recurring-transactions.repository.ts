@@ -9,28 +9,25 @@ import {
 } from '@/database/schemas/index.js';
 import { DB_TOKEN } from '@/database/types.js';
 import type { DrizzleDb } from '@/database/types.js';
-
-import type {
-  CurrencyCode,
-  RecurringFrequency,
-  RecurringTransactionStatus,
-  TransactionType,
-} from './recurring-transactions.constants.js';
+import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
+import type { RecurringFrequency } from '@/shared/enums/recurring-frequency.enum.js';
+import type { RecurringTransactionStatus } from '@/shared/enums/recurring-transaction-status.enum.js';
+import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
 
 export interface RecurringTransactionInfo {
   id: string;
   userId: string;
   categoryId: string;
-  type: string;
+  type: TransactionType;
   amount: string;
-  currencyCode: string;
+  currencyCode: CurrencyCode;
   description: string | null;
-  frequency: string;
+  frequency: RecurringFrequency;
   interval: number;
   startDate: Date;
   endDate: Date | null;
   nextOccurrenceDate: Date;
-  status: string;
+  status: RecurringTransactionStatus;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -81,7 +78,7 @@ export interface UpdateRecurringTransactionData {
 
 export interface CategoryValidationInfo {
   id: string;
-  type: string;
+  type: TransactionType;
 }
 
 export interface CreateMaterializedTransactionData {

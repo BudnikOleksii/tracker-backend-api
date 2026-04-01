@@ -9,8 +9,9 @@ import type { DrizzleDb } from '@/database/types.js';
 import { buildCacheKey, buildCachePrefix } from '@/modules/cache/cache-key.utils.js';
 import { CacheService } from '@/modules/cache/cache.service.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
+import type { BudgetPeriod, BudgetStatus } from '@/shared/enums/budget.enum.js';
+import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 
-import type { BudgetPeriod, CurrencyCode } from './budgets.constants.js';
 import { BudgetRepository } from './budgets.repository.js';
 import type {
   BudgetInfo,
@@ -220,7 +221,7 @@ export class BudgetsService {
 
   async checkOverspendForAllBudgets(): Promise<{ checked: number; updated: number }> {
     const activeBudgets = await this.budgetRepository.findActiveBudgetsWithFutureEndDate();
-    const statusUpdates: { id: string; status: 'ACTIVE' | 'EXCEEDED' }[] = [];
+    const statusUpdates: { id: string; status: BudgetStatus }[] = [];
 
     for (const budget of activeBudgets) {
       const spentAmount = await this.budgetRepository.getSpentAmount({

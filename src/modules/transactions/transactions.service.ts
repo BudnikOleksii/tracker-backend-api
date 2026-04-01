@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 
 import type { DrizzleDb } from '@/database/types.js';
+import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
 import { buildCacheKey, buildCachePrefix } from '@/modules/cache/cache-key.utils.js';
 import { CacheService } from '@/modules/cache/cache.service.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
@@ -133,7 +134,7 @@ export class TransactionsService {
   private async validateCategory(params: {
     categoryId: string;
     userId: string;
-    transactionType: string;
+    transactionType: TransactionType;
     tx?: DrizzleDb;
   }): Promise<void> {
     const { categoryId, userId, transactionType, tx } = params;

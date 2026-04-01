@@ -4,9 +4,10 @@ import type { DrizzleDb } from '@/database/types.js';
 import { buildCacheKey, buildCachePrefix } from '@/modules/cache/cache-key.utils.js';
 import { CacheService } from '@/modules/cache/cache.service.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
+import type { RecurringFrequency } from '@/shared/enums/recurring-frequency.enum.js';
+import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
 
 import { CACHE_MODULE } from './recurring-transactions.constants.js';
-import type { RecurringFrequency } from './recurring-transactions.constants.js';
 import { RecurringTransactionsRepository } from './recurring-transactions.repository.js';
 import type {
   CreateRecurringTransactionData,
@@ -139,7 +140,7 @@ export class RecurringTransactionsService {
         data.interval !== undefined ||
         data.startDate !== undefined
       ) {
-        const frequency = (data.frequency ?? existing.frequency) as RecurringFrequency;
+        const frequency = data.frequency ?? existing.frequency;
         const interval = data.interval ?? existing.interval;
         updateData.nextOccurrenceDate = this.calculateNextOccurrenceFromStart(
           effectiveStartDate,
@@ -346,7 +347,7 @@ export class RecurringTransactionsService {
   ): Promise<number> {
     return this.repository.transaction(async (tx) => {
       let nextDate = new Date(record.nextOccurrenceDate);
-      const frequency = record.frequency as RecurringFrequency;
+      const frequency = record.frequency;
       const interval = record.interval;
       let transactionsCreated = 0;
 
@@ -359,11 +360,9 @@ export class RecurringTransactionsService {
           {
             userId,
             categoryId: record.categoryId,
-            type: record.type as 'EXPENSE' | 'INCOME',
+            type: record.type,
             amount: record.amount,
-            currencyCode: record.currencyCode as Parameters<
-              typeof this.repository.createTransaction
-            >[0]['currencyCode'],
+            currencyCode: record.currencyCode,
             date: nextDate,
             description: record.description ?? undefined,
             recurringTransactionId: record.id,
@@ -450,7 +449,7 @@ export class RecurringTransactionsService {
   private async validateCategory(params: {
     categoryId: string;
     userId: string;
-    transactionType: string;
+    transactionType: TransactionType;
     tx?: DrizzleDb;
   }): Promise<void> {
     const { categoryId, userId, transactionType, tx } = params;

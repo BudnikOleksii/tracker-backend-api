@@ -6,7 +6,6 @@ import * as bcrypt from 'bcrypt';
 
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 import type { Env } from '@/app/config/env.schema.js';
-import type { UserRole } from '@/shared/enums/role.enum.js';
 
 import { UserService } from '../user/user.service.js';
 import { RefreshTokenRepository } from './refresh-token.repository.js';
@@ -45,7 +44,7 @@ export class AuthService {
     return this.generateTokens({
       userId: created.id,
       email: created.email,
-      role: created.role as UserRole,
+      role: created.role,
       deviceContext,
     });
   }
@@ -112,7 +111,7 @@ export class AuthService {
     return this.generateTokens({
       userId: user.id,
       email: user.email,
-      role: user.role as UserRole,
+      role: user.role,
       deviceContext,
     });
   }
