@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 import { IsEmailField, IsNotEmptyField, IsStringField } from '@/shared/decorators/validators.js';
+import type { UserRole } from '@/shared/enums/role.enum.js';
 
 export class LoginDto {
   @ApiProperty({ example: 'user@example.com' })
@@ -23,8 +24,8 @@ export class AuthUserDto {
   @ApiProperty({ description: 'User email address', example: 'user@example.com' })
   email: string;
 
-  @ApiProperty({ description: 'User role', example: 'user' })
-  role: string;
+  @ApiProperty({ description: 'User role', example: 'USER' })
+  role: UserRole;
 }
 
 export class AuthResponseDto {

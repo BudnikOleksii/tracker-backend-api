@@ -4,6 +4,8 @@ import {
   CURRENCY_CODES,
   TRANSACTION_TYPES,
 } from '@/modules/transactions/transactions.constants.js';
+import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
+import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
 
 export class CategoryBreakdownItemDto {
   @ApiProperty({ description: 'Category ID', example: '550e8400-e29b-41d4-a716-446655440000' })
@@ -18,7 +20,7 @@ export class CategoryBreakdownItemDto {
     enum: TRANSACTION_TYPES,
     enumName: 'TransactionType',
   })
-  type: string;
+  type: TransactionType;
 
   @ApiProperty({ description: 'Total amount for this category', example: '450.25' })
   total: string;
@@ -37,7 +39,7 @@ export class CategoryBreakdownResponseDto {
     enum: CURRENCY_CODES,
     enumName: 'CurrencyCode',
   })
-  currencyCode: string;
+  currencyCode: CurrencyCode;
 
   @ApiProperty({ description: 'Period start date', example: '2026-03-01T00:00:00.000Z' })
   dateFrom: string;

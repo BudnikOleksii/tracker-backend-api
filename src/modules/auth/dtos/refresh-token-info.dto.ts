@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+import type { UserRole } from '@/shared/enums/role.enum.js';
+
 class RefreshTokenUserDto {
   @ApiProperty({ description: 'User ID', example: '550e8400-e29b-41d4-a716-446655440000' })
   id: string;
@@ -8,7 +10,7 @@ class RefreshTokenUserDto {
   email: string;
 
   @ApiProperty({ description: 'User role', example: 'USER' })
-  role: string;
+  role: UserRole;
 }
 
 class RefreshTokenDetailDto {

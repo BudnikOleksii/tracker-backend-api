@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
+
 export class SummaryResponseDto {
   @ApiProperty({ description: 'Total income amount', example: '5000.00' })
   totalIncome: string;
@@ -14,7 +16,7 @@ export class SummaryResponseDto {
   transactionCount: number;
 
   @ApiProperty({ description: 'Currency code', example: 'USD' })
-  currencyCode: string;
+  currencyCode: CurrencyCode;
 
   @ApiProperty({ description: 'Period start date', example: '2026-03-01T00:00:00.000Z' })
   dateFrom: string;
