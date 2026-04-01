@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
+
 class DailySpendingItemDto {
   @ApiProperty({ description: 'Date', example: '2026-03-15' })
   date: string;
@@ -13,7 +15,7 @@ class DailySpendingItemDto {
 
 export class DailySpendingResponseDto {
   @ApiProperty({ description: 'Currency code', example: 'USD' })
-  currencyCode: string;
+  currencyCode: CurrencyCode;
 
   @ApiProperty({ description: 'Year', example: 2026 })
   year: number;

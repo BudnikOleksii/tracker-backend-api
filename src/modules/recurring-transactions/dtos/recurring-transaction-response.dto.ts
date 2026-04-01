@@ -1,5 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
+import type { RecurringFrequency } from '@/shared/enums/recurring-frequency.enum.js';
+import type { RecurringTransactionStatus } from '@/shared/enums/recurring-transaction-status.enum.js';
+import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
+
 import {
   CURRENCY_CODES,
   RECURRING_FREQUENCIES,
@@ -26,7 +31,7 @@ export class RecurringTransactionResponseDto {
     enum: TRANSACTION_TYPES,
     enumName: 'TransactionType',
   })
-  type: string;
+  type: TransactionType;
 
   @ApiProperty({ description: 'Transaction amount', example: '49.99' })
   amount: string;
@@ -37,7 +42,7 @@ export class RecurringTransactionResponseDto {
     enum: CURRENCY_CODES,
     enumName: 'CurrencyCode',
   })
-  currencyCode: string;
+  currencyCode: CurrencyCode;
 
   @ApiProperty({
     description: 'Transaction description',
@@ -53,7 +58,7 @@ export class RecurringTransactionResponseDto {
     enum: RECURRING_FREQUENCIES,
     enumName: 'RecurringFrequency',
   })
-  frequency: string;
+  frequency: RecurringFrequency;
 
   @ApiProperty({ description: 'Recurrence interval', example: 1 })
   interval: number;
@@ -78,7 +83,7 @@ export class RecurringTransactionResponseDto {
     enum: RECURRING_TRANSACTION_STATUSES,
     enumName: 'RecurringTransactionStatus',
   })
-  status: string;
+  status: RecurringTransactionStatus;
 
   @ApiProperty({ description: 'Creation timestamp', example: '2026-01-01T10:30:00.000Z' })
   createdAt: Date;

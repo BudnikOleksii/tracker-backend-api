@@ -5,10 +5,10 @@ import type { SQL } from 'drizzle-orm';
 import { transactionCategories, transactions } from '@/database/schemas/index.js';
 import { DB_TOKEN } from '@/database/types.js';
 import type { DrizzleDb } from '@/database/types.js';
-import type {
-  CurrencyCode,
-  TransactionType,
-} from '@/modules/transactions/transactions.constants.js';
+import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
+import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
+
+import type { Granularity } from './dtos/trends-query.dto.js';
 
 export interface AnalyticsBaseQuery {
   userId: string;
@@ -29,7 +29,7 @@ export interface SummaryResult {
 export interface CategoryBreakdownRow {
   categoryId: string;
   categoryName: string;
-  type: string;
+  type: TransactionType;
   total: string;
   transactionCount: number;
 }
@@ -113,10 +113,7 @@ export class TransactionsAnalyticsRepository {
     }));
   }
 
-  async getTrends(
-    query: AnalyticsBaseQuery,
-    granularity: 'weekly' | 'monthly',
-  ): Promise<TrendRow[]> {
+  async getTrends(query: AnalyticsBaseQuery, granularity: Granularity): Promise<TrendRow[]> {
     const conditions = this.buildBaseConditions(query);
     const truncUnit = granularity === 'weekly' ? 'week' : 'month';
     const periodExpr = sql`date_trunc(${sql.raw(`'${truncUnit}'`)}, ${transactions.date})`;

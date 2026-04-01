@@ -5,8 +5,9 @@ import type { SQL } from 'drizzle-orm';
 import { budgets, transactionCategories, transactions } from '@/database/schemas/index.js';
 import { DB_TOKEN } from '@/database/types.js';
 import type { DrizzleDb } from '@/database/types.js';
-
-import type { BudgetPeriod, BudgetStatus, CurrencyCode } from './budgets.constants.js';
+import type { BudgetPeriod, BudgetStatus } from '@/shared/enums/budget.enum.js';
+import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
+import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
 
 export interface BudgetInfo {
   id: string;
@@ -14,10 +15,10 @@ export interface BudgetInfo {
   categoryId: string | null;
   amount: string;
   currencyCode: CurrencyCode;
-  period: string;
+  period: BudgetPeriod;
   startDate: Date;
   endDate: Date;
-  status: string;
+  status: BudgetStatus;
   description: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -58,7 +59,7 @@ export interface UpdateBudgetData {
 
 export interface CategoryValidationInfo {
   id: string;
-  type: string;
+  type: TransactionType;
 }
 
 @Injectable()

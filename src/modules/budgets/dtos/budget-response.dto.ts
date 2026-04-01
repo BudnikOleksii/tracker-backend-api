@@ -1,5 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+import type { BudgetPeriod, BudgetStatus } from '@/shared/enums/budget.enum.js';
+import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
+
 import { BUDGET_PERIODS, BUDGET_STATUSES, CURRENCY_CODES } from '../budgets.constants.js';
 
 export class BudgetResponseDto {
@@ -26,7 +29,7 @@ export class BudgetResponseDto {
     enum: CURRENCY_CODES,
     enumName: 'CurrencyCode',
   })
-  currencyCode: string;
+  currencyCode: CurrencyCode;
 
   @ApiProperty({
     description: 'Budget period',
@@ -34,7 +37,7 @@ export class BudgetResponseDto {
     enum: BUDGET_PERIODS,
     enumName: 'BudgetPeriod',
   })
-  period: string;
+  period: BudgetPeriod;
 
   @ApiProperty({ description: 'Budget start date', example: '2026-03-01T00:00:00.000Z' })
   startDate: Date;
@@ -48,7 +51,7 @@ export class BudgetResponseDto {
     enum: BUDGET_STATUSES,
     enumName: 'BudgetStatus',
   })
-  status: string;
+  status: BudgetStatus;
 
   @ApiProperty({
     description: 'Budget description',

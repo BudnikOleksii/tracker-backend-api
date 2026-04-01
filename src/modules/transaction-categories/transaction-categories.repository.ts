@@ -5,13 +5,12 @@ import type { SQL } from 'drizzle-orm';
 import { transactionCategories, transactions } from '@/database/schemas/index.js';
 import { DB_TOKEN } from '@/database/types.js';
 import type { DrizzleDb } from '@/database/types.js';
-
-import type { TransactionType } from './transaction-categories.constants.js';
+import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
 
 export interface CategoryInfo {
   id: string;
   name: string;
-  type: string;
+  type: TransactionType;
   parentCategoryId: string | null;
   createdAt: Date;
   updatedAt: Date;

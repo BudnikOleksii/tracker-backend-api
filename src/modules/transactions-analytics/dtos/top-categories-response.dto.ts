@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
+
 class TopCategoryItemDto {
   @ApiProperty({ description: 'Category rank', example: 1 })
   rank: number;
@@ -22,7 +24,7 @@ class TopCategoryItemDto {
 
 export class TopCategoriesResponseDto {
   @ApiProperty({ description: 'Currency code', example: 'USD' })
-  currencyCode: string;
+  currencyCode: CurrencyCode;
 
   @ApiProperty({
     description: 'Top categories data',

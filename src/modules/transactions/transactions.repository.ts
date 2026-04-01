@@ -5,15 +5,15 @@ import type { SQL } from 'drizzle-orm';
 import { transactionCategories, transactions } from '@/database/schemas/index.js';
 import { DB_TOKEN } from '@/database/types.js';
 import type { DrizzleDb } from '@/database/types.js';
-
-import type { CurrencyCode, TransactionType } from './transactions.constants.js';
+import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
+import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
 
 export interface TransactionInfo {
   id: string;
   categoryId: string;
-  type: string;
+  type: TransactionType;
   amount: string;
-  currencyCode: string;
+  currencyCode: CurrencyCode;
   date: Date;
   description: string | null;
   recurringTransactionId: string | null;
@@ -58,7 +58,7 @@ export interface UpdateTransactionData {
 
 export interface CategoryValidationInfo {
   id: string;
-  type: string;
+  type: TransactionType;
 }
 
 @Injectable()
