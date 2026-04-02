@@ -1,8 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
-
-import { TRANSACTION_TYPES } from '../transaction-categories.constants.js';
+import { TRANSACTION_TYPES } from '@/shared/enums/transaction-type.enum.js';
 
 export class CategoryResponseDto {
   @ApiProperty({ description: 'Category ID', example: '550e8400-e29b-41d4-a716-446655440000' })
@@ -14,6 +13,7 @@ export class CategoryResponseDto {
   @ApiProperty({
     description: 'Category type',
     example: 'EXPENSE',
+    type: String,
     enum: TRANSACTION_TYPES,
     enumName: 'TransactionType',
   })

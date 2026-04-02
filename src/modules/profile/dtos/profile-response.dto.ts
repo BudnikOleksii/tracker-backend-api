@@ -23,6 +23,7 @@ export class ProfileResponseDto {
   @ApiProperty({
     description: 'Country code (ISO 3166-1 alpha-2)',
     example: 'US',
+    type: String,
     enum: COUNTRY_CODES,
     enumName: 'CountryCode',
     nullable: true,
@@ -32,6 +33,7 @@ export class ProfileResponseDto {
   @ApiProperty({
     description: 'Base currency code (ISO 4217)',
     example: 'USD',
+    type: String,
     enum: CURRENCY_CODES,
     enumName: 'CurrencyCode',
     nullable: true,
@@ -44,6 +46,7 @@ export class ProfileResponseDto {
   @ApiProperty({
     description: 'User role',
     example: 'USER',
+    type: String,
     enum: ROLES,
     enumName: 'UserRole',
   })

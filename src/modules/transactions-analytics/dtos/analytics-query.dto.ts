@@ -2,17 +2,13 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsIn, IsOptional } from 'class-validator';
 
 import { IsISO8601Field, IsUUIDField } from '@/shared/decorators/validators.js';
-import {
-  CURRENCY_CODES,
-  TRANSACTION_TYPES,
-} from '@/modules/transactions/transactions.constants.js';
-import type {
-  CurrencyCode,
-  TransactionType,
-} from '@/modules/transactions/transactions.constants.js';
+import { CURRENCY_CODES } from '@/shared/enums/currency-code.enum.js';
+import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
+import { TRANSACTION_TYPES } from '@/shared/enums/transaction-type.enum.js';
+import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
 
 export class AnalyticsQueryDto {
-  @ApiProperty({ example: 'USD', enum: CURRENCY_CODES, enumName: 'CurrencyCode' })
+  @ApiProperty({ example: 'USD', type: String, enum: CURRENCY_CODES, enumName: 'CurrencyCode' })
   @IsIn(CURRENCY_CODES)
   currencyCode!: CurrencyCode;
 
@@ -26,7 +22,12 @@ export class AnalyticsQueryDto {
   @IsISO8601Field()
   dateTo?: string;
 
-  @ApiPropertyOptional({ example: 'EXPENSE', enum: TRANSACTION_TYPES, enumName: 'TransactionType' })
+  @ApiPropertyOptional({
+    example: 'EXPENSE',
+    type: String,
+    enum: TRANSACTION_TYPES,
+    enumName: 'TransactionType',
+  })
   @IsOptional()
   @IsIn(TRANSACTION_TYPES)
   type?: TransactionType;

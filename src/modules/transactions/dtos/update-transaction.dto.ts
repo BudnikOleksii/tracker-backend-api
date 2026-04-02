@@ -9,9 +9,10 @@ import {
   MaxLengthField,
   MatchesField,
 } from '@/shared/decorators/validators.js';
-
-import { CURRENCY_CODES, TRANSACTION_TYPES } from '../transactions.constants.js';
-import type { CurrencyCode, TransactionType } from '../transactions.constants.js';
+import { CURRENCY_CODES } from '@/shared/enums/currency-code.enum.js';
+import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
+import { TRANSACTION_TYPES } from '@/shared/enums/transaction-type.enum.js';
+import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
 
 export class UpdateTransactionDto {
   @ApiPropertyOptional({ example: '550e8400-e29b-41d4-a716-446655440000' })
@@ -19,7 +20,12 @@ export class UpdateTransactionDto {
   @IsUUIDField()
   categoryId?: string;
 
-  @ApiPropertyOptional({ example: 'EXPENSE', enum: TRANSACTION_TYPES, enumName: 'TransactionType' })
+  @ApiPropertyOptional({
+    example: 'EXPENSE',
+    type: String,
+    enum: TRANSACTION_TYPES,
+    enumName: 'TransactionType',
+  })
   @IsOptional()
   @IsIn(TRANSACTION_TYPES)
   type?: TransactionType;
@@ -31,7 +37,12 @@ export class UpdateTransactionDto {
   @MatchesField(/^\d{1,17}(\.\d{1,2})?$/)
   amount?: string;
 
-  @ApiPropertyOptional({ example: 'USD', enum: CURRENCY_CODES, enumName: 'CurrencyCode' })
+  @ApiPropertyOptional({
+    example: 'USD',
+    type: String,
+    enum: CURRENCY_CODES,
+    enumName: 'CurrencyCode',
+  })
   @IsOptional()
   @IsIn(CURRENCY_CODES)
   currencyCode?: CurrencyCode;

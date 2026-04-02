@@ -8,9 +8,8 @@ import {
   IsUUIDField,
   MaxLengthField,
 } from '@/shared/decorators/validators.js';
-
-import { TRANSACTION_TYPES } from '../transaction-categories.constants.js';
-import type { TransactionType } from '../transaction-categories.constants.js';
+import { TRANSACTION_TYPES } from '@/shared/enums/transaction-type.enum.js';
+import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
 
 export class CreateCategoryDto {
   @ApiProperty({ example: 'Groceries' })
@@ -20,7 +19,12 @@ export class CreateCategoryDto {
   @MaxLengthField(100)
   name!: string;
 
-  @ApiProperty({ example: 'EXPENSE', enum: TRANSACTION_TYPES, enumName: 'TransactionType' })
+  @ApiProperty({
+    example: 'EXPENSE',
+    type: String,
+    enum: TRANSACTION_TYPES,
+    enumName: 'TransactionType',
+  })
   @IsIn(TRANSACTION_TYPES)
   type!: TransactionType;
 

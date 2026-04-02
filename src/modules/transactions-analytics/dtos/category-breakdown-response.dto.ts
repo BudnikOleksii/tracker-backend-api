@@ -1,9 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-import {
-  CURRENCY_CODES,
-  TRANSACTION_TYPES,
-} from '@/modules/transactions/transactions.constants.js';
+import { CURRENCY_CODES } from '@/shared/enums/currency-code.enum.js';
+import { TRANSACTION_TYPES } from '@/shared/enums/transaction-type.enum.js';
 import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
 
@@ -17,6 +15,7 @@ export class CategoryBreakdownItemDto {
   @ApiProperty({
     description: 'Category type',
     example: 'EXPENSE',
+    type: String,
     enum: TRANSACTION_TYPES,
     enumName: 'TransactionType',
   })
@@ -36,6 +35,7 @@ export class CategoryBreakdownResponseDto {
   @ApiProperty({
     description: 'Currency code',
     example: 'USD',
+    type: String,
     enum: CURRENCY_CODES,
     enumName: 'CurrencyCode',
   })

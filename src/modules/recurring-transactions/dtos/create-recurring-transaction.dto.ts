@@ -12,24 +12,24 @@ import {
   MaxLengthField,
   MinField,
 } from '@/shared/decorators/validators.js';
-
-import {
-  CURRENCY_CODES,
-  RECURRING_FREQUENCIES,
-  TRANSACTION_TYPES,
-} from '../recurring-transactions.constants.js';
-import type {
-  CurrencyCode,
-  RecurringFrequency,
-  TransactionType,
-} from '../recurring-transactions.constants.js';
+import { CURRENCY_CODES } from '@/shared/enums/currency-code.enum.js';
+import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
+import { RECURRING_FREQUENCIES } from '@/shared/enums/recurring-frequency.enum.js';
+import type { RecurringFrequency } from '@/shared/enums/recurring-frequency.enum.js';
+import { TRANSACTION_TYPES } from '@/shared/enums/transaction-type.enum.js';
+import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
 
 export class CreateRecurringTransactionDto {
   @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440000' })
   @IsUUIDField()
   categoryId!: string;
 
-  @ApiProperty({ example: 'EXPENSE', enum: TRANSACTION_TYPES, enumName: 'TransactionType' })
+  @ApiProperty({
+    example: 'EXPENSE',
+    type: String,
+    enum: TRANSACTION_TYPES,
+    enumName: 'TransactionType',
+  })
   @IsIn(TRANSACTION_TYPES)
   type!: TransactionType;
 
@@ -39,7 +39,7 @@ export class CreateRecurringTransactionDto {
   @MatchesField(/^\d{1,17}(\.\d{1,2})?$/)
   amount!: string;
 
-  @ApiProperty({ example: 'USD', enum: CURRENCY_CODES, enumName: 'CurrencyCode' })
+  @ApiProperty({ example: 'USD', type: String, enum: CURRENCY_CODES, enumName: 'CurrencyCode' })
   @IsIn(CURRENCY_CODES)
   currencyCode!: CurrencyCode;
 
@@ -49,7 +49,12 @@ export class CreateRecurringTransactionDto {
   @MaxLengthField(500)
   description?: string;
 
-  @ApiProperty({ example: 'MONTHLY', enum: RECURRING_FREQUENCIES, enumName: 'RecurringFrequency' })
+  @ApiProperty({
+    example: 'MONTHLY',
+    type: String,
+    enum: RECURRING_FREQUENCIES,
+    enumName: 'RecurringFrequency',
+  })
   @IsIn(RECURRING_FREQUENCIES)
   frequency!: RecurringFrequency;
 

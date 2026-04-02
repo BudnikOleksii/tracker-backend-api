@@ -3,17 +3,28 @@ import { IsIn, IsOptional } from 'class-validator';
 
 import { IsUUIDField } from '@/shared/decorators/validators.js';
 import { OffsetPaginationDto } from '@/shared/dtos/pagination.dto.js';
-
-import { BUDGET_PERIODS, BUDGET_STATUSES, CURRENCY_CODES } from '../budgets.constants.js';
-import type { BudgetPeriod, BudgetStatus, CurrencyCode } from '../budgets.constants.js';
+import { BUDGET_PERIODS, BUDGET_STATUSES } from '@/shared/enums/budget.enum.js';
+import type { BudgetPeriod, BudgetStatus } from '@/shared/enums/budget.enum.js';
+import { CURRENCY_CODES } from '@/shared/enums/currency-code.enum.js';
+import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 
 export class BudgetQueryDto extends OffsetPaginationDto {
-  @ApiPropertyOptional({ example: 'ACTIVE', enum: BUDGET_STATUSES, enumName: 'BudgetStatus' })
+  @ApiPropertyOptional({
+    example: 'ACTIVE',
+    type: String,
+    enum: BUDGET_STATUSES,
+    enumName: 'BudgetStatus',
+  })
   @IsOptional()
   @IsIn(BUDGET_STATUSES)
   status?: BudgetStatus;
 
-  @ApiPropertyOptional({ example: 'MONTHLY', enum: BUDGET_PERIODS, enumName: 'BudgetPeriod' })
+  @ApiPropertyOptional({
+    example: 'MONTHLY',
+    type: String,
+    enum: BUDGET_PERIODS,
+    enumName: 'BudgetPeriod',
+  })
   @IsOptional()
   @IsIn(BUDGET_PERIODS)
   period?: BudgetPeriod;
@@ -23,7 +34,12 @@ export class BudgetQueryDto extends OffsetPaginationDto {
   @IsUUIDField()
   categoryId?: string;
 
-  @ApiPropertyOptional({ example: 'USD', enum: CURRENCY_CODES, enumName: 'CurrencyCode' })
+  @ApiPropertyOptional({
+    example: 'USD',
+    type: String,
+    enum: CURRENCY_CODES,
+    enumName: 'CurrencyCode',
+  })
   @IsOptional()
   @IsIn(CURRENCY_CODES)
   currencyCode?: CurrencyCode;

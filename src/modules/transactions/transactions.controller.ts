@@ -23,6 +23,7 @@ import { CreateTransactionDto } from './dtos/create-transaction.dto.js';
 import { TransactionListResponseDto } from './dtos/transaction-list-response.dto.js';
 import { TransactionQueryDto } from './dtos/transaction-query.dto.js';
 import { TransactionResponseDto } from './dtos/transaction-response.dto.js';
+import { TransactionsByCategoryResponseDto } from './dtos/transactions-by-category-response.dto.js';
 import { UpdateTransactionDto } from './dtos/update-transaction.dto.js';
 import { TransactionsService } from './transactions.service.js';
 
@@ -50,6 +51,8 @@ export class TransactionsController {
       currencyCode: query.currencyCode,
       dateFrom: query.dateFrom,
       dateTo: query.dateTo,
+      sortBy: query.sortBy,
+      sortOrder: query.sortOrder,
     });
 
     const totalPages = Math.ceil(result.total / pageSize);
@@ -62,6 +65,18 @@ export class TransactionsController {
       pageSize,
       hasMore: page < totalPages,
     };
+  }
+
+  @Get('by-category/:categoryId')
+  @ApiOperation({ summary: 'Get transactions grouped by subcategory' })
+  @ApiResponse({ status: 200, type: TransactionsByCategoryResponseDto })
+  @ApiResponse({ status: 400, description: 'Category is a subcategory' })
+  @ApiResponse({ status: 404, description: 'Category not found' })
+  async findByCategory(
+    @Param('categoryId', ParseUUIDPipe) categoryId: string,
+    @Request() req: { user: { id: string } },
+  ) {
+    return this.transactionsService.getTransactionsByCategory(categoryId, req.user.id);
   }
 
   @Get(':id')

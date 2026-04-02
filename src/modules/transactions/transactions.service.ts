@@ -14,6 +14,7 @@ import type {
   TransactionListResult,
   UpdateTransactionData,
 } from './transactions.repository.js';
+import type { TransactionGroupDto } from './dtos/transactions-by-category-response.dto.js';
 
 const CACHE_MODULE = 'transactions';
 
@@ -129,6 +130,85 @@ export class TransactionsService {
     await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE, userId));
     await this.cacheService.delByPrefix(buildCachePrefix('transactions-analytics', userId));
     await this.cacheService.delByPrefix(buildCachePrefix('budgets', userId));
+  }
+
+  async getTransactionsByCategory(
+    categoryId: string,
+    userId: string,
+  ): Promise<{ groups: TransactionGroupDto[] }> {
+    const key = buildCacheKey({
+      module: CACHE_MODULE,
+      userId,
+      operation: 'by-category',
+      params: { categoryId },
+    });
+
+    return this.cacheService.wrap(key, async () => {
+      const category = await this.transactionRepository.findCategoryWithSubcategories(
+        categoryId,
+        userId,
+      );
+
+      if (!category) {
+        throw new NotFoundException({
+          code: ErrorCode.RESOURCE_NOT_FOUND,
+          message: `Category ${categoryId} not found`,
+        });
+      }
+
+      if (category.parentCategoryId !== null) {
+        throw new BadRequestException({
+          code: ErrorCode.BAD_REQUEST,
+          message:
+            'This endpoint requires a parent category. The provided category is a subcategory.',
+        });
+      }
+
+      const subcategoryIds = category.subcategories.map((s) => s.id);
+      const allTransactions = await this.transactionRepository.findByParentCategory(
+        categoryId,
+        subcategoryIds,
+        userId,
+      );
+
+      const subcategoryMap = new Map(category.subcategories.map((s) => [s.id, s]));
+      const grouped = new Map<string | null, TransactionInfo[]>();
+
+      for (const tx of allTransactions) {
+        const groupKey = tx.categoryId === categoryId ? null : tx.categoryId;
+        const existing = grouped.get(groupKey);
+        if (existing) {
+          existing.push(tx);
+        } else {
+          grouped.set(groupKey, [tx]);
+        }
+      }
+
+      const groups: TransactionGroupDto[] = [];
+
+      for (const [groupKey, txList] of grouped) {
+        const subcategory = groupKey ? (subcategoryMap.get(groupKey) ?? null) : null;
+        const totalsMap = new Map<string, number>();
+
+        for (const tx of txList) {
+          const current = totalsMap.get(tx.currencyCode) ?? 0;
+          totalsMap.set(tx.currencyCode, current + parseFloat(tx.amount));
+        }
+
+        const totals = Array.from(totalsMap.entries()).map(([currencyCode, total]) => ({
+          currencyCode: currencyCode as TransactionInfo['currencyCode'],
+          total: total.toFixed(2),
+        }));
+
+        groups.push({
+          subcategory: subcategory ? { id: subcategory.id, name: subcategory.name } : null,
+          transactions: txList,
+          totals,
+        });
+      }
+
+      return { groups };
+    });
   }
 
   private async validateCategory(params: {

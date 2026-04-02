@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-import { CURRENCY_CODES } from '@/modules/transactions/transactions.constants.js';
+import { CURRENCY_CODES } from '@/shared/enums/currency-code.enum.js';
 import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 
 import { GRANULARITY_VALUES } from './trends-query.dto.js';
@@ -30,6 +30,7 @@ export class TrendsResponseDto {
   @ApiProperty({
     description: 'Currency code',
     example: 'USD',
+    type: String,
     enum: CURRENCY_CODES,
     enumName: 'CurrencyCode',
   })
@@ -38,6 +39,7 @@ export class TrendsResponseDto {
   @ApiProperty({
     description: 'Time granularity',
     example: 'monthly',
+    type: String,
     enum: GRANULARITY_VALUES,
     enumName: 'Granularity',
   })

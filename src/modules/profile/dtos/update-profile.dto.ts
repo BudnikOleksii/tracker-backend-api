@@ -29,6 +29,7 @@ export class UpdateProfileDto {
 
   @ApiPropertyOptional({
     example: 'US',
+    type: String,
     enum: COUNTRY_CODES,
     enumName: 'CountryCode',
   })
@@ -38,6 +39,7 @@ export class UpdateProfileDto {
 
   @ApiPropertyOptional({
     example: 'USD',
+    type: String,
     enum: CURRENCY_CODES,
     enumName: 'CurrencyCode',
   })

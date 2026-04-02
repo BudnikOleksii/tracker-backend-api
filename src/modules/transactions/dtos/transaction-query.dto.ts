@@ -3,12 +3,21 @@ import { IsIn, IsOptional } from 'class-validator';
 
 import { IsISO8601Field, IsUUIDField } from '@/shared/decorators/validators.js';
 import { OffsetPaginationDto } from '@/shared/dtos/pagination.dto.js';
+import { CURRENCY_CODES } from '@/shared/enums/currency-code.enum.js';
+import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
+import { TRANSACTION_TYPES } from '@/shared/enums/transaction-type.enum.js';
+import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
 
-import { CURRENCY_CODES, TRANSACTION_TYPES } from '../transactions.constants.js';
-import type { CurrencyCode, TransactionType } from '../transactions.constants.js';
+import { SORT_BY_FIELDS, SORT_ORDERS } from '../transactions.constants.js';
+import type { SortByField, SortOrder } from '../transactions.constants.js';
 
 export class TransactionQueryDto extends OffsetPaginationDto {
-  @ApiPropertyOptional({ example: 'EXPENSE', enum: TRANSACTION_TYPES, enumName: 'TransactionType' })
+  @ApiPropertyOptional({
+    example: 'EXPENSE',
+    type: String,
+    enum: TRANSACTION_TYPES,
+    enumName: 'TransactionType',
+  })
   @IsOptional()
   @IsIn(TRANSACTION_TYPES)
   type?: TransactionType;
@@ -18,7 +27,12 @@ export class TransactionQueryDto extends OffsetPaginationDto {
   @IsUUIDField()
   categoryId?: string;
 
-  @ApiPropertyOptional({ example: 'USD', enum: CURRENCY_CODES, enumName: 'CurrencyCode' })
+  @ApiPropertyOptional({
+    example: 'USD',
+    type: String,
+    enum: CURRENCY_CODES,
+    enumName: 'CurrencyCode',
+  })
   @IsOptional()
   @IsIn(CURRENCY_CODES)
   currencyCode?: CurrencyCode;
@@ -32,4 +46,26 @@ export class TransactionQueryDto extends OffsetPaginationDto {
   @IsOptional()
   @IsISO8601Field()
   dateTo?: string;
+
+  @ApiPropertyOptional({
+    example: 'date',
+    type: String,
+    enum: SORT_BY_FIELDS,
+    enumName: 'TransactionSortBy',
+    description: 'Field to sort by (default: date)',
+  })
+  @IsOptional()
+  @IsIn(SORT_BY_FIELDS)
+  sortBy?: SortByField;
+
+  @ApiPropertyOptional({
+    example: 'desc',
+    type: String,
+    enum: SORT_ORDERS,
+    enumName: 'SortOrder',
+    description: 'Sort direction (default: desc)',
+  })
+  @IsOptional()
+  @IsIn(SORT_ORDERS)
+  sortOrder?: SortOrder;
 }
