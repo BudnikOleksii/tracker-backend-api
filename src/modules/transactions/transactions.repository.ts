@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, count, desc, eq, gte, inArray, isNull, lte } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte, inArray, isNull, lte, or } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 
 import { transactionCategories, transactions } from '@/database/schemas/index.js';
@@ -268,7 +268,7 @@ export class TransactionRepository {
     categoryId: string,
     userId: string,
   ): Promise<ParentCategoryInfo | null> {
-    const result = await this.db
+    const rows = await this.db
       .select({
         id: transactionCategories.id,
         name: transactionCategories.name,
@@ -278,37 +278,29 @@ export class TransactionRepository {
       .from(transactionCategories)
       .where(
         and(
-          eq(transactionCategories.id, categoryId),
           eq(transactionCategories.userId, userId),
           isNull(transactionCategories.deletedAt),
-        ),
-      )
-      .limit(1);
-
-    const category = result[0];
-    if (!category) {
-      return null;
-    }
-
-    const subcategories = await this.db
-      .select({
-        id: transactionCategories.id,
-        name: transactionCategories.name,
-      })
-      .from(transactionCategories)
-      .where(
-        and(
-          eq(transactionCategories.parentCategoryId, categoryId),
-          eq(transactionCategories.userId, userId),
-          isNull(transactionCategories.deletedAt),
+          or(
+            eq(transactionCategories.id, categoryId),
+            eq(transactionCategories.parentCategoryId, categoryId),
+          ),
         ),
       );
 
+    const parent = rows.find((r) => r.id === categoryId);
+    if (!parent) {
+      return null;
+    }
+
+    const subcategories = rows
+      .filter((r) => r.parentCategoryId === categoryId)
+      .map((r) => ({ id: r.id, name: r.name }));
+
     return {
-      id: category.id,
-      name: category.name,
-      type: category.type,
-      parentCategoryId: category.parentCategoryId,
+      id: parent.id,
+      name: parent.name,
+      type: parent.type,
+      parentCategoryId: parent.parentCategoryId,
       subcategories,
     };
   }

@@ -1,9 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-import {
-  CURRENCY_CODES,
-  TRANSACTION_TYPES,
-} from '@/modules/transactions/transactions.constants.js';
+import { CURRENCY_CODES } from '@/shared/enums/currency-code.enum.js';
+import { TRANSACTION_TYPES } from '@/shared/enums/transaction-type.enum.js';
 import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
 

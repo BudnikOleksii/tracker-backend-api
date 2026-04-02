@@ -4,9 +4,8 @@ import { Transform, Type } from 'class-transformer';
 
 import { OffsetPaginationDto } from '@/shared/dtos/pagination.dto.js';
 import { IsUUIDField } from '@/shared/decorators/validators.js';
-
-import { TRANSACTION_TYPES } from '../transaction-categories.constants.js';
-import type { TransactionType } from '../transaction-categories.constants.js';
+import { TRANSACTION_TYPES } from '@/shared/enums/transaction-type.enum.js';
+import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
 
 export class CategoryQueryDto extends OffsetPaginationDto {
   @ApiPropertyOptional({

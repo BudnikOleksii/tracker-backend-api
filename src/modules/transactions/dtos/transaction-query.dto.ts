@@ -3,19 +3,13 @@ import { IsIn, IsOptional } from 'class-validator';
 
 import { IsISO8601Field, IsUUIDField } from '@/shared/decorators/validators.js';
 import { OffsetPaginationDto } from '@/shared/dtos/pagination.dto.js';
+import { CURRENCY_CODES } from '@/shared/enums/currency-code.enum.js';
+import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
+import { TRANSACTION_TYPES } from '@/shared/enums/transaction-type.enum.js';
+import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
 
-import {
-  CURRENCY_CODES,
-  SORT_BY_FIELDS,
-  SORT_ORDERS,
-  TRANSACTION_TYPES,
-} from '../transactions.constants.js';
-import type {
-  CurrencyCode,
-  SortByField,
-  SortOrder,
-  TransactionType,
-} from '../transactions.constants.js';
+import { SORT_BY_FIELDS, SORT_ORDERS } from '../transactions.constants.js';
+import type { SortByField, SortOrder } from '../transactions.constants.js';
 
 export class TransactionQueryDto extends OffsetPaginationDto {
   @ApiPropertyOptional({
@@ -57,6 +51,7 @@ export class TransactionQueryDto extends OffsetPaginationDto {
     example: 'date',
     type: String,
     enum: SORT_BY_FIELDS,
+    enumName: 'TransactionSortBy',
     description: 'Field to sort by (default: date)',
   })
   @IsOptional()
@@ -67,6 +62,7 @@ export class TransactionQueryDto extends OffsetPaginationDto {
     example: 'desc',
     type: String,
     enum: SORT_ORDERS,
+    enumName: 'SortOrder',
     description: 'Sort direction (default: desc)',
   })
   @IsOptional()

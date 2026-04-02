@@ -2,10 +2,8 @@ import { Injectable } from '@nestjs/common';
 
 import { buildCacheKey } from '@/modules/cache/cache-key.utils.js';
 import { CacheService } from '@/modules/cache/cache.service.js';
-import type {
-  CurrencyCode,
-  TransactionType,
-} from '@/modules/transactions/transactions.constants.js';
+import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
+import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
 import {
   TransactionsAnalyticsRepository,
   type AnalyticsBaseQuery,

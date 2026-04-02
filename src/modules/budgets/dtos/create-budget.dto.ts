@@ -9,9 +9,10 @@ import {
   MatchesField,
   MaxLengthField,
 } from '@/shared/decorators/validators.js';
-
-import { BUDGET_PERIODS, CURRENCY_CODES } from '../budgets.constants.js';
-import type { BudgetPeriod, CurrencyCode } from '../budgets.constants.js';
+import { BUDGET_PERIODS } from '@/shared/enums/budget.enum.js';
+import type { BudgetPeriod } from '@/shared/enums/budget.enum.js';
+import { CURRENCY_CODES } from '@/shared/enums/currency-code.enum.js';
+import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 
 export class CreateBudgetDto {
   @ApiProperty({ example: '500.00' })

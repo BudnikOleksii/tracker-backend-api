@@ -4,13 +4,10 @@ import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 import type { RecurringFrequency } from '@/shared/enums/recurring-frequency.enum.js';
 import type { RecurringTransactionStatus } from '@/shared/enums/recurring-transaction-status.enum.js';
 import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
-
-import {
-  CURRENCY_CODES,
-  RECURRING_FREQUENCIES,
-  RECURRING_TRANSACTION_STATUSES,
-  TRANSACTION_TYPES,
-} from '../recurring-transactions.constants.js';
+import { CURRENCY_CODES } from '@/shared/enums/currency-code.enum.js';
+import { RECURRING_FREQUENCIES } from '@/shared/enums/recurring-frequency.enum.js';
+import { RECURRING_TRANSACTION_STATUSES } from '@/shared/enums/recurring-transaction-status.enum.js';
+import { TRANSACTION_TYPES } from '@/shared/enums/transaction-type.enum.js';
 
 export class RecurringTransactionResponseDto {
   @ApiProperty({

@@ -1,7 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-import { CURRENCY_CODES } from '../transactions.constants.js';
-import type { CurrencyCode } from '../transactions.constants.js';
+import { CURRENCY_CODES } from '@/shared/enums/currency-code.enum.js';
+import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
+
 import { TransactionResponseDto } from './transaction-response.dto.js';
 
 export class SubcategoryTotalDto {

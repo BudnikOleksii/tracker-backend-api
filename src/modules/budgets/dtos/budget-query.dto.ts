@@ -3,9 +3,10 @@ import { IsIn, IsOptional } from 'class-validator';
 
 import { IsUUIDField } from '@/shared/decorators/validators.js';
 import { OffsetPaginationDto } from '@/shared/dtos/pagination.dto.js';
-
-import { BUDGET_PERIODS, BUDGET_STATUSES, CURRENCY_CODES } from '../budgets.constants.js';
-import type { BudgetPeriod, BudgetStatus, CurrencyCode } from '../budgets.constants.js';
+import { BUDGET_PERIODS, BUDGET_STATUSES } from '@/shared/enums/budget.enum.js';
+import type { BudgetPeriod, BudgetStatus } from '@/shared/enums/budget.enum.js';
+import { CURRENCY_CODES } from '@/shared/enums/currency-code.enum.js';
+import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 
 export class BudgetQueryDto extends OffsetPaginationDto {
   @ApiPropertyOptional({

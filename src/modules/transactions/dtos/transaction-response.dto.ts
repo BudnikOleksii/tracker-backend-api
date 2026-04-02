@@ -2,8 +2,8 @@ import { ApiProperty } from '@nestjs/swagger';
 
 import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
-
-import { CURRENCY_CODES, TRANSACTION_TYPES } from '../transactions.constants.js';
+import { CURRENCY_CODES } from '@/shared/enums/currency-code.enum.js';
+import { TRANSACTION_TYPES } from '@/shared/enums/transaction-type.enum.js';
 
 export class TransactionResponseDto {
   @ApiProperty({ description: 'Transaction ID', example: '550e8400-e29b-41d4-a716-446655440000' })
