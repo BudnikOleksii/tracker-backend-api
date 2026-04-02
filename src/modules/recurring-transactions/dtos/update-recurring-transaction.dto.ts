@@ -30,7 +30,12 @@ export class UpdateRecurringTransactionDto {
   @IsUUIDField()
   categoryId?: string;
 
-  @ApiPropertyOptional({ example: 'EXPENSE', enum: TRANSACTION_TYPES, enumName: 'TransactionType' })
+  @ApiPropertyOptional({
+    example: 'EXPENSE',
+    type: String,
+    enum: TRANSACTION_TYPES,
+    enumName: 'TransactionType',
+  })
   @IsOptional()
   @IsIn(TRANSACTION_TYPES)
   type?: TransactionType;
@@ -42,7 +47,12 @@ export class UpdateRecurringTransactionDto {
   @MatchesField(/^\d{1,17}(\.\d{1,2})?$/)
   amount?: string;
 
-  @ApiPropertyOptional({ example: 'USD', enum: CURRENCY_CODES, enumName: 'CurrencyCode' })
+  @ApiPropertyOptional({
+    example: 'USD',
+    type: String,
+    enum: CURRENCY_CODES,
+    enumName: 'CurrencyCode',
+  })
   @IsOptional()
   @IsIn(CURRENCY_CODES)
   currencyCode?: CurrencyCode;
@@ -55,6 +65,7 @@ export class UpdateRecurringTransactionDto {
 
   @ApiPropertyOptional({
     example: 'MONTHLY',
+    type: String,
     enum: RECURRING_FREQUENCIES,
     enumName: 'RecurringFrequency',
   })

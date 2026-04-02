@@ -26,6 +26,7 @@ export class BudgetResponseDto {
   @ApiProperty({
     description: 'Currency code',
     example: 'USD',
+    type: String,
     enum: CURRENCY_CODES,
     enumName: 'CurrencyCode',
   })
@@ -34,6 +35,7 @@ export class BudgetResponseDto {
   @ApiProperty({
     description: 'Budget period',
     example: 'MONTHLY',
+    type: String,
     enum: BUDGET_PERIODS,
     enumName: 'BudgetPeriod',
   })
@@ -48,6 +50,7 @@ export class BudgetResponseDto {
   @ApiProperty({
     description: 'Budget status',
     example: 'ACTIVE',
+    type: String,
     enum: BUDGET_STATUSES,
     enumName: 'BudgetStatus',
   })

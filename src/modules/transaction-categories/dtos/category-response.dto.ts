@@ -14,6 +14,7 @@ export class CategoryResponseDto {
   @ApiProperty({
     description: 'Category type',
     example: 'EXPENSE',
+    type: String,
     enum: TRANSACTION_TYPES,
     enumName: 'TransactionType',
   })

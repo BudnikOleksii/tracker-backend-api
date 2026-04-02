@@ -17,6 +17,7 @@ export class CategoryBreakdownItemDto {
   @ApiProperty({
     description: 'Category type',
     example: 'EXPENSE',
+    type: String,
     enum: TRANSACTION_TYPES,
     enumName: 'TransactionType',
   })
@@ -36,6 +37,7 @@ export class CategoryBreakdownResponseDto {
   @ApiProperty({
     description: 'Currency code',
     example: 'USD',
+    type: String,
     enum: CURRENCY_CODES,
     enumName: 'CurrencyCode',
   })

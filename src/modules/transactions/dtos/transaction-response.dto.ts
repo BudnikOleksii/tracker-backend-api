@@ -15,6 +15,7 @@ export class TransactionResponseDto {
   @ApiProperty({
     description: 'Transaction type',
     example: 'EXPENSE',
+    type: String,
     enum: TRANSACTION_TYPES,
     enumName: 'TransactionType',
   })
@@ -26,6 +27,7 @@ export class TransactionResponseDto {
   @ApiProperty({
     description: 'Currency code',
     example: 'USD',
+    type: String,
     enum: CURRENCY_CODES,
     enumName: 'CurrencyCode',
   })

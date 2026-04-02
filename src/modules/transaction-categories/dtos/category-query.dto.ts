@@ -9,7 +9,12 @@ import { TRANSACTION_TYPES } from '../transaction-categories.constants.js';
 import type { TransactionType } from '../transaction-categories.constants.js';
 
 export class CategoryQueryDto extends OffsetPaginationDto {
-  @ApiPropertyOptional({ example: 'EXPENSE', enum: TRANSACTION_TYPES, enumName: 'TransactionType' })
+  @ApiPropertyOptional({
+    example: 'EXPENSE',
+    type: String,
+    enum: TRANSACTION_TYPES,
+    enumName: 'TransactionType',
+  })
   @IsOptional()
   @IsIn(TRANSACTION_TYPES)
   type?: TransactionType;

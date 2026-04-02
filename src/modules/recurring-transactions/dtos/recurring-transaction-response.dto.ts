@@ -28,6 +28,7 @@ export class RecurringTransactionResponseDto {
   @ApiProperty({
     description: 'Transaction type',
     example: 'EXPENSE',
+    type: String,
     enum: TRANSACTION_TYPES,
     enumName: 'TransactionType',
   })
@@ -39,6 +40,7 @@ export class RecurringTransactionResponseDto {
   @ApiProperty({
     description: 'Currency code',
     example: 'USD',
+    type: String,
     enum: CURRENCY_CODES,
     enumName: 'CurrencyCode',
   })
@@ -55,6 +57,7 @@ export class RecurringTransactionResponseDto {
   @ApiProperty({
     description: 'Recurrence frequency',
     example: 'MONTHLY',
+    type: String,
     enum: RECURRING_FREQUENCIES,
     enumName: 'RecurringFrequency',
   })
@@ -80,6 +83,7 @@ export class RecurringTransactionResponseDto {
   @ApiProperty({
     description: 'Recurring transaction status',
     example: 'ACTIVE',
+    type: String,
     enum: RECURRING_TRANSACTION_STATUSES,
     enumName: 'RecurringTransactionStatus',
   })

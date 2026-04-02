@@ -29,7 +29,12 @@ export class CreateRecurringTransactionDto {
   @IsUUIDField()
   categoryId!: string;
 
-  @ApiProperty({ example: 'EXPENSE', enum: TRANSACTION_TYPES, enumName: 'TransactionType' })
+  @ApiProperty({
+    example: 'EXPENSE',
+    type: String,
+    enum: TRANSACTION_TYPES,
+    enumName: 'TransactionType',
+  })
   @IsIn(TRANSACTION_TYPES)
   type!: TransactionType;
 
@@ -39,7 +44,7 @@ export class CreateRecurringTransactionDto {
   @MatchesField(/^\d{1,17}(\.\d{1,2})?$/)
   amount!: string;
 
-  @ApiProperty({ example: 'USD', enum: CURRENCY_CODES, enumName: 'CurrencyCode' })
+  @ApiProperty({ example: 'USD', type: String, enum: CURRENCY_CODES, enumName: 'CurrencyCode' })
   @IsIn(CURRENCY_CODES)
   currencyCode!: CurrencyCode;
 
@@ -49,7 +54,12 @@ export class CreateRecurringTransactionDto {
   @MaxLengthField(500)
   description?: string;
 
-  @ApiProperty({ example: 'MONTHLY', enum: RECURRING_FREQUENCIES, enumName: 'RecurringFrequency' })
+  @ApiProperty({
+    example: 'MONTHLY',
+    type: String,
+    enum: RECURRING_FREQUENCIES,
+    enumName: 'RecurringFrequency',
+  })
   @IsIn(RECURRING_FREQUENCIES)
   frequency!: RecurringFrequency;
 

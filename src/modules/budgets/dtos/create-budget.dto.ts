@@ -20,11 +20,11 @@ export class CreateBudgetDto {
   @MatchesField(/^\d{1,17}(\.\d{1,2})?$/)
   amount!: string;
 
-  @ApiProperty({ example: 'USD', enum: CURRENCY_CODES, enumName: 'CurrencyCode' })
+  @ApiProperty({ example: 'USD', type: String, enum: CURRENCY_CODES, enumName: 'CurrencyCode' })
   @IsIn(CURRENCY_CODES)
   currencyCode!: CurrencyCode;
 
-  @ApiProperty({ example: 'MONTHLY', enum: BUDGET_PERIODS, enumName: 'BudgetPeriod' })
+  @ApiProperty({ example: 'MONTHLY', type: String, enum: BUDGET_PERIODS, enumName: 'BudgetPeriod' })
   @IsIn(BUDGET_PERIODS)
   period!: BudgetPeriod;
 

@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, eq, gte, isNull, lte } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte, inArray, isNull, lte } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 
 import { transactionCategories, transactions } from '@/database/schemas/index.js';
@@ -7,6 +7,8 @@ import { DB_TOKEN } from '@/database/types.js';
 import type { DrizzleDb } from '@/database/types.js';
 import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
+
+import type { SortByField, SortOrder } from './transactions.constants.js';
 
 export interface TransactionInfo {
   id: string;
@@ -30,6 +32,8 @@ export interface TransactionListQuery {
   currencyCode?: CurrencyCode;
   dateFrom?: string;
   dateTo?: string;
+  sortBy?: SortByField;
+  sortOrder?: SortOrder;
 }
 
 export interface TransactionListResult {
@@ -61,6 +65,20 @@ export interface CategoryValidationInfo {
   type: TransactionType;
 }
 
+export interface ParentCategoryInfo {
+  id: string;
+  name: string;
+  type: TransactionType;
+  parentCategoryId: string | null;
+  subcategories: { id: string; name: string }[];
+}
+
+const SORT_COLUMN_MAP = {
+  date: transactions.date,
+  amount: transactions.amount,
+  createdAt: transactions.createdAt,
+} as const;
+
 @Injectable()
 export class TransactionRepository {
   constructor(
@@ -69,7 +87,18 @@ export class TransactionRepository {
   ) {}
 
   async findAll(query: TransactionListQuery): Promise<TransactionListResult> {
-    const { userId, page, pageSize, type, categoryId, currencyCode, dateFrom, dateTo } = query;
+    const {
+      userId,
+      page,
+      pageSize,
+      type,
+      categoryId,
+      currencyCode,
+      dateFrom,
+      dateTo,
+      sortBy = 'date',
+      sortOrder = 'desc',
+    } = query;
 
     const conditions: SQL[] = [eq(transactions.userId, userId)];
 
@@ -94,6 +123,8 @@ export class TransactionRepository {
     }
 
     const whereClause = and(...conditions);
+    const sortColumn = SORT_COLUMN_MAP[sortBy];
+    const sortDirection = sortOrder === 'asc' ? asc : desc;
 
     const [data, totalResult] = await Promise.all([
       this.db
@@ -102,7 +133,7 @@ export class TransactionRepository {
         .where(whereClause)
         .limit(pageSize)
         .offset((page - 1) * pageSize)
-        .orderBy(transactions.date),
+        .orderBy(sortDirection(sortColumn)),
       this.db.select({ count: count() }).from(transactions).where(whereClause),
     ]);
 
@@ -231,6 +262,71 @@ export class TransactionRepository {
     }
 
     return result[0] as CategoryValidationInfo;
+  }
+
+  async findCategoryWithSubcategories(
+    categoryId: string,
+    userId: string,
+  ): Promise<ParentCategoryInfo | null> {
+    const result = await this.db
+      .select({
+        id: transactionCategories.id,
+        name: transactionCategories.name,
+        type: transactionCategories.type,
+        parentCategoryId: transactionCategories.parentCategoryId,
+      })
+      .from(transactionCategories)
+      .where(
+        and(
+          eq(transactionCategories.id, categoryId),
+          eq(transactionCategories.userId, userId),
+          isNull(transactionCategories.deletedAt),
+        ),
+      )
+      .limit(1);
+
+    const category = result[0];
+    if (!category) {
+      return null;
+    }
+
+    const subcategories = await this.db
+      .select({
+        id: transactionCategories.id,
+        name: transactionCategories.name,
+      })
+      .from(transactionCategories)
+      .where(
+        and(
+          eq(transactionCategories.parentCategoryId, categoryId),
+          eq(transactionCategories.userId, userId),
+          isNull(transactionCategories.deletedAt),
+        ),
+      );
+
+    return {
+      id: category.id,
+      name: category.name,
+      type: category.type,
+      parentCategoryId: category.parentCategoryId,
+      subcategories,
+    };
+  }
+
+  async findByParentCategory(
+    categoryId: string,
+    subcategoryIds: string[],
+    userId: string,
+  ): Promise<TransactionInfo[]> {
+    const allCategoryIds = [categoryId, ...subcategoryIds];
+
+    const data = await this.db
+      .select()
+      .from(transactions)
+      .where(and(eq(transactions.userId, userId), inArray(transactions.categoryId, allCategoryIds)))
+      .orderBy(desc(transactions.date));
+
+    return data.map((row) => this.toTransactionInfo(row));
   }
 
   private toTransactionInfo(row: typeof transactions.$inferSelect): TransactionInfo {

@@ -30,6 +30,7 @@ export class TrendsResponseDto {
   @ApiProperty({
     description: 'Currency code',
     example: 'USD',
+    type: String,
     enum: CURRENCY_CODES,
     enumName: 'CurrencyCode',
   })
@@ -38,6 +39,7 @@ export class TrendsResponseDto {
   @ApiProperty({
     description: 'Time granularity',
     example: 'monthly',
+    type: String,
     enum: GRANULARITY_VALUES,
     enumName: 'Granularity',
   })

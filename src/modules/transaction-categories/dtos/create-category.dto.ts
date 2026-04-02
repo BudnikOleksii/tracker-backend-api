@@ -20,7 +20,12 @@ export class CreateCategoryDto {
   @MaxLengthField(100)
   name!: string;
 
-  @ApiProperty({ example: 'EXPENSE', enum: TRANSACTION_TYPES, enumName: 'TransactionType' })
+  @ApiProperty({
+    example: 'EXPENSE',
+    type: String,
+    enum: TRANSACTION_TYPES,
+    enumName: 'TransactionType',
+  })
   @IsIn(TRANSACTION_TYPES)
   type!: TransactionType;
 
