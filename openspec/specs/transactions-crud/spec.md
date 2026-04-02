@@ -24,7 +24,7 @@ The system SHALL allow an authenticated user to create a transaction by providin
 
 ### Requirement: List transactions with pagination
 
-The system SHALL return a paginated list of the authenticated user's transactions, excluding soft-deleted records. The response MUST include `data`, `total`, `page`, `pageSize`, and `hasMore` fields. The system SHALL support optional `sortBy` (`date`, `amount`, `createdAt`) and `sortOrder` (`asc`, `desc`) query parameters. When omitted, the default sort is `date` descending.
+The system SHALL return a paginated list of the authenticated user's transactions. The response MUST include `data`, `total`, `page`, `pageSize`, and `hasMore` fields. The system SHALL support optional `sortBy` (`date`, `amount`, `createdAt`) and `sortOrder` (`asc`, `desc`) query parameters. When omitted, the default sort is `date` descending.
 
 #### Scenario: Default pagination
 
