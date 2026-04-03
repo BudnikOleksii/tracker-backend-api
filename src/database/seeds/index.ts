@@ -1,11 +1,17 @@
 /* eslint-disable no-console */
 import { count } from 'drizzle-orm';
 
-import { users, transactions, transactionCategories } from '../schemas/index.js';
+import {
+  users,
+  transactions,
+  transactionCategories,
+  defaultTransactionCategories,
+} from '../schemas/index.js';
 import { createSeedClient } from './client.js';
 import { loadTransactionData } from './data-loader.js';
 import { createSuperAdminUser } from './user.seed.js';
 import { createCategories } from './category.seed.js';
+import { seedDefaultTransactionCategories } from './default-transaction-category.seed.js';
 import { createTransactions } from './transaction.seed.js';
 
 async function seedDatabase(): Promise<void> {
@@ -23,6 +29,8 @@ async function seedDatabase(): Promise<void> {
     console.log('Loading transaction data...');
     const transactionsData = loadTransactionData();
     console.log(`Loaded ${transactionsData.length} transactions`);
+
+    await seedDefaultTransactionCategories(db);
 
     const user = await createSuperAdminUser(db);
 
@@ -42,11 +50,15 @@ async function seedDatabase(): Promise<void> {
     console.log('Database seeding completed successfully!');
 
     const [userCount] = await db.select({ count: count() }).from(users);
+    const [defaultCategoryCount] = await db
+      .select({ count: count() })
+      .from(defaultTransactionCategories);
     const [categoryCount] = await db.select({ count: count() }).from(transactionCategories);
     const [transactionCount] = await db.select({ count: count() }).from(transactions);
 
     console.log('\nDatabase Summary:');
     console.log(`Users: ${String(userCount?.count)}`);
+    console.log(`Default Categories: ${String(defaultCategoryCount?.count)}`);
     console.log(`Categories: ${String(categoryCount?.count)}`);
     console.log(`Transactions: ${String(transactionCount?.count)}`);
   } catch (error) {

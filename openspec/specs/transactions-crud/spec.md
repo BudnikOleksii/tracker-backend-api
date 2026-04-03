@@ -1,6 +1,6 @@
 ### Requirement: Create a transaction
 
-The system SHALL allow an authenticated user to create a transaction by providing a categoryId, type (EXPENSE or INCOME), amount, currencyCode, date, and optional description. The transaction MUST be scoped to the authenticated user. The system SHALL validate that the referenced category belongs to the user, is not soft-deleted, and matches the transaction type.
+The system SHALL allow an authenticated user to create a transaction by providing a categoryId, type (EXPENSE or INCOME), amount, currencyCode, date, and optional description. The transaction MUST be scoped to the authenticated user. The system SHALL validate that the referenced category belongs to the user, is not soft-deleted, and matches the transaction type. The transaction MAY optionally include a `recurringTransactionId` to link it to a source recurring transaction.
 
 #### Scenario: Successful transaction creation
 
@@ -67,12 +67,12 @@ The system SHALL support optional query filters: `type` (EXPENSE/INCOME), `categ
 
 ### Requirement: Get a transaction by ID
 
-The system SHALL return a single transaction by its ID, scoped to the authenticated user. Soft-deleted transactions SHALL NOT be returned.
+The system SHALL return a single transaction by its ID, scoped to the authenticated user. The response SHALL include the `recurringTransactionId` field if the transaction was materialized from a recurring transaction. Soft-deleted transactions SHALL NOT be returned.
 
 #### Scenario: Transaction found
 
 - **WHEN** the user requests GET `/transactions/:id` with a valid ID belonging to them
-- **THEN** the system returns the transaction
+- **THEN** the system returns the transaction including its recurringTransactionId (null if not from a recurring source)
 
 #### Scenario: Transaction not found
 
