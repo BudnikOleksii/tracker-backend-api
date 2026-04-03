@@ -11,12 +11,12 @@ The system SHALL return a paginated list of all default transaction categories, 
 
 #### Scenario: Filter by type
 
-- **WHEN** an authenticated admin sends `GET /api/default-categories?type=EXPENSE`
+- **WHEN** an authenticated admin sends `GET /api/default-transaction-categories?type=EXPENSE`
 - **THEN** the system SHALL return only default transaction categories with type EXPENSE
 
 #### Scenario: List root default transaction categories only
 
-- **WHEN** an authenticated admin sends `GET /api/default-categories?root=true`
+- **WHEN** an authenticated admin sends `GET /api/default-transaction-categories?root=true`
 - **THEN** the system SHALL return only default transaction categories where `parentDefaultTransactionCategoryId` is null
 
 #### Scenario: Non-admin user attempts to list
