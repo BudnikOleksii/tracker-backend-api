@@ -2,6 +2,7 @@ export * from './enums.js';
 export * from './users.js';
 export * from './refresh-tokens.js';
 export * from './known-devices.js';
+export * from './default-transaction-categories.js';
 export * from './transaction-categories.js';
 export * from './transactions.js';
 export * from './recurring-transactions.js';

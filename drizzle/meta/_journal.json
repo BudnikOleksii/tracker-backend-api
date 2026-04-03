@@ -57,6 +57,13 @@
       "when": 1774716255336,
       "tag": "0007_military_the_spike",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1775197124367,
+      "tag": "0008_wealthy_micromacro",
+      "breakpoints": true
     }
   ]
 }

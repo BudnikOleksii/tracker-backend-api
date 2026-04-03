@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -7,6 +7,7 @@ import * as bcrypt from 'bcrypt';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 import type { Env } from '@/app/config/env.schema.js';
 
+import { DefaultTransactionCategoriesService } from '../default-transaction-categories/default-transaction-categories.service.js';
 import { UserService } from '../user/user.service.js';
 import { RefreshTokenRepository } from './refresh-token.repository.js';
 import { LoginLogRepository } from './login-log.repository.js';
@@ -20,9 +21,12 @@ import type {
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   // eslint-disable-next-line @typescript-eslint/max-params
   constructor(
     private readonly userService: UserService,
+    private readonly defaultTransactionCategoriesService: DefaultTransactionCategoriesService,
     private readonly refreshTokenRepo: RefreshTokenRepository,
     private readonly loginLogRepo: LoginLogRepository,
     private readonly jwtService: JwtService,
@@ -40,6 +44,15 @@ export class AuthService {
       firstName: deviceContext?.firstName,
       lastName: deviceContext?.lastName,
     });
+
+    try {
+      await this.defaultTransactionCategoriesService.assignDefaultCategoriesToUser(created.id);
+    } catch (error) {
+      this.logger.error(
+        `Failed to assign default transaction categories to user ${created.id}`,
+        error instanceof Error ? error.stack : undefined,
+      );
+    }
 
     return this.generateTokens({
       userId: created.id,
