@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { parse } from 'csv-parse/sync';
+import { stringify } from 'csv-stringify/sync';
 
 import type { DrizzleDb } from '@/database/types.js';
 import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
@@ -10,9 +11,11 @@ import { buildCacheKey, buildCachePrefix } from '@/modules/cache/cache-key.utils
 import { CacheService } from '@/modules/cache/cache.service.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 
+import type { ExportFormat } from './dtos/export-transaction-query.dto.js';
 import { TransactionRepository } from './transactions.repository.js';
 import type {
   CreateTransactionData,
+  ExportTransactionQuery,
   TransactionInfo,
   TransactionListQuery,
   TransactionListResult,
@@ -269,6 +272,79 @@ export class TransactionsService {
     await this.cacheService.delByPrefix(buildCachePrefix('categories', userId));
 
     return result;
+  }
+
+  async exportTransactions(params: {
+    userId: string;
+    format: ExportFormat;
+    dateFrom?: string;
+    dateTo?: string;
+    categoryId?: string;
+  }): Promise<{ content: string; contentType: string; filename: string }> {
+    const { userId, format, dateFrom, dateTo, categoryId } = params;
+
+    const query: ExportTransactionQuery = { userId, dateFrom, dateTo, categoryId };
+    const [rows, categories] = await Promise.all([
+      this.transactionRepository.findAllForExport(query),
+      this.transactionRepository.findCategoriesByUser(userId),
+    ]);
+
+    const categoryMap = new Map(categories.map((c) => [c.id, c]));
+    const exportRows = rows.map((row) => this.toExportRow(row, categoryMap));
+
+    const date = new Date().toISOString().split('T')[0];
+    const filename = `transactions-${date}.${format}`;
+
+    if (format === 'csv') {
+      const content = stringify(exportRows, {
+        header: true,
+        columns: ['Date', 'Category', 'Type', 'Amount', 'Currency', 'Subcategory'],
+      });
+
+      return { content, contentType: 'text/csv', filename };
+    }
+
+    const content = JSON.stringify(exportRows, null, 2);
+
+    return { content, contentType: 'application/json', filename };
+  }
+
+  private toExportRow(
+    row: TransactionInfo,
+    categoryMap: Map<
+      string,
+      { id: string; name: string; type: TransactionType; parentCategoryId: string | null }
+    >,
+  ): Record<string, string | number | undefined> {
+    const category = categoryMap.get(row.categoryId);
+    let categoryName = category?.name ?? 'Unknown';
+    let subcategoryName: string | undefined;
+
+    if (category?.parentCategoryId) {
+      const parent = categoryMap.get(category.parentCategoryId);
+      subcategoryName = category.name;
+      categoryName = parent?.name ?? 'Unknown';
+    }
+
+    const date = row.date;
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    const year = date.getUTCFullYear();
+    const hours = String(date.getUTCHours()).padStart(2, '0');
+    const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+    const seconds = String(date.getUTCSeconds()).padStart(2, '0');
+    const formattedDate = `${month}/${day}/${year} ${hours}:${minutes}:${seconds}`;
+
+    const typeLabel = row.type === 'EXPENSE' ? 'Expense' : 'Income';
+
+    return {
+      Date: formattedDate,
+      Category: categoryName,
+      Type: typeLabel,
+      Amount: parseFloat(row.amount),
+      Currency: row.currencyCode,
+      ...(subcategoryName ? { Subcategory: subcategoryName } : {}),
+    };
   }
 
   private parseImportFile(file: Express.Multer.File): ParsedTransactionRow[] {

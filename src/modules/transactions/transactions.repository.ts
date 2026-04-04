@@ -60,6 +60,13 @@ export interface UpdateTransactionData {
   description?: string;
 }
 
+export interface ExportTransactionQuery {
+  userId: string;
+  categoryId?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
 export interface CategoryValidationInfo {
   id: string;
   type: TransactionType;
@@ -141,6 +148,44 @@ export class TransactionRepository {
       data: data.map((row) => this.toTransactionInfo(row)),
       total: totalResult[0]?.count ?? 0,
     };
+  }
+
+  async findAllForExport(query: ExportTransactionQuery): Promise<TransactionInfo[]> {
+    const { userId, categoryId, dateFrom, dateTo } = query;
+
+    const conditions: SQL[] = [eq(transactions.userId, userId)];
+
+    if (categoryId) {
+      const subcategories = await this.db
+        .select({ id: transactionCategories.id })
+        .from(transactionCategories)
+        .where(
+          and(
+            eq(transactionCategories.parentCategoryId, categoryId),
+            eq(transactionCategories.userId, userId),
+            isNull(transactionCategories.deletedAt),
+          ),
+        );
+
+      const allCategoryIds = [categoryId, ...subcategories.map((s) => s.id)];
+      conditions.push(inArray(transactions.categoryId, allCategoryIds));
+    }
+
+    if (dateFrom) {
+      conditions.push(gte(transactions.date, new Date(dateFrom)));
+    }
+
+    if (dateTo) {
+      conditions.push(lte(transactions.date, new Date(dateTo)));
+    }
+
+    const data = await this.db
+      .select()
+      .from(transactions)
+      .where(and(...conditions))
+      .orderBy(desc(transactions.date));
+
+    return data.map((row) => this.toTransactionInfo(row));
   }
 
   async transaction<T>(callback: (tx: DrizzleDb) => Promise<T>): Promise<T> {
