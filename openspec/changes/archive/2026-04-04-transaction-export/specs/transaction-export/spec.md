@@ -44,7 +44,7 @@ The system SHALL support an optional `categoryId` query parameter to filter expo
 #### Scenario: Export filtered by category
 
 - **WHEN** user sends `GET /transactions/export?format=csv&categoryId=<uuid>`
-- **THEN** system returns only transactions belonging to that category
+- **THEN** system returns transactions belonging to that category and all of its subcategories
 
 ### Requirement: Format parameter is required
 

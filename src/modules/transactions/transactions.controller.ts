@@ -102,7 +102,7 @@ export class TransactionsController {
   async exportTransactions(
     @Query() query: ExportTransactionQueryDto,
     @Request() req: { user: { id: string } },
-    @Res() res: Response,
+    @Res({ passthrough: true }) res: Response,
   ) {
     const result = await this.transactionsService.exportTransactions({
       userId: req.user.id,
@@ -114,7 +114,8 @@ export class TransactionsController {
 
     res.setHeader('Content-Type', result.contentType);
     res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);
-    res.send(result.content);
+
+    return result.content;
   }
 
   @Post('import')
