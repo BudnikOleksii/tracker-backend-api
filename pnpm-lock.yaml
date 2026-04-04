@@ -58,6 +58,9 @@ importers:
       class-validator:
         specifier: 0.15.1
         version: 0.15.1
+      csv-parse:
+        specifier: 6.2.1
+        version: 6.2.1
       drizzle-orm:
         specifier: 0.45.1
         version: 0.45.1(@types/pg@8.18.0)(pg@8.20.0)
@@ -125,6 +128,9 @@ importers:
       '@types/express':
         specifier: 5.0.6
         version: 5.0.6
+      '@types/multer':
+        specifier: 2.1.0
+        version: 2.1.0
       '@types/node':
         specifier: 25.5.0
         version: 25.5.0
@@ -2541,6 +2547,12 @@ packages:
         integrity: sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==,
       }
 
+  '@types/multer@2.1.0':
+    resolution:
+      {
+        integrity: sha512-zYZb0+nJhOHtPpGDb3vqPjwpdeGlGC157VpkqNQL+UU2qwoacoQ7MpsAmUptI/0Oa127X32JzWDqQVEXp2RcIA==,
+      }
+
   '@types/node@25.5.0':
     resolution:
       {
@@ -3912,6 +3924,12 @@ packages:
         integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==,
       }
     engines: { node: '>= 8' }
+
+  csv-parse@6.2.1:
+    resolution:
+      {
+        integrity: sha512-LRLMV+UCyfMokp8Wb411duBf1gaBKJfOfBWU9eHMJ+b+cJYZsNu3AFmjJf3+yPGd59Exz1TsMjaSFyxnYB9+IQ==,
+      }
 
   dateformat@4.6.3:
     resolution:
@@ -9168,6 +9186,10 @@ snapshots:
 
   '@types/ms@2.1.0': {}
 
+  '@types/multer@2.1.0':
+    dependencies:
+      '@types/express': 5.0.6
+
   '@types/node@25.5.0':
     dependencies:
       undici-types: 7.18.2
@@ -10048,6 +10070,8 @@ snapshots:
       path-key: 3.1.1
       shebang-command: 2.0.0
       which: 2.0.2
+
+  csv-parse@6.2.1: {}
 
   dateformat@4.6.3: {}
 
