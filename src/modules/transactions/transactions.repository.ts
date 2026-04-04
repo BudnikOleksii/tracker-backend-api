@@ -321,6 +321,80 @@ export class TransactionRepository {
     return data.map((row) => this.toTransactionInfo(row));
   }
 
+  async findCategoriesByUser(
+    userId: string,
+    tx?: DrizzleDb,
+  ): Promise<
+    { id: string; name: string; type: TransactionType; parentCategoryId: string | null }[]
+  > {
+    const db = tx ?? this.db;
+
+    return db
+      .select({
+        id: transactionCategories.id,
+        name: transactionCategories.name,
+        type: transactionCategories.type,
+        parentCategoryId: transactionCategories.parentCategoryId,
+      })
+      .from(transactionCategories)
+      .where(
+        and(eq(transactionCategories.userId, userId), isNull(transactionCategories.deletedAt)),
+      );
+  }
+
+  async createCategories(
+    data: { userId: string; name: string; type: TransactionType; parentCategoryId?: string }[],
+    tx: DrizzleDb,
+  ): Promise<
+    { id: string; name: string; type: TransactionType; parentCategoryId: string | null }[]
+  > {
+    if (data.length === 0) {
+      return [];
+    }
+
+    const result = await tx
+      .insert(transactionCategories)
+      .values(
+        data.map((d) => ({
+          userId: d.userId,
+          name: d.name,
+          type: d.type,
+          parentCategoryId: d.parentCategoryId,
+        })),
+      )
+      .returning({
+        id: transactionCategories.id,
+        name: transactionCategories.name,
+        type: transactionCategories.type,
+        parentCategoryId: transactionCategories.parentCategoryId,
+      });
+
+    return result;
+  }
+
+  async createTransactions(data: CreateTransactionData[], tx: DrizzleDb): Promise<number> {
+    if (data.length === 0) {
+      return 0;
+    }
+
+    const result = await tx
+      .insert(transactions)
+      .values(
+        data.map((d) => ({
+          userId: d.userId,
+          categoryId: d.categoryId,
+          type: d.type,
+          amount: d.amount,
+          currencyCode: d.currencyCode,
+          date: d.date,
+          description: d.description,
+        })),
+      )
+      .returning({ id: transactions.id });
+
+    return result.length;
+  }
+
   private toTransactionInfo(row: typeof transactions.$inferSelect): TransactionInfo {
     return {
       id: row.id,

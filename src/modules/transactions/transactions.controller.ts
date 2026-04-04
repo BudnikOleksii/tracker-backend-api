@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -11,15 +12,27 @@ import {
   Post,
   Query,
   Request,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
 import { UseEnvelope } from '@/shared/decorators/use-envelope.decorator.js';
 import { MessageResponseDto } from '@/shared/dtos/message-response.dto.js';
+import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 import { JwtAuthGuard } from '@/shared/guards/index.js';
 
 import { CreateTransactionDto } from './dtos/create-transaction.dto.js';
+import { ImportTransactionResponseDto } from './dtos/import-transaction-response.dto.js';
 import { TransactionListResponseDto } from './dtos/transaction-list-response.dto.js';
 import { TransactionQueryDto } from './dtos/transaction-query.dto.js';
 import { TransactionResponseDto } from './dtos/transaction-response.dto.js';
@@ -77,6 +90,36 @@ export class TransactionsController {
     @Request() req: { user: { id: string } },
   ) {
     return this.transactionsService.getTransactionsByCategory(categoryId, req.user.id);
+  }
+
+  @Post('import')
+  @HttpCode(HttpStatus.CREATED)
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 5 * 1024 * 1024 } }))
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Import transactions from JSON or CSV file' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: { type: 'string', format: 'binary', description: 'JSON or CSV file' },
+      },
+      required: ['file'],
+    },
+  })
+  @ApiResponse({ status: 201, type: ImportTransactionResponseDto })
+  @ApiResponse({ status: 400, description: 'Invalid file format or data' })
+  async importTransactions(
+    @UploadedFile() file: Express.Multer.File | undefined,
+    @Request() req: { user: { id: string } },
+  ) {
+    if (!file) {
+      throw new BadRequestException({
+        code: ErrorCode.BAD_REQUEST,
+        message: 'File is required. Upload a .json or .csv file',
+      });
+    }
+
+    return this.transactionsService.importTransactions(file, req.user.id);
   }
 
   @Get(':id')
