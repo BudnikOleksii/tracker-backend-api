@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { parse } from 'csv-parse/sync';
 
@@ -271,7 +272,7 @@ export class TransactionsService {
   }
 
   private parseImportFile(file: Express.Multer.File): ParsedTransactionRow[] {
-    const extension = file.originalname.split('.').pop()?.toLowerCase();
+    const extension = path.extname(file.originalname).slice(1).toLowerCase();
 
     let rows: ParsedTransactionRow[];
     if (extension === 'json') {
@@ -463,17 +464,24 @@ export class TransactionsService {
       return null;
     }
 
-    const month = match[1];
-    const day = match[2];
-    const year = match[3];
-    const hours = match[4];
-    const minutes = match[5];
-    const seconds = match[6];
+    const month = Number(match[1]);
+    const day = Number(match[2]);
+    const year = Number(match[3]);
+    const hours = Number(match[4]);
+    const minutes = Number(match[5]);
+    const seconds = Number(match[6]);
 
-    const isoString = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.000Z`;
-    const date = new Date(isoString);
+    const date = new Date(Date.UTC(year, month - 1, day, hours, minutes, seconds));
 
-    if (isNaN(date.getTime())) {
+    if (
+      isNaN(date.getTime()) ||
+      date.getUTCFullYear() !== year ||
+      date.getUTCMonth() !== month - 1 ||
+      date.getUTCDate() !== day ||
+      date.getUTCHours() !== hours ||
+      date.getUTCMinutes() !== minutes ||
+      date.getUTCSeconds() !== seconds
+    ) {
       return null;
     }
 
@@ -491,14 +499,19 @@ export class TransactionsService {
   }> {
     const existingCategories = await this.transactionRepository.findCategoriesByUser(userId, tx);
 
+    const categoryById = new Map<string, { id: string; name: string; type: TransactionType }>();
     const existingParentMap = new Map<string, string>();
     const existingSubMap = new Map<string, string>();
+
+    for (const cat of existingCategories) {
+      categoryById.set(cat.id, { id: cat.id, name: cat.name, type: cat.type });
+    }
 
     for (const cat of existingCategories) {
       if (cat.parentCategoryId === null) {
         existingParentMap.set(`${cat.name}|${cat.type}`, cat.id);
       } else {
-        const parent = existingCategories.find((c) => c.id === cat.parentCategoryId);
+        const parent = categoryById.get(cat.parentCategoryId);
         if (parent) {
           existingSubMap.set(`${parent.name}|${cat.type}|${cat.name}`, cat.id);
         }
@@ -534,6 +547,7 @@ export class TransactionsService {
 
       for (const cat of created) {
         existingParentMap.set(`${cat.name}|${cat.type}`, cat.id);
+        categoryById.set(cat.id, { id: cat.id, name: cat.name, type: cat.type });
       }
     }
 
@@ -556,15 +570,7 @@ export class TransactionsService {
       subcategoriesCreated = created.length;
 
       for (const cat of created) {
-        const parent = existingCategories
-          .concat(
-            [...existingParentMap.entries()].map(([k, id]) => {
-              const [name, type] = k.split('|') as [string, TransactionType];
-
-              return { id, name, type, parentCategoryId: null };
-            }),
-          )
-          .find((c) => c.id === cat.parentCategoryId);
+        const parent = cat.parentCategoryId ? categoryById.get(cat.parentCategoryId) : undefined;
         if (parent) {
           existingSubMap.set(`${parent.name}|${cat.type}|${cat.name}`, cat.id);
         }
