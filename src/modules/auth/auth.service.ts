@@ -15,6 +15,7 @@ import type { JwtPayload } from './jwt.strategy.js';
 import type {
   DeviceContext,
   GenerateTokensParams,
+  GenerateTokensResult,
   GetRefreshTokenParams,
   RevokeRefreshTokenParams,
 } from './auth.types.js';
@@ -198,7 +199,7 @@ export class AuthService {
     };
   }
 
-  private async generateTokens(params: GenerateTokensParams) {
+  private async generateTokens(params: GenerateTokensParams): Promise<GenerateTokensResult> {
     const { userId, email, role, deviceContext } = params;
     const refreshToken = randomUUID();
 
@@ -225,6 +226,7 @@ export class AuthService {
     return {
       accessToken,
       refreshToken,
+      refreshExpiresAt: expiresAt,
       user: { id: userId, email, role },
     };
   }

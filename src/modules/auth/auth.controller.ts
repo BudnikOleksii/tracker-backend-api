@@ -1,37 +1,70 @@
-import { Body, Controller, Get, HttpCode, Post, Request, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Post,
+  Request,
+  Res,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
+import type { CookieOptions, Response } from 'express';
 
+import type { Env } from '@/app/config/env.schema.js';
+import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 import { JwtAuthGuard } from '@/shared/guards/index.js';
 
 import { AuthService } from './auth.service.js';
 import { LoginDto, AuthResponseDto } from './dtos/login.dto.js';
-import { LogoutDto } from './dtos/logout.dto.js';
 import { LogoutResponseDto } from './dtos/logout-response.dto.js';
-import { RefreshTokenDto } from './dtos/refresh-token.dto.js';
 import { RefreshTokenInfoDto } from './dtos/refresh-token-info.dto.js';
 import { RefreshTokenListDto } from './dtos/refresh-token-list.dto.js';
 import { RegisterDto } from './dtos/register.dto.js';
 import { RevokeRefreshTokenDto } from './dtos/revoke-refresh-token.dto.js';
 import { RevokeAllTokensResponseDto } from './dtos/revoke-all-tokens-response.dto.js';
 import { RevokeTokenResponseDto } from './dtos/revoke-token-response.dto.js';
-import type { AuthenticatedRequest } from './auth.types.js';
+import type { AuthenticatedRequest, GenerateTokensResult } from './auth.types.js';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  private readonly cookieName: string;
+  private readonly cookieOptions: CookieOptions;
+
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService<Env, true>,
+  ) {
+    this.cookieName = this.configService.get('REFRESH_TOKEN_COOKIE_NAME', { infer: true });
+    const domain = this.configService.get('COOKIE_DOMAIN', { infer: true });
+
+    this.cookieOptions = {
+      httpOnly: true,
+      secure: this.configService.get('COOKIE_SECURE', { infer: true }),
+      sameSite: this.configService.get('COOKIE_SAME_SITE', { infer: true }),
+      path: this.configService.get('COOKIE_PATH', { infer: true }),
+      ...(domain ? { domain } : {}),
+    };
+  }
 
   @Post('register')
   @Throttle({ auth: {} })
   @HttpCode(201)
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({ status: 201, type: AuthResponseDto })
-  async register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto.email, dto.password, {
+  async register(@Body() dto: RegisterDto, @Res({ passthrough: true }) res: Response) {
+    const result = await this.authService.register(dto.email, dto.password, {
       firstName: dto.firstName,
       lastName: dto.lastName,
     });
+
+    this.setRefreshTokenCookie(res, result);
+
+    return { accessToken: result.accessToken, user: result.user };
   }
 
   @Post('login')
@@ -46,6 +79,7 @@ export class AuthController {
       headers: Record<string, string | string[] | undefined>;
       socket?: { remoteAddress?: string };
     },
+    @Res({ passthrough: true }) res: Response,
   ) {
     const deviceContext = {
       ipAddress:
@@ -54,7 +88,11 @@ export class AuthController {
       userAgent: req.headers['user-agent'] as string | undefined,
     };
 
-    return this.authService.login(dto.email, dto.password, deviceContext);
+    const result = await this.authService.login(dto.email, dto.password, deviceContext);
+
+    this.setRefreshTokenCookie(res, result);
+
+    return { accessToken: result.accessToken, user: result.user };
   }
 
   @Post('refresh-token')
@@ -62,8 +100,16 @@ export class AuthController {
   @HttpCode(200)
   @ApiOperation({ summary: 'Refresh access token' })
   @ApiResponse({ status: 200, type: AuthResponseDto })
-  async refreshToken(@Body() dto: RefreshTokenDto) {
-    return this.authService.refreshToken(dto.refreshToken);
+  async refreshToken(
+    @Request() req: { cookies?: Record<string, string> },
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const refreshToken = this.getRefreshTokenFromCookie(req);
+    const result = await this.authService.refreshToken(refreshToken);
+
+    this.setRefreshTokenCookie(res, result);
+
+    return { accessToken: result.accessToken, user: result.user };
   }
 
   @Get('refresh-token')
@@ -90,8 +136,14 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Logout (single device)' })
   @ApiResponse({ status: 200, type: LogoutResponseDto })
-  async logout(@Body() dto: LogoutDto) {
-    const success = await this.authService.logout(dto.refreshToken);
+  async logout(
+    @Request() req: AuthenticatedRequest & { cookies?: Record<string, string> },
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const refreshToken = this.getRefreshTokenFromCookie(req);
+    const success = await this.authService.logout(refreshToken);
+
+    this.clearRefreshTokenCookie(res);
 
     return {
       success,
@@ -124,12 +176,43 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Revoke all refresh tokens' })
   @ApiResponse({ status: 200, type: RevokeAllTokensResponseDto })
-  async revokeRefreshTokens(@Request() req: AuthenticatedRequest) {
+  async revokeRefreshTokens(
+    @Request() req: AuthenticatedRequest,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const revokedCount = await this.authService.revokeAllRefreshTokens(req.user.id);
+
+    this.clearRefreshTokenCookie(res);
 
     return {
       revokedCount,
       message: `All refresh tokens revoked successfully. Total: ${revokedCount}`,
     };
+  }
+
+  private setRefreshTokenCookie(res: Response, result: GenerateTokensResult): void {
+    const maxAge = result.refreshExpiresAt.getTime() - Date.now();
+
+    res.cookie(this.cookieName, result.refreshToken, {
+      ...this.cookieOptions,
+      maxAge,
+    });
+  }
+
+  private clearRefreshTokenCookie(res: Response): void {
+    res.clearCookie(this.cookieName, this.cookieOptions);
+  }
+
+  private getRefreshTokenFromCookie(req: { cookies?: Record<string, string> }): string {
+    const token = req.cookies?.[this.cookieName];
+
+    if (!token) {
+      throw new UnauthorizedException({
+        code: ErrorCode.TOKEN_INVALID,
+        message: 'Refresh token not found',
+      });
+    }
+
+    return token;
   }
 }

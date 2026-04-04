@@ -28,3 +28,10 @@ export interface GenerateTokensParams {
   role: UserRole;
   deviceContext?: DeviceContext;
 }
+
+export interface GenerateTokensResult {
+  accessToken: string;
+  refreshToken: string;
+  refreshExpiresAt: Date;
+  user: { id: string; email: string; role: UserRole };
+}

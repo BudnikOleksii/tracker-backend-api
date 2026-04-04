@@ -106,6 +106,19 @@ export const envSchema = z.object({
     .refine((value) => value > 0, {
       message: 'THROTTLE_AUTH_LIMIT must be greater than 0',
     }),
+
+  REFRESH_TOKEN_COOKIE_NAME: z.string().default('refresh_token'),
+
+  COOKIE_DOMAIN: z.string().optional(),
+
+  COOKIE_SECURE: z
+    .enum(['true', 'false'])
+    .default('true')
+    .transform((value) => value === 'true'),
+
+  COOKIE_SAME_SITE: z.enum(['strict', 'lax', 'none']).default('strict'),
+
+  COOKIE_PATH: z.string().default('/api/auth'),
 });
 
 export type Env = z.infer<typeof envSchema>;

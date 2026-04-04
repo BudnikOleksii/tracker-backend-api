@@ -39,9 +39,6 @@ export class AuthResponseDto {
   @ApiProperty({ example: 'eyJhbGciOiJIUzI1NiJ9...' })
   accessToken: string;
 
-  @ApiProperty({ example: '550e8400-e29b-41d4-a716-446655440000' })
-  refreshToken: string;
-
   @ApiProperty({ type: AuthUserDto })
   user: AuthUserDto;
 }
