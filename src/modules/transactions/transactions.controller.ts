@@ -12,6 +12,7 @@ import {
   Post,
   Query,
   Request,
+  Res,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -25,6 +26,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import type { Response } from 'express';
 
 import { UseEnvelope } from '@/shared/decorators/use-envelope.decorator.js';
 import { MessageResponseDto } from '@/shared/dtos/message-response.dto.js';
@@ -32,6 +34,7 @@ import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 import { JwtAuthGuard } from '@/shared/guards/index.js';
 
 import { CreateTransactionDto } from './dtos/create-transaction.dto.js';
+import { ExportTransactionQueryDto } from './dtos/export-transaction-query.dto.js';
 import { ImportTransactionResponseDto } from './dtos/import-transaction-response.dto.js';
 import { TransactionListResponseDto } from './dtos/transaction-list-response.dto.js';
 import { TransactionQueryDto } from './dtos/transaction-query.dto.js';
@@ -90,6 +93,28 @@ export class TransactionsController {
     @Request() req: { user: { id: string } },
   ) {
     return this.transactionsService.getTransactionsByCategory(categoryId, req.user.id);
+  }
+
+  @Get('export')
+  @ApiOperation({ summary: 'Export transactions as JSON or CSV file' })
+  @ApiResponse({ status: 200, description: 'File download' })
+  @ApiResponse({ status: 400, description: 'Invalid format or query parameters' })
+  async exportTransactions(
+    @Query() query: ExportTransactionQueryDto,
+    @Request() req: { user: { id: string } },
+    @Res() res: Response,
+  ) {
+    const result = await this.transactionsService.exportTransactions({
+      userId: req.user.id,
+      format: query.format,
+      dateFrom: query.dateFrom,
+      dateTo: query.dateTo,
+      categoryId: query.categoryId,
+    });
+
+    res.setHeader('Content-Type', result.contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);
+    res.send(result.content);
   }
 
   @Post('import')
