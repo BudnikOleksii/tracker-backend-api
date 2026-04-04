@@ -118,7 +118,7 @@ export const envSchema = z.object({
 
   COOKIE_SAME_SITE: z.enum(['strict', 'lax', 'none']).default('strict'),
 
-  COOKIE_PATH: z.string().default('/api/auth'),
+  COOKIE_PATH: z.string().default('/'),
 });
 
 export type Env = z.infer<typeof envSchema>;
