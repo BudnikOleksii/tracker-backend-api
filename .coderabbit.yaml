@@ -13,6 +13,7 @@ reviews:
     - '!**/node_modules/**' # Exclude dependencies
     - '!**/dist/**' # Exclude build files
     - '!**/coverage/**' # Exclude test related folder
+    - '!**/openspec/changes/**'
   path_instructions:
     - path: '**/.env*'
       instructions: 'Check that the sensitive data is not stored in the repository.'
