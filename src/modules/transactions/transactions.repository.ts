@@ -80,6 +80,8 @@ export interface ParentCategoryInfo {
   subcategories: { id: string; name: string }[];
 }
 
+export const MAX_EXPORT_ROWS = 10_000;
+
 const SORT_COLUMN_MAP = {
   date: transactions.date,
   amount: transactions.amount,
@@ -150,7 +152,9 @@ export class TransactionRepository {
     };
   }
 
-  async findAllForExport(query: ExportTransactionQuery): Promise<TransactionInfo[]> {
+  async findAllForExport(
+    query: ExportTransactionQuery,
+  ): Promise<{ data: TransactionInfo[]; isTruncated: boolean }> {
     const { userId, categoryId, dateFrom, dateTo } = query;
 
     const conditions: SQL[] = [eq(transactions.userId, userId)];
@@ -183,9 +187,13 @@ export class TransactionRepository {
       .select()
       .from(transactions)
       .where(and(...conditions))
-      .orderBy(desc(transactions.date));
+      .orderBy(desc(transactions.date))
+      .limit(MAX_EXPORT_ROWS);
 
-    return data.map((row) => this.toTransactionInfo(row));
+    return {
+      data: data.map((row) => this.toTransactionInfo(row)),
+      isTruncated: data.length === MAX_EXPORT_ROWS,
+    };
   }
 
   async transaction<T>(callback: (tx: DrizzleDb) => Promise<T>): Promise<T> {

@@ -50,7 +50,11 @@ export class ProfileService {
     return updated;
   }
 
-  async changePassword(userId: string, dto: ChangePasswordDto): Promise<void> {
+  async changePassword(
+    userId: string,
+    dto: ChangePasswordDto,
+    accessTokenJti: string,
+  ): Promise<void> {
     const user = await this.userRepository.findWithPasswordHash(userId);
 
     if (!user) {
@@ -70,9 +74,15 @@ export class ProfileService {
 
     const newHash = await bcrypt.hash(dto.newPassword, BCRYPT_ROUNDS);
     await this.userRepository.updatePasswordHash(userId, newHash);
+    await this.authService.revokeAllRefreshTokens(userId);
+    await this.authService.blacklistAccessToken(accessTokenJti);
   }
 
-  async deleteAccount(userId: string, dto: DeleteAccountDto): Promise<void> {
+  async deleteAccount(
+    userId: string,
+    dto: DeleteAccountDto,
+    accessTokenJti: string,
+  ): Promise<void> {
     const user = await this.userRepository.findWithPasswordHash(userId);
 
     if (!user) {
@@ -92,6 +102,7 @@ export class ProfileService {
 
     await this.userRepository.softDelete(userId);
     await this.authService.revokeAllRefreshTokens(userId);
+    await this.authService.blacklistAccessToken(accessTokenJti);
     await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE));
   }
 }

@@ -13,6 +13,7 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 
 import { JwtAuthGuard } from '@/shared/guards/index.js';
 import { MessageResponseDto } from '@/shared/dtos/message-response.dto.js';
+import type { AuthUser } from '@/modules/auth/auth.types.js';
 
 import { ChangePasswordDto } from './dtos/change-password.dto.js';
 import { DeleteAccountDto } from './dtos/delete-account.dto.js';
@@ -49,8 +50,8 @@ export class ProfileController {
   @ApiOperation({ summary: 'Change password' })
   @ApiResponse({ status: 200, type: MessageResponseDto })
   @ApiResponse({ status: 401, description: 'Invalid current password' })
-  async changePassword(@Request() req: { user: { id: string } }, @Body() dto: ChangePasswordDto) {
-    await this.profileService.changePassword(req.user.id, dto);
+  async changePassword(@Request() req: { user: AuthUser }, @Body() dto: ChangePasswordDto) {
+    await this.profileService.changePassword(req.user.id, dto, req.user.jti);
 
     return { message: 'Password changed successfully' };
   }
@@ -60,8 +61,8 @@ export class ProfileController {
   @ApiOperation({ summary: 'Delete account' })
   @ApiResponse({ status: 200, type: MessageResponseDto })
   @ApiResponse({ status: 401, description: 'Invalid password' })
-  async deleteAccount(@Request() req: { user: { id: string } }, @Body() dto: DeleteAccountDto) {
-    await this.profileService.deleteAccount(req.user.id, dto);
+  async deleteAccount(@Request() req: { user: AuthUser }, @Body() dto: DeleteAccountDto) {
+    await this.profileService.deleteAccount(req.user.id, dto, req.user.jti);
 
     return { message: 'Account deleted successfully' };
   }

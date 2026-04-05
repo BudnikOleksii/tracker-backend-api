@@ -141,7 +141,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const refreshToken = this.getRefreshTokenFromCookie(req);
-    const success = await this.authService.logout(refreshToken);
+    const success = await this.authService.logout(refreshToken, req.user.jti);
 
     this.clearRefreshTokenCookie(res);
 

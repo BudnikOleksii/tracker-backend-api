@@ -11,6 +11,7 @@ import { DefaultTransactionCategoriesService } from '../default-transaction-cate
 import { UserService } from '../user/user.service.js';
 import { RefreshTokenRepository } from './refresh-token.repository.js';
 import { LoginLogRepository } from './login-log.repository.js';
+import { TokenBlacklistService } from './token-blacklist.service.js';
 import type { JwtPayload } from './jwt.strategy.js';
 import type {
   DeviceContext,
@@ -39,6 +40,7 @@ export class AuthService {
     private readonly loginLogRepo: LoginLogRepository,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService<Env, true>,
+    private readonly tokenBlacklistService: TokenBlacklistService,
   ) {}
 
   async register(
@@ -141,13 +143,24 @@ export class AuthService {
     });
   }
 
-  async logout(refreshToken: string): Promise<boolean> {
+  async logout(refreshToken: string, accessTokenJti: string): Promise<boolean> {
     const token = await this.refreshTokenRepo.findByToken(refreshToken);
-    if (!token) {
-      return false;
+    const deleted = token ? await this.refreshTokenRepo.delete(token.id) : false;
+
+    try {
+      await this.blacklistAccessToken(accessTokenJti);
+    } catch (error) {
+      this.logger.warn('Failed to blacklist access token during logout', error);
     }
 
-    return this.refreshTokenRepo.delete(token.id);
+    return deleted;
+  }
+
+  async blacklistAccessToken(jti: string): Promise<void> {
+    const expiresIn = this.configService.get('JWT_EXPIRES_IN', { infer: true });
+    const ttlSeconds = this.parseExpirationToSeconds(expiresIn);
+
+    await this.tokenBlacklistService.blacklistToken(jti, ttlSeconds);
   }
 
   async revokeAllRefreshTokens(userId: string): Promise<number> {
@@ -227,6 +240,7 @@ export class AuthService {
     });
 
     const payload: JwtPayload = {
+      jti: randomUUID(),
       sub: userId,
       email,
       role,
@@ -243,23 +257,28 @@ export class AuthService {
   }
 
   private parseExpiration(expiresIn: string): Date {
-    const now = new Date();
+    const ttlSeconds = this.parseExpirationToSeconds(expiresIn);
+
+    return new Date(Date.now() + ttlSeconds * 1000);
+  }
+
+  private parseExpirationToSeconds(expiresIn: string): number {
     const match = /^(\d+)([smhd])$/.exec(expiresIn);
 
     if (!match) {
-      return new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      return 7 * 24 * 60 * 60;
     }
 
     const value = Number.parseInt(match[1] as string, 10);
     const unit = match[2] as string;
 
     const multipliers: Record<string, number> = {
-      s: 1000,
-      m: 60 * 1000,
-      h: 60 * 60 * 1000,
-      d: 24 * 60 * 60 * 1000,
+      s: 1,
+      m: 60,
+      h: 60 * 60,
+      d: 24 * 60 * 60,
     };
 
-    return new Date(now.getTime() + value * (multipliers[unit] as number));
+    return value * (multipliers[unit] as number);
   }
 }

@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, eq, isNull, ne } from 'drizzle-orm';
+import { and, count, eq, isNull, ne, sql } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 
-import { defaultTransactionCategories } from '@/database/schemas/index.js';
+import { defaultTransactionCategories, transactionCategories } from '@/database/schemas/index.js';
 import { DB_TOKEN } from '@/database/types.js';
 import type { DrizzleDb } from '@/database/types.js';
 import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
@@ -243,31 +243,93 @@ export class DefaultTransactionCategoryRepository {
     tx?: DrizzleDb,
   ): Promise<boolean> {
     const db = tx ?? this.db;
-    let currentId: string | null = categoryId;
 
-    while (currentId) {
-      if (currentId === potentialAncestorId) {
-        return true;
-      }
+    // Walk up the ancestry chain in a single recursive CTE round-trip.
+    // The base case selects the starting category; the recursive term joins
+    // each row to its parent, stopping at soft-deleted nodes.
+    // depth < 100 guards against circular references causing unbounded execution.
+    const result = await db.execute<{ found: boolean }>(sql`
+      WITH RECURSIVE ancestors AS (
+        SELECT id, "parentDefaultTransactionCategoryId", 1 AS depth
+        FROM "DefaultTransactionCategory"
+        WHERE id = ${categoryId}
+          AND "deletedAt" IS NULL
+        UNION ALL
+        SELECT dtc.id, dtc."parentDefaultTransactionCategoryId", a.depth + 1
+        FROM "DefaultTransactionCategory" dtc
+        INNER JOIN ancestors a ON dtc.id = a."parentDefaultTransactionCategoryId"
+        WHERE dtc."deletedAt" IS NULL
+          AND a.depth < 100
+      )
+      SELECT EXISTS (
+        SELECT 1 FROM ancestors WHERE id = ${potentialAncestorId}
+      ) AS found
+    `);
 
-      const result = await db
-        .select({
-          parentDefaultTransactionCategoryId:
-            defaultTransactionCategories.parentDefaultTransactionCategoryId,
-        })
-        .from(defaultTransactionCategories)
-        .where(
-          and(
-            eq(defaultTransactionCategories.id, currentId),
-            isNull(defaultTransactionCategories.deletedAt),
-          ),
-        )
-        .limit(1);
+    return result.rows[0]?.found === true;
+  }
 
-      currentId = result[0]?.parentDefaultTransactionCategoryId ?? null;
+  async cloneDefaultCategoriesToUser(userId: string): Promise<void> {
+    const defaults = await this.findAllActive();
+
+    if (defaults.length === 0) {
+      return;
     }
 
-    return false;
+    const parents = defaults.filter((c) => c.parentDefaultTransactionCategoryId === null);
+    const children = defaults.filter((c) => c.parentDefaultTransactionCategoryId !== null);
+
+    // Nothing to clone if there are no root categories; children without parents would be invalid.
+    if (parents.length === 0) {
+      return;
+    }
+
+    await this.db.transaction(async (tx) => {
+      const insertedParents = await tx
+        .insert(transactionCategories)
+        .values(parents.map((p) => ({ userId, name: p.name, type: p.type })))
+        .returning({ id: transactionCategories.id, name: transactionCategories.name });
+
+      // PostgreSQL guarantees that RETURNING rows are returned in insertion order,
+      // so insertedParents[i] corresponds to parents[i] and the mapping is stable.
+      const idMap = new Map<string, string>(
+        parents
+          .map((p, i) => {
+            const inserted = insertedParents[i];
+
+            return inserted ? ([p.id, inserted.id] as [string, string]) : null;
+          })
+          .filter((entry): entry is [string, string] => entry !== null),
+      );
+
+      if (children.length === 0) {
+        return;
+      }
+
+      const childValues = children
+        .map((c) => {
+          const mappedParentId = idMap.get(c.parentDefaultTransactionCategoryId as string);
+          if (!mappedParentId) {
+            return null;
+          }
+
+          return { userId, name: c.name, type: c.type, parentCategoryId: mappedParentId };
+        })
+        .filter(
+          (
+            v,
+          ): v is {
+            userId: string;
+            name: string;
+            type: TransactionType;
+            parentCategoryId: string;
+          } => v !== null,
+        );
+
+      if (childValues.length > 0) {
+        await tx.insert(transactionCategories).values(childValues);
+      }
+    });
   }
 
   private toDefaultCategoryInfo(

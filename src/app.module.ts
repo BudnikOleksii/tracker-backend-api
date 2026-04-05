@@ -14,6 +14,7 @@ import { HealthModule } from './app/health/health.module.js';
 import { RequestContextInterceptor } from './app/interceptors/request-context.interceptor.js';
 import { AppThrottlerGuard } from './app/throttler/app-throttler.guard.js';
 import { RedisThrottlerStorage } from './app/throttler/redis-throttler.storage.js';
+import { ThrottlerStorageModule } from './app/throttler/throttler-storage.module.js';
 import { LoggerModule } from './app/logger/logger.module.js';
 import { DatabaseModule } from './database/database.module.js';
 import { AuditLogInterceptor } from './modules/audit-log/audit-log.interceptor.js';
@@ -40,8 +41,9 @@ import { UserModule } from './modules/user/user.module.js';
     ClsModule.forRoot(createClsConfig()),
     ScheduleModule.forRoot(),
     ThrottlerModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (config: ConfigService<Env, true>) => ({
+      imports: [ThrottlerStorageModule],
+      inject: [ConfigService, RedisThrottlerStorage],
+      useFactory: (config: ConfigService<Env, true>, storage: RedisThrottlerStorage) => ({
         throttlers: [
           {
             name: 'default',
@@ -54,7 +56,7 @@ import { UserModule } from './modules/user/user.module.js';
             limit: config.get('THROTTLE_AUTH_LIMIT', { infer: true }),
           },
         ],
-        storage: new RedisThrottlerStorage(config),
+        storage,
       }),
     }),
     LoggerModule,

@@ -15,9 +15,10 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
+import { Roles } from '@/shared/decorators/roles.decorator.js';
 import { UseEnvelope } from '@/shared/decorators/use-envelope.decorator.js';
 import { MessageResponseDto } from '@/shared/dtos/message-response.dto.js';
-import { JwtAuthGuard } from '@/shared/guards/index.js';
+import { JwtAuthGuard, RolesGuard } from '@/shared/guards/index.js';
 
 import { CreateRecurringTransactionDto } from './dtos/create-recurring-transaction.dto.js';
 import { ProcessResultResponseDto } from './dtos/process-result-response.dto.js';
@@ -154,8 +155,11 @@ export class RecurringTransactionsController {
 
   @Post('process')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(RolesGuard)
+  @Roles('ADMIN')
   @ApiOperation({ summary: 'Process due recurring transactions' })
   @ApiResponse({ status: 200, type: ProcessResultResponseDto })
+  @ApiResponse({ status: 403, description: 'Insufficient permissions' })
   async process(@Request() req: { user: { id: string } }) {
     return this.recurringTransactionsService.processRecurringTransactions(req.user.id);
   }

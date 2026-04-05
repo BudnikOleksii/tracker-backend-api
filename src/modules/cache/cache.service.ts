@@ -1,26 +1,21 @@
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { Redis } from 'ioredis';
+import { Inject, Injectable } from '@nestjs/common';
 import type { Cache } from 'cache-manager';
-
-import type { Env } from '@/app/config/env.schema.js';
+import type { Redis } from 'ioredis';
 
 import type { CachePort } from './cache.port.js';
+import { REDIS_CLIENT } from './redis.provider.js';
 
 const SCAN_BATCH_SIZE = 100;
 
 @Injectable()
-export class CacheService implements CachePort, OnModuleDestroy {
-  private readonly redis: Redis;
-
+export class CacheService implements CachePort {
   constructor(
     @Inject(CACHE_MANAGER)
     private readonly cacheManager: Cache,
-    configService: ConfigService<Env, true>,
-  ) {
-    this.redis = new Redis(configService.get('REDIS_URL', { infer: true }));
-  }
+    @Inject(REDIS_CLIENT)
+    private readonly redis: Redis,
+  ) {}
 
   async get<T>(key: string): Promise<T | undefined> {
     return this.cacheManager.get<T>(key);
@@ -68,9 +63,5 @@ export class CacheService implements CachePort, OnModuleDestroy {
     await this.set(key, result, ttl);
 
     return result;
-  }
-
-  async onModuleDestroy(): Promise<void> {
-    await this.redis.quit();
   }
 }

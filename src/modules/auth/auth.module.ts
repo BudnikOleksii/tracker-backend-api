@@ -12,6 +12,7 @@ import { AuthService } from './auth.service.js';
 import { JwtStrategy } from './jwt.strategy.js';
 import { LoginLogRepository } from './login-log.repository.js';
 import { RefreshTokenRepository } from './refresh-token.repository.js';
+import { TokenBlacklistService } from './token-blacklist.service.js';
 
 @Module({
   imports: [
@@ -30,7 +31,13 @@ import { RefreshTokenRepository } from './refresh-token.repository.js';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, RefreshTokenRepository, LoginLogRepository],
-  exports: [AuthService, RefreshTokenRepository],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    RefreshTokenRepository,
+    LoginLogRepository,
+    TokenBlacklistService,
+  ],
+  exports: [AuthService, RefreshTokenRepository, TokenBlacklistService],
 })
 export class AuthModule {}

@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, eq, isNull, ne } from 'drizzle-orm';
+import { and, count, eq, isNull, ne, sql } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 
 import { transactionCategories, transactions } from '@/database/schemas/index.js';
@@ -250,25 +250,30 @@ export class TransactionCategoryRepository {
     tx?: DrizzleDb,
   ): Promise<boolean> {
     const db = tx ?? this.db;
-    let currentId: string | null = categoryId;
 
-    while (currentId) {
-      if (currentId === potentialAncestorId) {
-        return true;
-      }
+    // Walk up the ancestry chain in a single recursive CTE round-trip.
+    // The base case selects the starting category; the recursive term joins
+    // each row to its parent, stopping at soft-deleted nodes.
+    // depth < 100 guards against circular references causing unbounded execution.
+    const result = await db.execute<{ found: boolean }>(sql`
+      WITH RECURSIVE ancestors AS (
+        SELECT id, "parentCategoryId", 1 AS depth
+        FROM "TransactionCategory"
+        WHERE id = ${categoryId}
+          AND "deletedAt" IS NULL
+        UNION ALL
+        SELECT tc.id, tc."parentCategoryId", a.depth + 1
+        FROM "TransactionCategory" tc
+        INNER JOIN ancestors a ON tc.id = a."parentCategoryId"
+        WHERE tc."deletedAt" IS NULL
+          AND a.depth < 100
+      )
+      SELECT EXISTS (
+        SELECT 1 FROM ancestors WHERE id = ${potentialAncestorId}
+      ) AS found
+    `);
 
-      const result = await db
-        .select({ parentCategoryId: transactionCategories.parentCategoryId })
-        .from(transactionCategories)
-        .where(
-          and(eq(transactionCategories.id, currentId), isNull(transactionCategories.deletedAt)),
-        )
-        .limit(1);
-
-      currentId = result[0]?.parentCategoryId ?? null;
-    }
-
-    return false;
+    return result.rows[0]?.found === true;
   }
 
   private toCategoryInfo(row: typeof transactionCategories.$inferSelect): CategoryInfo {
