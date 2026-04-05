@@ -2,6 +2,7 @@ import { RequestMethod } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory, Reflector } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 import { Logger } from 'nestjs-pino';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 
@@ -22,6 +23,7 @@ async function bootstrap() {
   });
 
   app.useLogger(app.get(Logger));
+  app.use(helmet());
   app.use(cookieParser());
 
   const configService = app.get<ConfigService<Env, true>>(ConfigService);
@@ -46,6 +48,8 @@ async function bootstrap() {
   app.useGlobalPipes(createValidationPipe());
 
   setupSwagger(app);
+
+  app.enableShutdownHooks();
 
   const port = configService.get('PORT', { infer: true });
   await app.listen(port);

@@ -110,7 +110,11 @@ export class UserRepository {
   }
 
   async findById(id: string): Promise<UserInfo | null> {
-    const result = await this.db.select().from(users).where(eq(users.id, id)).limit(1);
+    const result = await this.db
+      .select()
+      .from(users)
+      .where(and(eq(users.id, id), isNull(users.deletedAt)))
+      .limit(1);
 
     if (result.length === 0) {
       return null;
@@ -123,7 +127,7 @@ export class UserRepository {
     const result = await this.db
       .select()
       .from(users)
-      .where(eq(users.email, email.toLowerCase()))
+      .where(and(eq(users.email, email.toLowerCase()), isNull(users.deletedAt)))
       .limit(1);
 
     return result[0] ?? null;
@@ -210,7 +214,7 @@ export class UserRepository {
     const result = await this.db
       .select({ id: users.id, passwordHash: users.passwordHash })
       .from(users)
-      .where(eq(users.id, id))
+      .where(and(eq(users.id, id), isNull(users.deletedAt)))
       .limit(1);
 
     return result[0] ?? null;

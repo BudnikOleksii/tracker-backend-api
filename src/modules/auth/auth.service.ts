@@ -22,6 +22,13 @@ import type {
 
 @Injectable()
 export class AuthService {
+  // Pre-computed bcrypt hash used as a dummy target when a login email is not
+  // found. Running bcrypt.compare against it ensures the response time is
+  // indistinguishable from a real comparison, preventing email enumeration via
+  // timing side-channel attacks. Cost factor 12 matches the application default.
+  private static readonly DUMMY_HASH =
+    '$2b$12$qMkHw/Qr6k6FOOl3rL6OZ.nRMLR7k0hkmoa8bD.mb1TUBeNvBWAKi';
+
   private readonly logger = new Logger(AuthService.name);
 
   // eslint-disable-next-line @typescript-eslint/max-params
@@ -66,6 +73,10 @@ export class AuthService {
   async login(email: string, password: string, deviceContext?: DeviceContext) {
     const user = await this.userService.findByEmail(email);
     if (!user) {
+      // Perform a dummy bcrypt comparison to equalise response time with the
+      // case where the user exists but the password is wrong. This prevents
+      // email enumeration via timing side-channel attacks.
+      await bcrypt.compare(password, AuthService.DUMMY_HASH);
       void this.loginLogRepo.create({
         email,
         status: 'failed',

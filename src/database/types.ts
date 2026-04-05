@@ -4,6 +4,7 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type * as schema from './schemas/index.js';
 
 export const DB_TOKEN = Symbol('DB_TOKEN');
+export const POOL_TOKEN = Symbol('POOL_TOKEN');
 
 export type DrizzleDb = NodePgDatabase<typeof schema>;
 

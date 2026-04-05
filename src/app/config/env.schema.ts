@@ -11,7 +11,7 @@ export const envSchema = z.object({
       message: 'PORT must be between 1 and 65535',
     }),
 
-  DATABASE_URL: z.url().default('postgresql://tracker:tracker123@localhost:5432/tracker'),
+  DATABASE_URL: z.url(),
 
   DB_POOL_MAX: z
     .string()
@@ -29,10 +29,7 @@ export const envSchema = z.object({
       message: 'DB_POOL_MIN must be between 0 and 50',
     }),
 
-  JWT_SECRET: z
-    .string()
-    .min(32, { message: 'JWT_SECRET must be at least 32 characters long' })
-    .default('your-secret-key-change-me-in-production-min-32-chars'),
+  JWT_SECRET: z.string().min(32, { message: 'JWT_SECRET must be at least 32 characters long' }),
 
   JWT_EXPIRES_IN: z
     .string()
@@ -58,12 +55,9 @@ export const envSchema = z.object({
         .filter(Boolean),
     ),
 
-  REDIS_URL: z
-    .string()
-    .refine((value) => /^rediss?:\/\/.+/.test(value), {
-      message: 'REDIS_URL must start with redis:// or rediss://',
-    })
-    .default('redis://localhost:6379'),
+  REDIS_URL: z.string().refine((value) => /^rediss?:\/\/.+/.test(value), {
+    message: 'REDIS_URL must start with redis:// or rediss://',
+  }),
 
   REDIS_TTL: z
     .string()
