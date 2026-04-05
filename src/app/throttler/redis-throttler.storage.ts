@@ -31,6 +31,7 @@ export class RedisThrottlerStorage implements ThrottlerStorage, OnModuleDestroy 
   private readonly logger = new Logger(RedisThrottlerStorage.name);
   private readonly memoryStore = new Map<string, MemoryEntry>();
   private readonly cleanupTimer: NodeJS.Timeout;
+  private redisUnavailable = false;
 
   constructor(@Inject(REDIS_CLIENT) private readonly redis: Redis) {
     this.cleanupTimer = setInterval(
@@ -53,9 +54,19 @@ export class RedisThrottlerStorage implements ThrottlerStorage, OnModuleDestroy 
     _throttlerName: string,
   ): Promise<ThrottlerStorageRecord> {
     try {
-      return await this.performRedisIncrement({ key, ttl, limit, blockDuration });
+      const result = await this.performRedisIncrement({ key, ttl, limit, blockDuration });
+
+      if (this.redisUnavailable) {
+        this.redisUnavailable = false;
+        this.logger.log('Redis throttler recovered, switching back from in-memory fallback');
+      }
+
+      return result;
     } catch (error) {
-      this.logger.warn('Redis throttler unavailable, falling back to in-memory store', error);
+      if (!this.redisUnavailable) {
+        this.redisUnavailable = true;
+        this.logger.warn('Redis throttler unavailable, falling back to in-memory store', error);
+      }
 
       return this.performMemoryIncrement({ key, ttl, limit, blockDuration });
     }
@@ -95,16 +106,16 @@ export class RedisThrottlerStorage implements ThrottlerStorage, OnModuleDestroy 
   private performMemoryIncrement(params: IncrementParams): ThrottlerStorageRecord {
     const { key, ttl, limit, blockDuration } = params;
     const now = Date.now();
-    const ttlSeconds = Math.ceil(ttl / 1000);
 
     const existing = this.memoryStore.get(key);
 
     if (existing && existing.blockedUntil > now) {
       const timeToBlockExpire = Math.ceil((existing.blockedUntil - now) / 1000);
+      const timeToExpire = Math.max(0, Math.ceil((existing.expiresAt - now) / 1000));
 
       return {
         totalHits: existing.hits,
-        timeToExpire: Math.ceil((existing.expiresAt - now) / 1000),
+        timeToExpire,
         isBlocked: true,
         timeToBlockExpire,
       };
@@ -116,10 +127,11 @@ export class RedisThrottlerStorage implements ThrottlerStorage, OnModuleDestroy 
     if (entry.hits > limit && blockDuration > 0) {
       entry.blockedUntil = now + blockDuration;
       this.memoryStore.set(key, entry);
+      const timeToExpire = Math.max(0, Math.ceil((entry.expiresAt - now) / 1000));
 
       return {
         totalHits: entry.hits,
-        timeToExpire: ttlSeconds,
+        timeToExpire,
         isBlocked: true,
         timeToBlockExpire: Math.ceil(blockDuration / 1000),
       };

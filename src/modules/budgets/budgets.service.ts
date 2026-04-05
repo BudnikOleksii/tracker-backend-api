@@ -220,9 +220,10 @@ export class BudgetsService {
   }
 
   async checkOverspendForAllBudgets(): Promise<{ checked: number; updated: number }> {
+    const now = new Date();
     const [activeBudgets, spentAmounts] = await Promise.all([
-      this.budgetRepository.findActiveBudgetsWithFutureEndDate(),
-      this.budgetRepository.getSpentAmountForAllActiveBudgets(),
+      this.budgetRepository.findActiveBudgetsWithFutureEndDate(now),
+      this.budgetRepository.getSpentAmountForAllActiveBudgets(now),
     ]);
 
     const spentByBudgetId = new Map(spentAmounts.map(({ budgetId, spent }) => [budgetId, spent]));

@@ -4,7 +4,6 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 
 import type { Env } from '@/app/config/env.schema.js';
-import { CacheModule } from '@/modules/cache/cache.module.js';
 
 import { DefaultTransactionCategoriesModule } from '../default-transaction-categories/default-transaction-categories.module.js';
 import { UserModule } from '../user/user.module.js';
@@ -19,7 +18,6 @@ import { TokenBlacklistService } from './token-blacklist.service.js';
   imports: [
     DefaultTransactionCategoriesModule,
     UserModule,
-    CacheModule,
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],

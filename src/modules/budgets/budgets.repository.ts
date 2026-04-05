@@ -296,8 +296,8 @@ export class BudgetRepository {
     return result[0]?.total ?? '0.00';
   }
 
-  async findActiveBudgetsWithFutureEndDate(): Promise<BudgetInfo[]> {
-    const now = new Date();
+  async findActiveBudgetsWithFutureEndDate(now?: Date): Promise<BudgetInfo[]> {
+    now = now ?? new Date();
     const result = await this.db
       .select()
       .from(budgets)
@@ -312,8 +312,10 @@ export class BudgetRepository {
     return result.map((row) => this.toBudgetInfo(row));
   }
 
-  async getSpentAmountForAllActiveBudgets(): Promise<{ budgetId: string; spent: string }[]> {
-    const now = new Date();
+  async getSpentAmountForAllActiveBudgets(
+    now?: Date,
+  ): Promise<{ budgetId: string; spent: string }[]> {
+    now = now ?? new Date();
 
     const activeBudgets = this.db
       .select({

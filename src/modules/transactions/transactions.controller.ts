@@ -118,6 +118,10 @@ export class TransactionsController {
     res.setHeader('Content-Type', result.contentType);
     res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);
 
+    if (result.isTruncated) {
+      res.setHeader('X-Result-Truncated', 'true');
+    }
+
     if ('stream' in result) {
       return new StreamableFile(result.stream);
     }

@@ -282,19 +282,20 @@ export class TransactionsService {
     dateTo?: string;
     categoryId?: string;
   }): Promise<
-    | { stream: Readable; contentType: string; filename: string }
-    | { content: string; contentType: string; filename: string }
+    | { stream: Readable; contentType: string; filename: string; isTruncated: boolean }
+    | { content: string; contentType: string; filename: string; isTruncated: boolean }
   > {
     const { userId, format, dateFrom, dateTo, categoryId } = params;
 
     const query: ExportTransactionQuery = { userId, dateFrom, dateTo, categoryId };
-    const [rows, categories] = await Promise.all([
+    const [exportResult, categories] = await Promise.all([
       this.transactionRepository.findAllForExport(query),
       this.transactionRepository.findCategoriesByUser(userId),
     ]);
 
     const categoryMap = new Map(categories.map((c) => [c.id, c]));
-    const exportRows = rows.map((row) => this.toExportRow(row, categoryMap));
+    const exportRows = exportResult.data.map((row) => this.toExportRow(row, categoryMap));
+    const { isTruncated } = exportResult;
 
     const date = new Date().toISOString().split('T')[0];
     const filename = `transactions-${date}.${format}`;
@@ -305,12 +306,12 @@ export class TransactionsService {
         columns: ['Date', 'Category', 'Type', 'Amount', 'Currency', 'Subcategory'],
       });
 
-      return { stream, contentType: 'text/csv', filename };
+      return { stream, contentType: 'text/csv', filename, isTruncated };
     }
 
     const content = JSON.stringify(exportRows, null, 2);
 
-    return { content, contentType: 'application/json', filename };
+    return { content, contentType: 'application/json', filename, isTruncated };
   }
 
   private toExportRow(

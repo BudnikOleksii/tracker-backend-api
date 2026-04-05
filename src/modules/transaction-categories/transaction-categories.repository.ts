@@ -273,7 +273,7 @@ export class TransactionCategoryRepository {
       ) AS found
     `);
 
-    return result.rows[0]?.found ?? false;
+    return result.rows[0]?.found === true;
   }
 
   private toCategoryInfo(row: typeof transactionCategories.$inferSelect): CategoryInfo {

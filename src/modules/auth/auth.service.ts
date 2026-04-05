@@ -145,14 +145,12 @@ export class AuthService {
 
   async logout(refreshToken: string, accessTokenJti: string): Promise<boolean> {
     const token = await this.refreshTokenRepo.findByToken(refreshToken);
-    if (!token) {
-      return false;
-    }
+    const deleted = token ? await this.refreshTokenRepo.delete(token.id) : false;
 
-    const deleted = await this.refreshTokenRepo.delete(token.id);
-
-    if (deleted) {
+    try {
       await this.blacklistAccessToken(accessTokenJti);
+    } catch (error) {
+      this.logger.warn('Failed to blacklist access token during logout', error);
     }
 
     return deleted;

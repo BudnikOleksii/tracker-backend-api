@@ -266,7 +266,7 @@ export class DefaultTransactionCategoryRepository {
       ) AS found
     `);
 
-    return result.rows[0]?.found ?? false;
+    return result.rows[0]?.found === true;
   }
 
   async cloneDefaultCategoriesToUser(userId: string): Promise<void> {

@@ -152,7 +152,9 @@ export class TransactionRepository {
     };
   }
 
-  async findAllForExport(query: ExportTransactionQuery): Promise<TransactionInfo[]> {
+  async findAllForExport(
+    query: ExportTransactionQuery,
+  ): Promise<{ data: TransactionInfo[]; isTruncated: boolean }> {
     const { userId, categoryId, dateFrom, dateTo } = query;
 
     const conditions: SQL[] = [eq(transactions.userId, userId)];
@@ -188,7 +190,10 @@ export class TransactionRepository {
       .orderBy(desc(transactions.date))
       .limit(MAX_EXPORT_ROWS);
 
-    return data.map((row) => this.toTransactionInfo(row));
+    return {
+      data: data.map((row) => this.toTransactionInfo(row)),
+      isTruncated: data.length === MAX_EXPORT_ROWS,
+    };
   }
 
   async transaction<T>(callback: (tx: DrizzleDb) => Promise<T>): Promise<T> {
