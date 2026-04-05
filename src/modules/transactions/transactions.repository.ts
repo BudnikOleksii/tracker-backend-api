@@ -80,6 +80,8 @@ export interface ParentCategoryInfo {
   subcategories: { id: string; name: string }[];
 }
 
+export const MAX_EXPORT_ROWS = 10_000;
+
 const SORT_COLUMN_MAP = {
   date: transactions.date,
   amount: transactions.amount,
@@ -183,7 +185,8 @@ export class TransactionRepository {
       .select()
       .from(transactions)
       .where(and(...conditions))
-      .orderBy(desc(transactions.date));
+      .orderBy(desc(transactions.date))
+      .limit(MAX_EXPORT_ROWS);
 
     return data.map((row) => this.toTransactionInfo(row));
   }

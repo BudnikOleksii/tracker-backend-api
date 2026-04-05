@@ -1,5 +1,5 @@
 import { index, numeric, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 
 import { budgetPeriodEnum, budgetStatusEnum, currencyCodeEnum } from './enums.js';
 import { users } from './users.js';
@@ -33,6 +33,9 @@ export const budgets = pgTable(
     index('Budget_categoryId_idx').on(table.categoryId),
     index('Budget_status_idx').on(table.status),
     index('Budget_startDate_endDate_idx').on(table.startDate, table.endDate),
+    index('Budget_status_endDate_idx')
+      .on(table.status, table.endDate)
+      .where(sql`status IN ('ACTIVE', 'EXCEEDED')`),
   ],
 );
 

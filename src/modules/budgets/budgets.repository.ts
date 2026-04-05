@@ -312,10 +312,74 @@ export class BudgetRepository {
     return result.map((row) => this.toBudgetInfo(row));
   }
 
-  async batchUpdateStatuses(updates: { id: string; status: BudgetStatus }[]): Promise<void> {
-    for (const { id, status } of updates) {
-      await this.db.update(budgets).set({ status }).where(eq(budgets.id, id));
+  async getSpentAmountForAllActiveBudgets(): Promise<{ budgetId: string; spent: string }[]> {
+    const now = new Date();
+
+    const activeBudgets = this.db
+      .select({
+        id: budgets.id,
+        userId: budgets.userId,
+        categoryId: budgets.categoryId,
+        currencyCode: budgets.currencyCode,
+        startDate: budgets.startDate,
+        endDate: budgets.endDate,
+      })
+      .from(budgets)
+      .where(
+        and(
+          or(eq(budgets.status, 'ACTIVE'), eq(budgets.status, 'EXCEEDED')),
+          lte(budgets.startDate, now),
+          gte(budgets.endDate, now),
+        ),
+      )
+      .as('active_budgets');
+
+    const result = await this.db
+      .select({
+        budgetId: activeBudgets.id,
+        spent: sql<string>`COALESCE(SUM(${transactions.amount}), '0.00')`,
+      })
+      .from(activeBudgets)
+      .leftJoin(
+        transactions,
+        and(
+          eq(transactions.userId, activeBudgets.userId),
+          eq(transactions.currencyCode, activeBudgets.currencyCode),
+          gte(transactions.date, activeBudgets.startDate),
+          lte(transactions.date, activeBudgets.endDate),
+          eq(transactions.type, 'EXPENSE'),
+          sql`(${activeBudgets.categoryId} IS NULL OR ${transactions.categoryId} = ${activeBudgets.categoryId})`,
+        ),
+      )
+      .groupBy(activeBudgets.id);
+
+    return result as { budgetId: string; spent: string }[];
+  }
+
+  async bulkUpdateStatuses(updates: { id: string; status: BudgetStatus }[]): Promise<void> {
+    if (updates.length === 0) {
+      return;
     }
+
+    const ids = updates.map(({ id }) => id);
+    const caseWhen = sql.join(
+      updates.map(
+        ({ id, status }) => sql`WHEN ${budgets.id} = ${id} THEN ${status}::"BudgetStatus"`,
+      ),
+      sql` `,
+    );
+
+    await this.db.transaction(async (tx) => {
+      await tx
+        .update(budgets)
+        .set({ status: sql`CASE ${caseWhen} ELSE ${budgets.status} END` })
+        .where(
+          sql`${budgets.id} = ANY(ARRAY[${sql.join(
+            ids.map((id) => sql`${id}`),
+            sql`, `,
+          )}]::uuid[])`,
+        );
+    });
   }
 
   private toBudgetInfo(row: typeof budgets.$inferSelect): BudgetInfo {

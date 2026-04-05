@@ -4,6 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 
 import type { Env } from '@/app/config/env.schema.js';
+import { CacheModule } from '@/modules/cache/cache.module.js';
 
 import { DefaultTransactionCategoriesModule } from '../default-transaction-categories/default-transaction-categories.module.js';
 import { UserModule } from '../user/user.module.js';
@@ -12,11 +13,13 @@ import { AuthService } from './auth.service.js';
 import { JwtStrategy } from './jwt.strategy.js';
 import { LoginLogRepository } from './login-log.repository.js';
 import { RefreshTokenRepository } from './refresh-token.repository.js';
+import { TokenBlacklistService } from './token-blacklist.service.js';
 
 @Module({
   imports: [
     DefaultTransactionCategoriesModule,
     UserModule,
+    CacheModule,
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -30,7 +33,13 @@ import { RefreshTokenRepository } from './refresh-token.repository.js';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, RefreshTokenRepository, LoginLogRepository],
-  exports: [AuthService, RefreshTokenRepository],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    RefreshTokenRepository,
+    LoginLogRepository,
+    TokenBlacklistService,
+  ],
+  exports: [AuthService, RefreshTokenRepository, TokenBlacklistService],
 })
 export class AuthModule {}

@@ -220,33 +220,34 @@ export class BudgetsService {
   }
 
   async checkOverspendForAllBudgets(): Promise<{ checked: number; updated: number }> {
-    const activeBudgets = await this.budgetRepository.findActiveBudgetsWithFutureEndDate();
-    const statusUpdates: { id: string; status: BudgetStatus }[] = [];
+    const [activeBudgets, spentAmounts] = await Promise.all([
+      this.budgetRepository.findActiveBudgetsWithFutureEndDate(),
+      this.budgetRepository.getSpentAmountForAllActiveBudgets(),
+    ]);
 
-    for (const budget of activeBudgets) {
-      const spentAmount = await this.budgetRepository.getSpentAmount({
-        userId: budget.userId,
-        categoryId: budget.categoryId,
-        currencyCode: budget.currencyCode,
-        startDate: budget.startDate,
-        endDate: budget.endDate,
-      });
+    const spentByBudgetId = new Map(spentAmounts.map(({ budgetId, spent }) => [budgetId, spent]));
 
-      const spent = parseFloat(spentAmount);
+    const statusUpdates = activeBudgets.flatMap((budget) => {
+      const spent = parseFloat(spentByBudgetId.get(budget.id) ?? '0');
       const amount = parseFloat(budget.amount);
 
       if (spent > amount && budget.status === 'ACTIVE') {
-        statusUpdates.push({ id: budget.id, status: 'EXCEEDED' });
-      } else if (spent <= amount && budget.status === 'EXCEEDED') {
-        statusUpdates.push({ id: budget.id, status: 'ACTIVE' });
+        return [{ id: budget.id, status: 'EXCEEDED' as BudgetStatus }];
       }
-    }
+
+      if (spent <= amount && budget.status === 'EXCEEDED') {
+        return [{ id: budget.id, status: 'ACTIVE' as BudgetStatus }];
+      }
+
+      return [];
+    });
 
     if (statusUpdates.length > 0) {
-      await this.budgetRepository.batchUpdateStatuses(statusUpdates);
+      await this.budgetRepository.bulkUpdateStatuses(statusUpdates);
 
+      const updatedIds = new Set(statusUpdates.map((u) => u.id));
       const affectedUserIds = new Set(
-        activeBudgets.filter((b) => statusUpdates.some((u) => u.id === b.id)).map((b) => b.userId),
+        activeBudgets.filter((b) => updatedIds.has(b.id)).map((b) => b.userId),
       );
 
       for (const uid of affectedUserIds) {

@@ -3,11 +3,8 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
-  Inject,
 } from '@nestjs/common';
 
-import { transactionCategories } from '@/database/schemas/index.js';
-import { DB_TOKEN } from '@/database/types.js';
 import type { DrizzleDb } from '@/database/types.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
@@ -23,11 +20,7 @@ import type {
 
 @Injectable()
 export class DefaultTransactionCategoriesService {
-  constructor(
-    private readonly repository: DefaultTransactionCategoryRepository,
-    @Inject(DB_TOKEN)
-    private readonly db: DrizzleDb,
-  ) {}
+  constructor(private readonly repository: DefaultTransactionCategoryRepository) {}
 
   async findAll(query: DefaultCategoryListQuery): Promise<DefaultCategoryListResult> {
     if (query.root && query.type === undefined) {
@@ -197,53 +190,7 @@ export class DefaultTransactionCategoriesService {
   }
 
   async assignDefaultCategoriesToUser(userId: string): Promise<void> {
-    const defaults = await this.repository.findAllActive();
-
-    if (defaults.length === 0) {
-      return;
-    }
-
-    const parents = defaults.filter((c) => c.parentDefaultTransactionCategoryId === null);
-    const children = defaults.filter((c) => c.parentDefaultTransactionCategoryId !== null);
-
-    const idMap = new Map<string, string>();
-
-    await this.db.transaction(async (tx) => {
-      for (const parent of parents) {
-        const [created] = await tx
-          .insert(transactionCategories)
-          .values({
-            userId,
-            name: parent.name,
-            type: parent.type,
-          })
-          .returning({ id: transactionCategories.id });
-
-        if (created) {
-          idMap.set(parent.id, created.id);
-        }
-      }
-
-      for (const child of children) {
-        const mappedParentId = idMap.get(child.parentDefaultTransactionCategoryId as string);
-
-        if (mappedParentId) {
-          const [created] = await tx
-            .insert(transactionCategories)
-            .values({
-              userId,
-              name: child.name,
-              type: child.type,
-              parentCategoryId: mappedParentId,
-            })
-            .returning({ id: transactionCategories.id });
-
-          if (created) {
-            idMap.set(child.id, created.id);
-          }
-        }
-      }
-    });
+    await this.repository.cloneDefaultCategoriesToUser(userId);
   }
 
   private async checkDuplicate(

@@ -36,6 +36,12 @@ export const transactions = pgTable(
     index('Transaction_type_idx').on(table.type),
     index('Transaction_currencyCode_idx').on(table.currencyCode),
     index('Transaction_recurringTransactionId_idx').on(table.recurringTransactionId),
+    index('Transaction_userId_date_idx').on(table.userId, table.date.desc()),
+    index('Transaction_userId_currencyCode_date_idx').on(
+      table.userId,
+      table.currencyCode,
+      table.date.desc(),
+    ),
     foreignKey({
       columns: [table.userId, table.categoryId],
       foreignColumns: [transactionCategories.userId, transactionCategories.id],

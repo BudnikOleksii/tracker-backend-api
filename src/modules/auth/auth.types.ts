@@ -10,6 +10,7 @@ export interface AuthUser {
   email: string;
   role: string;
   sessionId: string;
+  jti: string;
 }
 
 export type AuthenticatedRequest = Express.Request & { user: AuthUser };

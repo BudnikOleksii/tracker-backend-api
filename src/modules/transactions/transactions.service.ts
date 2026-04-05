@@ -1,7 +1,8 @@
 import path from 'node:path';
+import type { Readable } from 'node:stream';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { parse } from 'csv-parse/sync';
-import { stringify } from 'csv-stringify/sync';
+import { stringify as stringifyCsvStream } from 'csv-stringify';
 
 import type { DrizzleDb } from '@/database/types.js';
 import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
@@ -280,7 +281,10 @@ export class TransactionsService {
     dateFrom?: string;
     dateTo?: string;
     categoryId?: string;
-  }): Promise<{ content: string; contentType: string; filename: string }> {
+  }): Promise<
+    | { stream: Readable; contentType: string; filename: string }
+    | { content: string; contentType: string; filename: string }
+  > {
     const { userId, format, dateFrom, dateTo, categoryId } = params;
 
     const query: ExportTransactionQuery = { userId, dateFrom, dateTo, categoryId };
@@ -296,12 +300,12 @@ export class TransactionsService {
     const filename = `transactions-${date}.${format}`;
 
     if (format === 'csv') {
-      const content = stringify(exportRows, {
+      const stream = stringifyCsvStream(exportRows, {
         header: true,
         columns: ['Date', 'Category', 'Type', 'Amount', 'Currency', 'Subcategory'],
       });
 
-      return { content, contentType: 'text/csv', filename };
+      return { stream, contentType: 'text/csv', filename };
     }
 
     const content = JSON.stringify(exportRows, null, 2);

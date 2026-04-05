@@ -1,5 +1,6 @@
 import { Controller, Get, Query, Request, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 
 import { JwtAuthGuard } from '@/shared/guards/index.js';
 
@@ -18,6 +19,7 @@ import { TransactionsAnalyticsService } from './transactions-analytics.service.j
 @Controller('transactions-analytics')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
+@Throttle({ default: { limit: 10, ttl: 60000 } })
 export class TransactionsAnalyticsController {
   constructor(private readonly transactionsAnalyticsService: TransactionsAnalyticsService) {}
 

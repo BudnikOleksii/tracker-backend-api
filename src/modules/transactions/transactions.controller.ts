@@ -13,6 +13,7 @@ import {
   Query,
   Request,
   Res,
+  StreamableFile,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -26,6 +27,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
 
 import { UseEnvelope } from '@/shared/decorators/use-envelope.decorator.js';
@@ -96,6 +98,7 @@ export class TransactionsController {
   }
 
   @Get('export')
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @ApiOperation({ summary: 'Export transactions as JSON or CSV file' })
   @ApiResponse({ status: 200, description: 'File download' })
   @ApiResponse({ status: 400, description: 'Invalid format or query parameters' })
@@ -103,7 +106,7 @@ export class TransactionsController {
     @Query() query: ExportTransactionQueryDto,
     @Request() req: { user: { id: string } },
     @Res({ passthrough: true }) res: Response,
-  ) {
+  ): Promise<StreamableFile | string> {
     const result = await this.transactionsService.exportTransactions({
       userId: req.user.id,
       format: query.format,
@@ -115,11 +118,16 @@ export class TransactionsController {
     res.setHeader('Content-Type', result.contentType);
     res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);
 
+    if ('stream' in result) {
+      return new StreamableFile(result.stream);
+    }
+
     return result.content;
   }
 
   @Post('import')
   @HttpCode(HttpStatus.CREATED)
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 5 * 1024 * 1024 } }))
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Import transactions from JSON or CSV file' })

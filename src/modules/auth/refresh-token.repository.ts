@@ -67,13 +67,16 @@ export class RefreshTokenRepository {
   }
 
   async findActiveByUserId(userId: string): Promise<RefreshToken[]> {
-    const now = new Date();
-    const results = await this.db
+    return this.db
       .select()
       .from(refreshTokens)
-      .where(eq(refreshTokens.userId, userId));
-
-    return results.filter((rt) => rt.expiresAt > now && rt.revokedAt === null);
+      .where(
+        and(
+          eq(refreshTokens.userId, userId),
+          isNull(refreshTokens.revokedAt),
+          gt(refreshTokens.expiresAt, new Date()),
+        ),
+      );
   }
 
   async consumeToken(token: string): Promise<RefreshToken | null> {

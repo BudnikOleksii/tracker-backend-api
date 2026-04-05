@@ -1,4 +1,4 @@
-import { boolean, index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { boolean, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 import { countryCodeEnum, currencyCodeEnum, userRoleEnum } from './enums.js';
@@ -33,7 +33,7 @@ export const users = pgTable(
       .$onUpdate(() => new Date()),
     deletedAt: timestamp('deletedAt', { precision: 3, mode: 'date' }),
   },
-  (table) => [index('User_email_idx').on(table.email)],
+  () => [],
 );
 
 export type User = typeof users.$inferSelect;
