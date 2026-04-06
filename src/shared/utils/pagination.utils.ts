@@ -14,6 +14,7 @@ export interface PaginatedResponse<T> {
   total: number;
   page: number;
   pageSize: number;
+  totalPages: number;
   hasMore: boolean;
 }
 
@@ -31,6 +32,7 @@ export function buildPaginatedResponse<T>(
     total: result.total,
     page,
     pageSize,
+    totalPages,
     hasMore: page < totalPages,
   };
 }
