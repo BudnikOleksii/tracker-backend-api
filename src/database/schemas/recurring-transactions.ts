@@ -35,9 +35,13 @@ export const recurringTransactions = pgTable(
     description: text('description'),
     frequency: recurringFrequencyEnum('frequency').notNull(),
     interval: integer('interval').notNull().default(1),
-    startDate: timestamp('startDate', { precision: 3, mode: 'date' }).notNull(),
-    endDate: timestamp('endDate', { precision: 3, mode: 'date' }),
-    nextOccurrenceDate: timestamp('nextOccurrenceDate', { precision: 3, mode: 'date' }).notNull(),
+    startDate: timestamp('startDate', { precision: 3, mode: 'date', withTimezone: true }).notNull(),
+    endDate: timestamp('endDate', { precision: 3, mode: 'date', withTimezone: true }),
+    nextOccurrenceDate: timestamp('nextOccurrenceDate', {
+      precision: 3,
+      mode: 'date',
+      withTimezone: true,
+    }).notNull(),
     status: recurringTransactionStatusEnum('status').notNull().default('ACTIVE'),
     createdAt: timestamp('createdAt', { precision: 3, mode: 'date' }).notNull().defaultNow(),
     updatedAt: timestamp('updatedAt', { precision: 3, mode: 'date' })

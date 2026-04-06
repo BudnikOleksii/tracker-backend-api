@@ -26,7 +26,7 @@ export const transactions = pgTable(
     type: transactionTypeEnum('type').notNull(),
     amount: numeric('amount', { precision: 19, scale: 2 }).notNull(),
     currencyCode: currencyCodeEnum('currencyCode').notNull(),
-    date: timestamp('date', { precision: 3, mode: 'date' }).notNull(),
+    date: timestamp('date', { precision: 3, mode: 'date', withTimezone: true }).notNull(),
     description: text('description'),
     recurringTransactionId: uuid('recurringTransactionId').references(
       () => recurringTransactions.id,
