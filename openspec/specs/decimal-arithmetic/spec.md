@@ -24,5 +24,5 @@ The system SHALL use `decimal.js` for all arithmetic operations on monetary valu
 
 #### Scenario: Transaction currency totals precision
 
-- **WHEN** deletion response aggregates remaining totals by currency
+- **WHEN** transactions are grouped by category and totals are accumulated per currency
 - **THEN** the accumulation SHALL use decimal arithmetic instead of float addition
