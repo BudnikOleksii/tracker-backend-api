@@ -17,7 +17,9 @@ export function createPool(options: DrizzleModuleOptions): Pool {
   });
 
   pool.on('connect', (client) => {
-    void client.query(`SET statement_timeout = '${STATEMENT_TIMEOUT}'`);
+    client.query(`SET statement_timeout = '${STATEMENT_TIMEOUT}'`).catch((err: unknown) => {
+      console.error('Failed to set statement_timeout on connection:', err);
+    });
   });
 
   return pool;
