@@ -10,8 +10,8 @@ import { IsOptional, IsString } from 'class-validator';
 
 import { OffsetPaginationDto } from '@/shared/dtos/pagination.dto.js';
 import { Roles } from '@/shared/decorators/roles.decorator.js';
-import { UseEnvelope } from '@/shared/decorators/use-envelope.decorator.js';
 import { JwtAuthGuard, RolesGuard } from '@/shared/guards/index.js';
+import { buildPaginatedResponse } from '@/shared/utils/pagination.utils.js';
 
 import { AuditLogService } from './audit-log.service.js';
 import { AuditLogListResponseDto } from './dtos/audit-log-list-response.dto.js';
@@ -37,29 +37,16 @@ export class AuditLogController {
   constructor(private readonly auditLogService: AuditLogService) {}
 
   @Get()
-  @UseEnvelope()
   @ApiOperation({ summary: 'Query audit log list' })
   @ApiResponse({ status: 200, type: AuditLogListResponseDto })
   async findAll(@Query() query: AuditLogQueryDto) {
-    const page = query.page ?? 1;
-    const pageSize = query.pageSize ?? 20;
-
     const result = await this.auditLogService.findAll({
-      page,
-      pageSize,
+      page: query.page ?? 1,
+      pageSize: query.pageSize ?? 20,
       actorId: query.actorId,
       action: query.action,
     });
 
-    const totalPages = Math.ceil(result.total / pageSize);
-
-    return {
-      object: 'list' as const,
-      data: result.data,
-      total: result.total,
-      page,
-      pageSize,
-      hasMore: page < totalPages,
-    };
+    return buildPaginatedResponse(query, result);
   }
 }

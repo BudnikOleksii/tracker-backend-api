@@ -15,8 +15,8 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { Roles } from '@/shared/decorators/roles.decorator.js';
-import { UseEnvelope } from '@/shared/decorators/use-envelope.decorator.js';
 import { MessageResponseDto } from '@/shared/dtos/message-response.dto.js';
+import { buildPaginatedResponse } from '@/shared/utils/pagination.utils.js';
 import { JwtAuthGuard, RolesGuard } from '@/shared/guards/index.js';
 
 import { CreateDefaultTransactionCategoryDto } from './dtos/create-default-transaction-category.dto.js';
@@ -35,30 +35,17 @@ export class DefaultTransactionCategoriesController {
   constructor(private readonly service: DefaultTransactionCategoriesService) {}
 
   @Get()
-  @UseEnvelope()
   @ApiOperation({ summary: 'List default transaction categories' })
   @ApiResponse({ status: 200, type: DefaultTransactionCategoryListResponseDto })
   async findAll(@Query() query: DefaultTransactionCategoryQueryDto) {
-    const page = query.page ?? 1;
-    const pageSize = query.pageSize ?? 20;
-
     const result = await this.service.findAll({
-      page,
-      pageSize,
+      page: query.page ?? 1,
+      pageSize: query.pageSize ?? 20,
       type: query.type,
       root: query.root,
     });
 
-    const totalPages = Math.ceil(result.total / pageSize);
-
-    return {
-      object: 'list' as const,
-      data: result.data,
-      total: result.total,
-      page,
-      pageSize,
-      hasMore: page < totalPages,
-    };
+    return buildPaginatedResponse(query, result);
   }
 
   @Get(':id')

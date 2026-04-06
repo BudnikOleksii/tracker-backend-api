@@ -30,8 +30,8 @@ import {
 import { Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
 
-import { UseEnvelope } from '@/shared/decorators/use-envelope.decorator.js';
 import { MessageResponseDto } from '@/shared/dtos/message-response.dto.js';
+import { buildPaginatedResponse } from '@/shared/utils/pagination.utils.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 import { JwtAuthGuard } from '@/shared/guards/index.js';
 
@@ -53,17 +53,13 @@ export class TransactionsController {
   constructor(private readonly transactionsService: TransactionsService) {}
 
   @Get()
-  @UseEnvelope()
   @ApiOperation({ summary: 'List transactions' })
   @ApiResponse({ status: 200, type: TransactionListResponseDto })
   async findAll(@Query() query: TransactionQueryDto, @Request() req: { user: { id: string } }) {
-    const page = query.page ?? 1;
-    const pageSize = query.pageSize ?? 20;
-
     const result = await this.transactionsService.findAll({
       userId: req.user.id,
-      page,
-      pageSize,
+      page: query.page ?? 1,
+      pageSize: query.pageSize ?? 20,
       type: query.type,
       categoryId: query.categoryId,
       currencyCode: query.currencyCode,
@@ -73,16 +69,7 @@ export class TransactionsController {
       sortOrder: query.sortOrder,
     });
 
-    const totalPages = Math.ceil(result.total / pageSize);
-
-    return {
-      object: 'list' as const,
-      data: result.data,
-      total: result.total,
-      page,
-      pageSize,
-      hasMore: page < totalPages,
-    };
+    return buildPaginatedResponse(query, result);
   }
 
   @Get('by-category/:categoryId')

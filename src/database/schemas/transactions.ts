@@ -1,5 +1,14 @@
-import { foreignKey, index, numeric, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+import {
+  check,
+  foreignKey,
+  index,
+  numeric,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
+import { relations, sql } from 'drizzle-orm';
 
 import { currencyCodeEnum, transactionTypeEnum } from './enums.js';
 import { users } from './users.js';
@@ -46,6 +55,7 @@ export const transactions = pgTable(
       columns: [table.userId, table.categoryId],
       foreignColumns: [transactionCategories.userId, transactionCategories.id],
     }).onDelete('restrict'),
+    check('Transaction_amount_positive', sql`amount > 0`),
   ],
 );
 

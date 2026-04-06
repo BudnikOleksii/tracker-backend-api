@@ -5,7 +5,6 @@ import {
   text,
   timestamp,
   unique,
-  uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
@@ -35,12 +34,9 @@ export const transactionCategories = pgTable(
     deletedAt: timestamp('deletedAt', { precision: 3, mode: 'date' }),
   },
   (table) => [
-    uniqueIndex('TransactionCategory_userId_name_type_parentCategoryId_key').on(
-      table.userId,
-      table.name,
-      table.type,
-      table.parentCategoryId,
-    ),
+    unique('TransactionCategory_userId_name_type_parentCategoryId_key')
+      .on(table.userId, table.name, table.type, table.parentCategoryId)
+      .nullsNotDistinct(),
     index('TransactionCategory_userId_idx').on(table.userId),
     index('TransactionCategory_parentCategoryId_idx').on(table.parentCategoryId),
     index('TransactionCategory_type_idx').on(table.type),

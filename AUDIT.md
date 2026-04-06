@@ -513,43 +513,43 @@ Also drop duplicate indexes: `User_email_idx` (covered by unique constraint), `R
 
 ## Summary Matrix
 
-| #   | Finding                                  | Impact | Effort | Priority |
-| --- | ---------------------------------------- | ------ | ------ | -------- |
-| 1   | Add Helmet security headers              | 5      | S      | P0       |
-| 2   | Remove default JWT_SECRET                | 5      | S      | P0       |
-| 3   | Fix CORS default to deny all             | 5      | S      | P0       |
-| 4   | Enable graceful shutdown hooks           | 5      | S      | P0       |
-| 5   | Filter soft-deleted users from login     | 5      | S      | P0       |
-| 6   | Fix login timing side-channel            | 4      | S      | P0       |
-| 7   | Fix N+1 budget overspend cron            | 5      | M      | P1       |
-| 8   | Add composite database indexes           | 5      | S      | P1       |
-| 9   | Push refresh token filters to SQL        | 4      | S      | P1       |
-| 10  | Cap export with LIMIT + streaming        | 5      | M      | P1       |
-| 11  | Replace isDescendantOf with CTE          | 4      | S      | P1       |
-| 12  | Rate limiting fail-closed on Redis down  | 5      | M      | P1       |
-| 13  | Per-endpoint throttling on expensive ops | 4      | S      | P1       |
-| 14  | Protect /process endpoint (admin-only)   | 4      | S      | P1       |
-| 15  | Align admin password policy              | 4      | S      | P1       |
-| 16  | Fix service-to-DB architecture violation | 4      | M      | P1       |
-| 17  | Add JWT session validation / blacklist   | 5      | L      | P1       |
-| 18  | Consolidate 3 Redis connections to 1     | 4      | M      | P1       |
-| 19  | Domain events for cache invalidation     | 4      | L      | P2       |
-| 20  | Extract pagination helper                | 3      | S      | P2       |
-| 21  | Remove/complete TransformInterceptor     | 3      | S      | P2       |
-| 22  | Add test coverage                        | 5      | XL     | P2       |
-| 23  | Async CSV parsing                        | 4      | M      | P2       |
-| 24  | Cache stampede protection                | 4      | M      | P2       |
-| 25  | Migrate date columns to timestamptz      | 4      | M      | P2       |
-| 26  | CSRF protection for cookie auth          | 4      | M      | P2       |
-| 27  | Disable Swagger in production            | 3      | S      | P2       |
-| 28  | Consistent validator decorators          | 3      | S      | P2       |
-| 29  | Add database CHECK constraints           | 3      | S      | P2       |
-| 30  | Fix NULLS NOT DISTINCT on unique index   | 3      | S      | P2       |
-| 31  | Decimal arithmetic for money             | 4      | M      | P2       |
-| 32  | HTTP response compression                | 2      | S      | P3       |
-| 33  | Add statement_timeout                    | 3      | S      | P3       |
-| 34  | Sort params on all collections           | 2      | M      | P3       |
-| 35  | Table partitioning for transactions      | 3      | XL     | P3       |
+| #   | Finding                                  | Impact | Effort | Priority | Status |
+| --- | ---------------------------------------- | ------ | ------ | -------- | ------ |
+| 1   | Add Helmet security headers              | 5      | S      | P0       | Done   |
+| 2   | Remove default JWT_SECRET                | 5      | S      | P0       | Done   |
+| 3   | Fix CORS default to deny all             | 5      | S      | P0       | Done   |
+| 4   | Enable graceful shutdown hooks           | 5      | S      | P0       | Done   |
+| 5   | Filter soft-deleted users from login     | 5      | S      | P0       | Done   |
+| 6   | Fix login timing side-channel            | 4      | S      | P0       | Done   |
+| 7   | Fix N+1 budget overspend cron            | 5      | M      | P1       | Done   |
+| 8   | Add composite database indexes           | 5      | S      | P1       | Done   |
+| 9   | Push refresh token filters to SQL        | 4      | S      | P1       | Done   |
+| 10  | Cap export with LIMIT + streaming        | 5      | M      | P1       | Done   |
+| 11  | Replace isDescendantOf with CTE          | 4      | S      | P1       | Done   |
+| 12  | Rate limiting fail-closed on Redis down  | 5      | M      | P1       | Done   |
+| 13  | Per-endpoint throttling on expensive ops | 4      | S      | P1       | Done   |
+| 14  | Protect /process endpoint (admin-only)   | 4      | S      | P1       | Done   |
+| 15  | Align admin password policy              | 4      | S      | P1       | Done   |
+| 16  | Fix service-to-DB architecture violation | 4      | M      | P1       | Done   |
+| 17  | Add JWT session validation / blacklist   | 5      | L      | P1       | Done   |
+| 18  | Consolidate 3 Redis connections to 1     | 4      | M      | P1       | Done   |
+| 19  | Domain events for cache invalidation     | 4      | L      | P2       | Todo   |
+| 20  | Extract pagination helper                | 3      | S      | P2       | Done   |
+| 21  | Remove/complete TransformInterceptor     | 3      | S      | P2       | Done   |
+| 22  | Add test coverage                        | 5      | XL     | P2       | Todo   |
+| 23  | Async CSV parsing                        | 4      | M      | P2       | Todo   |
+| 24  | Cache stampede protection                | 4      | M      | P2       | Todo   |
+| 25  | Migrate date columns to timestamptz      | 4      | M      | P2       | Todo   |
+| 26  | CSRF protection for cookie auth          | 4      | M      | P2       | Todo   |
+| 27  | Disable Swagger in production            | 3      | S      | P2       | Done   |
+| 28  | Consistent validator decorators          | 3      | S      | P2       | Done   |
+| 29  | Add database CHECK constraints           | 3      | S      | P2       | Done   |
+| 30  | Fix NULLS NOT DISTINCT on unique index   | 3      | S      | P2       | Done   |
+| 31  | Decimal arithmetic for money             | 4      | M      | P2       | Todo   |
+| 32  | HTTP response compression                | 2      | S      | P3       | Todo   |
+| 33  | Add statement_timeout                    | 3      | S      | P3       | Todo   |
+| 34  | Sort params on all collections           | 2      | M      | P3       | Todo   |
+| 35  | Table partitioning for transactions      | 3      | XL     | P3       | Todo   |
 
 ---
 

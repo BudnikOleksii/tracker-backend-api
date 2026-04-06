@@ -1,6 +1,6 @@
 import { RequestMethod } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { NestFactory, Reflector } from '@nestjs/core';
+import { NestFactory } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { Logger } from 'nestjs-pino';
@@ -13,7 +13,6 @@ import { AllExceptionsFilter } from './app/filters/all-exceptions.filter.js';
 import { ProblemDetailsFilter } from './app/filters/problem-details.filter.js';
 import { RequestContextInterceptor } from './app/interceptors/request-context.interceptor.js';
 import { TimeoutInterceptor } from './app/interceptors/timeout.interceptor.js';
-import { TransformInterceptor } from './app/interceptors/transform.interceptor.js';
 import { AppModule } from './app.module.js';
 import type { Env } from './app/config/env.schema.js';
 
@@ -39,15 +38,15 @@ async function bootstrap() {
 
   app.useGlobalFilters(app.get(ProblemDetailsFilter), app.get(AllExceptionsFilter));
 
-  app.useGlobalInterceptors(
-    app.get(RequestContextInterceptor),
-    new TimeoutInterceptor(30_000),
-    new TransformInterceptor(app.get(Reflector)),
-  );
+  app.useGlobalInterceptors(app.get(RequestContextInterceptor), new TimeoutInterceptor(30_000));
 
   app.useGlobalPipes(createValidationPipe());
 
-  setupSwagger(app);
+  const env = configService.get('NODE_ENV', { infer: true });
+
+  if (env !== 'production') {
+    setupSwagger(app);
+  }
 
   app.enableShutdownHooks();
 
@@ -55,8 +54,12 @@ async function bootstrap() {
   await app.listen(port);
 
   const logger = app.get(Logger);
-  const env = configService.get('NODE_ENV', { infer: true });
   const baseUrl = `http://localhost:${port}`;
+
+  const docsLines =
+    env !== 'production'
+      ? `│  - Docs:       ${`${baseUrl}/docs`.padEnd(35)}  │\n│  - Swagger:    ${`${baseUrl}/swagger`.padEnd(35)}  │\n`
+      : '';
 
   const startupMessage = `
 ┌─────────────────────────────────────────────────────┐
@@ -67,9 +70,7 @@ async function bootstrap() {
 ├─────────────────────────────────────────────────────┤
 │  Endpoints:                                         │
 │  - App:        ${baseUrl.padEnd(35)}  │
-│  - Docs:       ${`${baseUrl}/docs`.padEnd(35)}  │
-│  - Swagger:    ${`${baseUrl}/swagger`.padEnd(35)}  │
-│  - Health:     ${`${baseUrl}/health`.padEnd(35)}  │
+${docsLines}│  - Health:     ${`${baseUrl}/health`.padEnd(35)}  │
 └─────────────────────────────────────────────────────┘`;
 
   logger.log(startupMessage);

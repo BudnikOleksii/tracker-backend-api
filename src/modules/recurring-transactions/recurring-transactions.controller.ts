@@ -16,8 +16,8 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { Roles } from '@/shared/decorators/roles.decorator.js';
-import { UseEnvelope } from '@/shared/decorators/use-envelope.decorator.js';
 import { MessageResponseDto } from '@/shared/dtos/message-response.dto.js';
+import { buildPaginatedResponse } from '@/shared/utils/pagination.utils.js';
 import { JwtAuthGuard, RolesGuard } from '@/shared/guards/index.js';
 
 import { CreateRecurringTransactionDto } from './dtos/create-recurring-transaction.dto.js';
@@ -36,20 +36,16 @@ export class RecurringTransactionsController {
   constructor(private readonly recurringTransactionsService: RecurringTransactionsService) {}
 
   @Get()
-  @UseEnvelope()
   @ApiOperation({ summary: 'List recurring transactions' })
   @ApiResponse({ status: 200, type: RecurringTransactionListResponseDto })
   async findAll(
     @Query() query: RecurringTransactionQueryDto,
     @Request() req: { user: { id: string } },
   ) {
-    const page = query.page ?? 1;
-    const pageSize = query.pageSize ?? 20;
-
     const result = await this.recurringTransactionsService.findAll({
       userId: req.user.id,
-      page,
-      pageSize,
+      page: query.page ?? 1,
+      pageSize: query.pageSize ?? 20,
       status: query.status,
       type: query.type,
       categoryId: query.categoryId,
@@ -57,16 +53,7 @@ export class RecurringTransactionsController {
       frequency: query.frequency,
     });
 
-    const totalPages = Math.ceil(result.total / pageSize);
-
-    return {
-      object: 'list' as const,
-      data: result.data,
-      total: result.total,
-      page,
-      pageSize,
-      hasMore: page < totalPages,
-    };
+    return buildPaginatedResponse(query, result);
   }
 
   @Get(':id')

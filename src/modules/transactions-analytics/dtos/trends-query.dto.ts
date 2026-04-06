@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsIn } from 'class-validator';
+
+import { IsInField } from '@/shared/decorators/validators.js';
 
 import { AnalyticsQueryDto } from './analytics-query.dto.js';
 
@@ -9,6 +10,6 @@ export type Granularity = (typeof GRANULARITY_VALUES)[number];
 
 export class TrendsQueryDto extends AnalyticsQueryDto {
   @ApiProperty({ example: 'monthly', enum: GRANULARITY_VALUES, enumName: 'Granularity' })
-  @IsIn(GRANULARITY_VALUES)
+  @IsInField([...GRANULARITY_VALUES])
   granularity!: Granularity;
 }

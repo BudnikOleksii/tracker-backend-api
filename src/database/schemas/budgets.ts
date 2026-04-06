@@ -1,4 +1,4 @@
-import { index, numeric, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { check, index, numeric, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
 
 import { budgetPeriodEnum, budgetStatusEnum, currencyCodeEnum } from './enums.js';
@@ -36,6 +36,7 @@ export const budgets = pgTable(
     index('Budget_status_endDate_idx')
       .on(table.status, table.endDate)
       .where(sql`status IN ('ACTIVE', 'EXCEEDED')`),
+    check('Budget_endDate_after_startDate', sql`"endDate" > "startDate"`),
   ],
 );
 
