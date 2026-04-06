@@ -5,14 +5,22 @@ import * as schema from './schemas/index.js';
 import * as relations from './relations.js';
 import type { DrizzleModuleOptions } from './types.js';
 
+const STATEMENT_TIMEOUT = '30s';
+
 export function createPool(options: DrizzleModuleOptions): Pool {
-  return new Pool({
+  const pool = new Pool({
     connectionString: options.connectionString,
     max: options.pool?.max ?? 10,
     min: options.pool?.min ?? 2,
     idleTimeoutMillis: options.pool?.idleTimeoutMillis ?? 30_000,
     connectionTimeoutMillis: options.pool?.connectionTimeoutMillis ?? 5000,
   });
+
+  pool.on('connect', (client) => {
+    void client.query(`SET statement_timeout = '${STATEMENT_TIMEOUT}'`);
+  });
+
+  return pool;
 }
 
 export function createDrizzleInstance(pool: Pool) {

@@ -546,8 +546,8 @@ Also drop duplicate indexes: `User_email_idx` (covered by unique constraint), `R
 | 29  | Add database CHECK constraints           | 3      | S      | P2       | Done   |
 | 30  | Fix NULLS NOT DISTINCT on unique index   | 3      | S      | P2       | Done   |
 | 31  | Decimal arithmetic for money             | 4      | M      | P2       | Todo   |
-| 32  | HTTP response compression                | 2      | S      | P3       | Todo   |
-| 33  | Add statement_timeout                    | 3      | S      | P3       | Todo   |
+| 32  | HTTP response compression                | 2      | S      | P3       | Done   |
+| 33  | Add statement_timeout                    | 3      | S      | P3       | Done   |
 | 34  | Sort params on all collections           | 2      | M      | P3       | Todo   |
 | 35  | Table partitioning for transactions      | 3      | XL     | P3       | Todo   |
 
