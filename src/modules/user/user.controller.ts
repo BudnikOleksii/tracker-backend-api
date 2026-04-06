@@ -17,8 +17,8 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { Roles } from '@/shared/decorators/roles.decorator.js';
-import { UseEnvelope } from '@/shared/decorators/use-envelope.decorator.js';
 import { JwtAuthGuard, RolesGuard } from '@/shared/guards/index.js';
+import { buildPaginatedResponse } from '@/shared/utils/pagination.utils.js';
 import type { UserRole } from '@/shared/enums/role.enum.js';
 
 import { AssignRoleDto } from './dtos/assign-role.dto.js';
@@ -39,30 +39,17 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
-  @UseEnvelope()
   @ApiOperation({ summary: 'Get user list' })
   @ApiResponse({ status: 200, type: UserListResponseDto })
   async findAll(@Query() query: UserQueryDto) {
-    const page = query.page ?? 1;
-    const pageSize = query.pageSize ?? 20;
-
     const result = await this.userService.findAll({
-      page,
-      pageSize,
+      page: query.page ?? 1,
+      pageSize: query.pageSize ?? 20,
       search: query.search,
       role: query.role,
     });
 
-    const totalPages = Math.ceil(result.total / pageSize);
-
-    return {
-      object: 'list' as const,
-      data: result.data,
-      total: result.total,
-      page,
-      pageSize,
-      hasMore: page < totalPages,
-    };
+    return buildPaginatedResponse(query, result);
   }
 
   @Get('summary')

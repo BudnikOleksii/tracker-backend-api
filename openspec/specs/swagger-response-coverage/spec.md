@@ -75,3 +75,17 @@ Every endpoint across all controllers (transactions, transaction-categories, bud
 
 - **WHEN** the OpenAPI spec is generated for any delete endpoint (except DELETE /users/:id which is 204)
 - **THEN** the response schema SHALL reference `MessageResponseDto` with a `message` string field
+
+### Requirement: Swagger disabled in production
+
+The `setupSwagger()` function SHALL NOT be called when `NODE_ENV` is `'production'`. The `/swagger`, `/docs`, and `/openapi.yaml` routes MUST NOT be registered in production environments.
+
+#### Scenario: Development environment
+
+- **WHEN** the application starts with `NODE_ENV=development`
+- **THEN** Swagger UI at `/swagger`, Scalar docs at `/docs`, and OpenAPI YAML at `/openapi.yaml` are available
+
+#### Scenario: Production environment
+
+- **WHEN** the application starts with `NODE_ENV=production`
+- **THEN** requests to `/swagger`, `/docs`, and `/openapi.yaml` return 404
