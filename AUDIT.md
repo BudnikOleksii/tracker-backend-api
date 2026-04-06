@@ -537,15 +537,15 @@ Also drop duplicate indexes: `User_email_idx` (covered by unique constraint), `R
 | 20  | Extract pagination helper                | 3      | S      | P2       | Done   |
 | 21  | Remove/complete TransformInterceptor     | 3      | S      | P2       | Done   |
 | 22  | Add test coverage                        | 5      | XL     | P2       | Todo   |
-| 23  | Async CSV parsing                        | 4      | M      | P2       | Todo   |
+| 23  | Async CSV parsing                        | 4      | M      | P2       | Done   |
 | 24  | Cache stampede protection                | 4      | M      | P2       | Todo   |
-| 25  | Migrate date columns to timestamptz      | 4      | M      | P2       | Todo   |
-| 26  | CSRF protection for cookie auth          | 4      | M      | P2       | Todo   |
+| 25  | Migrate date columns to timestamptz      | 4      | M      | P2       | Done   |
+| 26  | CSRF protection for cookie auth          | 4      | M      | P2       | Done   |
 | 27  | Disable Swagger in production            | 3      | S      | P2       | Done   |
 | 28  | Consistent validator decorators          | 3      | S      | P2       | Done   |
 | 29  | Add database CHECK constraints           | 3      | S      | P2       | Done   |
 | 30  | Fix NULLS NOT DISTINCT on unique index   | 3      | S      | P2       | Done   |
-| 31  | Decimal arithmetic for money             | 4      | M      | P2       | Todo   |
+| 31  | Decimal arithmetic for money             | 4      | M      | P2       | Done   |
 | 32  | HTTP response compression                | 2      | S      | P3       | Done   |
 | 33  | Add statement_timeout                    | 3      | S      | P3       | Done   |
 | 34  | Sort params on all collections           | 2      | M      | P3       | Todo   |

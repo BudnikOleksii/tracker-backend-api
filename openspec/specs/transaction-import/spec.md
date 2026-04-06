@@ -46,19 +46,20 @@ The system SHALL parse JSON files as an array of objects with the following fiel
 - **WHEN** a JSON entry has an invalid `Type` value (not `Expense` or `Income`), invalid date format, negative amount, or unrecognized currency code
 - **THEN** the system returns HTTP 400 indicating which row and field failed validation
 
-### Requirement: CSV parsing
+### Requirement: CSV file parsing
 
-The system SHALL parse CSV files with comma delimiter and UTF-8 encoding. The first row SHALL be treated as headers. Required headers: `Date`, `Category`, `Type`, `Amount`, `Currency`. Optional header: `Subcategory`.
+The system SHALL parse uploaded CSV files using the async streaming `csv-parse` API. The `parseCsvFile` method SHALL accept a `Buffer` and return a `Promise<ParsedTransactionRow[]>`. The method signature changes from synchronous to asynchronous.
 
-#### Scenario: Valid CSV with all headers
+#### Scenario: Successful CSV import
 
-- **WHEN** a CSV file has all required headers and valid data rows
-- **THEN** the system parses all rows into normalized transaction records
+- **WHEN** a user uploads a valid CSV file
+- **THEN** the file SHALL be parsed asynchronously using streaming csv-parse
+- **AND** the parsed rows SHALL be validated and inserted as transactions
 
-#### Scenario: Missing required CSV headers
+#### Scenario: Import with parse error
 
-- **WHEN** a CSV file is missing one or more required headers
-- **THEN** the system returns HTTP 400 listing the missing headers
+- **WHEN** a user uploads a CSV file with invalid format
+- **THEN** a `BadRequestException` SHALL be thrown with an appropriate error message
 
 ### Requirement: Category auto-resolution
 

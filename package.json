@@ -45,6 +45,7 @@
     "cookie-parser": "1.4.7",
     "csv-parse": "6.2.1",
     "csv-stringify": "6.7.0",
+    "decimal.js": "10.6.0",
     "drizzle-orm": "0.45.1",
     "helmet": "8.1.0",
     "ioredis": "5.10.0",

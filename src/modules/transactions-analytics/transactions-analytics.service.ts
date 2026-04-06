@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Decimal } from 'decimal.js';
 
 import { buildCacheKey } from '@/modules/cache/cache-key.utils.js';
 import { CacheService } from '@/modules/cache/cache.service.js';
@@ -84,7 +85,7 @@ export class TransactionsAnalyticsService {
       async () => {
         const query = this.buildQuery(params);
         const rows = await this.transactionsAnalyticsRepository.getCategoryBreakdown(query);
-        const grandTotal = rows.reduce((sum, row) => sum + Number(row.total), 0);
+        const grandTotal = rows.reduce((sum, row) => sum.plus(row.total), new Decimal(0));
 
         return {
           currencyCode: params.currencyCode,
@@ -92,8 +93,9 @@ export class TransactionsAnalyticsService {
           dateTo: query.dateTo.toISOString(),
           breakdown: rows.map((row) => ({
             ...row,
-            percentage:
-              grandTotal > 0 ? this.roundPercent((Number(row.total) / grandTotal) * 100) : 0,
+            percentage: grandTotal.gt(0)
+              ? new Decimal(row.total).div(grandTotal).times(100).toDecimalPlaces(2).toNumber()
+              : 0,
           })),
         };
       },
@@ -143,7 +145,7 @@ export class TransactionsAnalyticsService {
       TTL_DEFAULT,
     );
 
-    const grandTotal = rows.reduce((sum, row) => sum + Number(row.total), 0);
+    const grandTotal = rows.reduce((sum, row) => sum.plus(row.total), new Decimal(0));
 
     return {
       currencyCode: params.currencyCode,
@@ -152,7 +154,9 @@ export class TransactionsAnalyticsService {
         categoryId: row.categoryId,
         categoryName: row.categoryName,
         total: row.total,
-        percentage: grandTotal > 0 ? this.roundPercent((Number(row.total) / grandTotal) * 100) : 0,
+        percentage: grandTotal.gt(0)
+          ? new Decimal(row.total).div(grandTotal).times(100).toDecimalPlaces(2).toNumber()
+          : 0,
         transactionCount: row.transactionCount,
       })),
     };
@@ -235,9 +239,5 @@ export class TransactionsAnalyticsService {
     const [date] = new Date(isoOrTimestamp).toISOString().split('T');
 
     return date ?? '';
-  }
-
-  private roundPercent(value: number): number {
-    return Math.round(value * 100) / 100;
   }
 }

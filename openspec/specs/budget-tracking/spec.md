@@ -1,28 +1,14 @@
 ## ADDED Requirements
 
-### Requirement: Get budget progress
+### Requirement: Budget progress calculation
 
-The system SHALL provide an endpoint to retrieve the spending progress for a specific budget. Progress SHALL be computed by summing transaction amounts matching the budget's userId, categoryId (if set), currencyCode, and date range (startDate to endDate). If categoryId is null, the system SHALL sum all transactions for that currency in the period.
+The budget progress calculation (spent, remaining, percentUsed) SHALL use `decimal.js` for all arithmetic on monetary values. The `parseFloat()` function SHALL NOT be used on budget amounts or spent amounts.
 
-#### Scenario: Get progress for a category budget
+#### Scenario: Budget progress with decimal precision
 
-- **WHEN** user sends GET /api/budgets/:id/progress for a budget with categoryId set
-- **THEN** system returns the budget details along with spentAmount (sum of matching transactions), remainingAmount (amount - spentAmount), and percentUsed (spentAmount / amount \* 100)
-
-#### Scenario: Get progress for an overall budget (no category)
-
-- **WHEN** user sends GET /api/budgets/:id/progress for a budget with no categoryId
-- **THEN** system sums all transactions for that user, currency, and date range, returning spentAmount, remainingAmount, and percentUsed
-
-#### Scenario: Get progress when no transactions exist
-
-- **WHEN** user sends GET /api/budgets/:id/progress and there are no matching transactions
-- **THEN** system returns spentAmount "0.00", remainingAmount equal to budget amount, and percentUsed 0
-
-#### Scenario: Get progress for overspent budget
-
-- **WHEN** the sum of matching transactions exceeds the budget amount
-- **THEN** system returns a negative remainingAmount and percentUsed greater than 100
+- **WHEN** `getBudgetProgress` is called for a budget with amount `1000.55` and spent `333.18`
+- **THEN** remaining SHALL be `667.37` exactly
+- **AND** percentUsed SHALL be calculated as `(333.18 / 1000.55) * 100` using decimal math
 
 ### Requirement: Progress caching
 
@@ -33,24 +19,14 @@ The system SHALL cache budget progress responses. The system SHALL invalidate bu
 - **WHEN** a user creates, updates, or deletes a transaction
 - **THEN** system invalidates cached budget progress for that user
 
-### Requirement: Overspend detection cron
+### Requirement: Budget overspend cron calculation
 
-The system SHALL run a periodic scheduled task that checks all ACTIVE and EXCEEDED budgets whose period has started and not yet ended. For ACTIVE budgets, it SHALL update status to EXCEEDED when spentAmount > amount. For EXCEEDED budgets, it SHALL update status back to ACTIVE when spentAmount <= amount. The cron SHALL run daily.
+The budget overspend cron job SHALL use `decimal.js` when comparing spent amounts to budget amounts for status determination.
 
-#### Scenario: Budget exceeds limit
+#### Scenario: Overspend detection precision
 
-- **WHEN** the overspend detection cron runs and finds a budget where spentAmount > amount
-- **THEN** system updates the budget status from "ACTIVE" to "EXCEEDED"
-
-#### Scenario: Budget returns under limit
-
-- **WHEN** the overspend detection cron runs and finds an EXCEEDED budget where spentAmount <= amount (e.g., a transaction was deleted)
-- **THEN** system updates the budget status from "EXCEEDED" back to "ACTIVE"
-
-#### Scenario: Cron skips expired budgets
-
-- **WHEN** the overspend detection cron runs and a budget's endDate is in the past
-- **THEN** system skips that budget (does not update its status)
+- **WHEN** the cron job processes a budget with amount `500.00` and spent `500.00`
+- **THEN** the comparison SHALL use decimal equality, not floating-point comparison
 
 ### Requirement: Budget date range CHECK constraint
 

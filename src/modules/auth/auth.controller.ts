@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import {
   Body,
   Controller,
@@ -16,7 +17,7 @@ import type { CookieOptions, Response } from 'express';
 
 import type { Env } from '@/app/config/env.schema.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
-import { JwtAuthGuard } from '@/shared/guards/index.js';
+import { CsrfGuard, JwtAuthGuard } from '@/shared/guards/index.js';
 
 import { AuthService } from './auth.service.js';
 import { LoginDto, AuthResponseDto } from './dtos/login.dto.js';
@@ -34,12 +35,16 @@ import type { AuthenticatedRequest, GenerateTokensResult } from './auth.types.js
 export class AuthController {
   private readonly cookieName: string;
   private readonly cookieOptions: CookieOptions;
+  private readonly csrfCookieName: string;
+  private readonly sameSite: string;
 
   constructor(
     private readonly authService: AuthService,
     private readonly configService: ConfigService<Env, true>,
   ) {
     this.cookieName = this.configService.get('REFRESH_TOKEN_COOKIE_NAME', { infer: true });
+    this.csrfCookieName = this.configService.get('CSRF_TOKEN_COOKIE_NAME', { infer: true });
+    this.sameSite = this.configService.get('COOKIE_SAME_SITE', { infer: true });
     const domain = this.configService.get('COOKIE_DOMAIN', { infer: true });
 
     this.cookieOptions = {
@@ -97,6 +102,7 @@ export class AuthController {
 
   @Post('refresh-token')
   @Throttle({ auth: {} })
+  @UseGuards(CsrfGuard)
   @HttpCode(200)
   @ApiOperation({ summary: 'Refresh access token' })
   @ApiResponse({ status: 200, type: AuthResponseDto })
@@ -132,7 +138,7 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(200)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, CsrfGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Logout (single device)' })
   @ApiResponse({ status: 200, type: LogoutResponseDto })
@@ -172,7 +178,7 @@ export class AuthController {
 
   @Post('revoke-refresh-tokens')
   @HttpCode(200)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, CsrfGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Revoke all refresh tokens' })
   @ApiResponse({ status: 200, type: RevokeAllTokensResponseDto })
@@ -197,10 +203,23 @@ export class AuthController {
       ...this.cookieOptions,
       maxAge,
     });
+
+    if (this.sameSite === 'none') {
+      const csrfToken = crypto.randomBytes(32).toString('hex');
+      res.cookie(this.csrfCookieName, csrfToken, {
+        ...this.cookieOptions,
+        httpOnly: false,
+        maxAge,
+      });
+    }
   }
 
   private clearRefreshTokenCookie(res: Response): void {
     res.clearCookie(this.cookieName, this.cookieOptions);
+
+    if (this.sameSite === 'none') {
+      res.clearCookie(this.csrfCookieName, { ...this.cookieOptions, httpOnly: false });
+    }
   }
 
   private getRefreshTokenFromCookie(req: { cookies?: Record<string, string> }): string {

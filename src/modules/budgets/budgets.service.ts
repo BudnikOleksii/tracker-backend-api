@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { Decimal } from 'decimal.js';
 
 import type { DrizzleDb } from '@/database/types.js';
 import { buildCacheKey, buildCachePrefix } from '@/modules/cache/cache-key.utils.js';
@@ -205,16 +206,18 @@ export class BudgetsService {
         endDate: budget.endDate,
       });
 
-      const spent = parseFloat(spentAmount);
-      const budgetAmount = parseFloat(budget.amount);
-      const remaining = budgetAmount - spent;
-      const percentUsed = budgetAmount > 0 ? (spent / budgetAmount) * 100 : 0;
+      const spent = new Decimal(spentAmount);
+      const budgetAmount = new Decimal(budget.amount);
+      const remaining = budgetAmount.minus(spent);
+      const percentUsed = budgetAmount.gt(0)
+        ? spent.div(budgetAmount).times(100).toDecimalPlaces(2).toNumber()
+        : 0;
 
       return {
         budget,
         spentAmount: spent.toFixed(2),
         remainingAmount: remaining.toFixed(2),
-        percentUsed: Math.round(percentUsed * 100) / 100,
+        percentUsed,
       };
     });
   }
@@ -229,14 +232,14 @@ export class BudgetsService {
     const spentByBudgetId = new Map(spentAmounts.map(({ budgetId, spent }) => [budgetId, spent]));
 
     const statusUpdates = activeBudgets.flatMap((budget) => {
-      const spent = parseFloat(spentByBudgetId.get(budget.id) ?? '0');
-      const amount = parseFloat(budget.amount);
+      const spent = new Decimal(spentByBudgetId.get(budget.id) ?? '0');
+      const amount = new Decimal(budget.amount);
 
-      if (spent > amount && budget.status === 'ACTIVE') {
+      if (spent.gt(amount) && budget.status === 'ACTIVE') {
         return [{ id: budget.id, status: 'EXCEEDED' as BudgetStatus }];
       }
 
-      if (spent <= amount && budget.status === 'EXCEEDED') {
+      if (spent.lte(amount) && budget.status === 'EXCEEDED') {
         return [{ id: budget.id, status: 'ACTIVE' as BudgetStatus }];
       }
 

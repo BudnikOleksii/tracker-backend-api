@@ -1,8 +1,9 @@
 import path from 'node:path';
 import type { Readable } from 'node:stream';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { parse } from 'csv-parse/sync';
+import { parse } from 'csv-parse';
 import { stringify as stringifyCsvStream } from 'csv-stringify';
+import { Decimal } from 'decimal.js';
 
 import type { DrizzleDb } from '@/database/types.js';
 import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
@@ -204,11 +205,11 @@ export class TransactionsService {
 
       for (const [groupKey, txList] of grouped) {
         const subcategory = groupKey ? (subcategoryMap.get(groupKey) ?? null) : null;
-        const totalsMap = new Map<string, number>();
+        const totalsMap = new Map<string, Decimal>();
 
         for (const tx of txList) {
-          const current = totalsMap.get(tx.currencyCode) ?? 0;
-          totalsMap.set(tx.currencyCode, current + parseFloat(tx.amount));
+          const current = totalsMap.get(tx.currencyCode) ?? new Decimal(0);
+          totalsMap.set(tx.currencyCode, current.plus(tx.amount));
         }
 
         const totals = Array.from(totalsMap.entries()).map(([currencyCode, total]) => ({
@@ -228,7 +229,7 @@ export class TransactionsService {
   }
 
   async importTransactions(file: Express.Multer.File, userId: string): Promise<ImportResult> {
-    const rows = this.parseImportFile(file);
+    const rows = await this.parseImportFile(file);
 
     const result = await this.transactionRepository.transaction(async (tx) => {
       const { categoryMap, categoriesCreated, subcategoriesCreated } = await this.resolveCategories(
@@ -352,14 +353,14 @@ export class TransactionsService {
     };
   }
 
-  private parseImportFile(file: Express.Multer.File): ParsedTransactionRow[] {
+  private async parseImportFile(file: Express.Multer.File): Promise<ParsedTransactionRow[]> {
     const extension = path.extname(file.originalname).slice(1).toLowerCase();
 
     let rows: ParsedTransactionRow[];
     if (extension === 'json') {
       rows = this.parseJsonFile(file.buffer);
     } else if (extension === 'csv') {
-      rows = this.parseCsvFile(file.buffer);
+      rows = await this.parseCsvFile(file.buffer);
     } else {
       throw new BadRequestException({
         code: ErrorCode.BAD_REQUEST,
@@ -407,14 +408,19 @@ export class TransactionsService {
     );
   }
 
-  private parseCsvFile(buffer: Buffer): ParsedTransactionRow[] {
-    let records: Record<string, string>[];
+  private async parseCsvFile(buffer: Buffer): Promise<ParsedTransactionRow[]> {
+    const records: Record<string, string>[] = [];
+
     try {
-      records = parse(buffer.toString('utf-8'), {
+      const parser = parse(buffer.toString('utf-8'), {
         columns: true,
         skip_empty_lines: true,
         trim: true,
       });
+
+      for await (const record of parser) {
+        records.push(record as Record<string, string>);
+      }
     } catch {
       throw new BadRequestException({
         code: ErrorCode.BAD_REQUEST,
