@@ -29,11 +29,11 @@ export class CreateBudgetDto {
   @IsIn(BUDGET_PERIODS)
   period!: BudgetPeriod;
 
-  @ApiProperty({ example: '2026-03-01T00:00:00.000Z' })
+  @ApiProperty({ example: '2026-03-01T00:00:00.000+02:00' })
   @IsISO8601Field()
   startDate!: string;
 
-  @ApiPropertyOptional({ example: '2026-03-31T23:59:59.999Z' })
+  @ApiPropertyOptional({ example: '2026-03-31T23:59:59.999+02:00' })
   @IsOptional()
   @IsISO8601Field()
   endDate?: string;

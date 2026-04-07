@@ -1,14 +1,17 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, eq, gte, ilike, isNull } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte, ilike, isNull } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 
 import { users } from '@/database/schemas/index.js';
 import { DB_TOKEN } from '@/database/types.js';
 import type { DrizzleDb } from '@/database/types.js';
 import type { User } from '@/database/schemas/index.js';
+import type { SortOrder } from '@/shared/constants/sort.constants.js';
 import type { CountryCode } from '@/shared/enums/country-code.enum.js';
 import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 import type { UserRole } from '@/shared/enums/role.enum.js';
+
+import type { SortByField } from './user.constants.js';
 
 export interface UserInfo {
   id: string;
@@ -44,6 +47,8 @@ export interface UserListQuery {
   pageSize: number;
   search?: string;
   role?: UserRole;
+  sortBy?: SortByField;
+  sortOrder?: SortOrder;
 }
 
 export interface UserListResult {
@@ -69,6 +74,11 @@ export interface UserSummary {
   newToday: number;
 }
 
+const SORT_COLUMN_MAP = {
+  email: users.email,
+  createdAt: users.createdAt,
+} as const;
+
 @Injectable()
 export class UserRepository {
   constructor(
@@ -77,7 +87,7 @@ export class UserRepository {
   ) {}
 
   async findAll(query: UserListQuery): Promise<UserListResult> {
-    const { page, pageSize, search, role } = query;
+    const { page, pageSize, search, role, sortBy = 'createdAt', sortOrder = 'desc' } = query;
 
     const conditions: SQL[] = [];
     if (role) {
@@ -89,6 +99,8 @@ export class UserRepository {
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+    const sortColumn = SORT_COLUMN_MAP[sortBy];
+    const sortDirection = sortOrder === 'asc' ? asc : desc;
 
     const [usersData, totalResult] = await Promise.all([
       this.db
@@ -97,7 +109,7 @@ export class UserRepository {
         .where(whereClause)
         .limit(pageSize)
         .offset((page - 1) * pageSize)
-        .orderBy(users.createdAt),
+        .orderBy(sortDirection(sortColumn)),
       this.db.select({ count: count() }).from(users).where(whereClause),
     ]);
 

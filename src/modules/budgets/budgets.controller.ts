@@ -46,6 +46,8 @@ export class BudgetsController {
       period: query.period,
       categoryId: query.categoryId,
       currencyCode: query.currencyCode,
+      sortBy: query.sortBy,
+      sortOrder: query.sortOrder,
     });
 
     return buildPaginatedResponse(query, result);

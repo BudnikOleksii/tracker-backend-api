@@ -75,12 +75,12 @@ export class UpdateRecurringTransactionDto {
   @MinField(1)
   interval?: number;
 
-  @ApiPropertyOptional({ example: '2026-04-01T00:00:00.000Z' })
+  @ApiPropertyOptional({ example: '2026-04-01T00:00:00.000+02:00' })
   @IsOptional()
   @IsISO8601Field()
   startDate?: string;
 
-  @ApiPropertyOptional({ example: '2027-04-01T00:00:00.000Z' })
+  @ApiPropertyOptional({ example: '2027-04-01T00:00:00.000+02:00' })
   @IsOptional()
   @IsISO8601Field()
   endDate?: string;

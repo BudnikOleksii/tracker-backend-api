@@ -43,6 +43,8 @@ export class DefaultTransactionCategoriesController {
       pageSize: query.pageSize ?? 20,
       type: query.type,
       root: query.root,
+      sortBy: query.sortBy,
+      sortOrder: query.sortOrder,
     });
 
     return buildPaginatedResponse(query, result);

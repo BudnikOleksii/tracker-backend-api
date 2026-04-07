@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, eq, isNull, lte } from 'drizzle-orm';
+import { and, asc, count, desc, eq, isNull, lte } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 
 import {
@@ -9,10 +9,13 @@ import {
 } from '@/database/schemas/index.js';
 import { DB_TOKEN } from '@/database/types.js';
 import type { DrizzleDb } from '@/database/types.js';
+import type { SortOrder } from '@/shared/constants/sort.constants.js';
 import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 import type { RecurringFrequency } from '@/shared/enums/recurring-frequency.enum.js';
 import type { RecurringTransactionStatus } from '@/shared/enums/recurring-transaction-status.enum.js';
 import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
+
+import type { SortByField } from './recurring-transactions.constants.js';
 
 export interface RecurringTransactionInfo {
   id: string;
@@ -41,6 +44,8 @@ export interface RecurringTransactionListQuery {
   categoryId?: string;
   currencyCode?: CurrencyCode;
   frequency?: RecurringFrequency;
+  sortBy?: SortByField;
+  sortOrder?: SortOrder;
 }
 
 export interface RecurringTransactionListResult {
@@ -92,6 +97,13 @@ export interface CreateMaterializedTransactionData {
   recurringTransactionId: string;
 }
 
+const SORT_COLUMN_MAP = {
+  amount: recurringTransactions.amount,
+  startDate: recurringTransactions.startDate,
+  nextOccurrenceDate: recurringTransactions.nextOccurrenceDate,
+  createdAt: recurringTransactions.createdAt,
+} as const;
+
 @Injectable()
 export class RecurringTransactionsRepository {
   constructor(
@@ -100,7 +112,18 @@ export class RecurringTransactionsRepository {
   ) {}
 
   async findAll(query: RecurringTransactionListQuery): Promise<RecurringTransactionListResult> {
-    const { userId, page, pageSize, status, type, categoryId, currencyCode, frequency } = query;
+    const {
+      userId,
+      page,
+      pageSize,
+      status,
+      type,
+      categoryId,
+      currencyCode,
+      frequency,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+    } = query;
 
     const conditions: SQL[] = [eq(recurringTransactions.userId, userId)];
 
@@ -125,6 +148,8 @@ export class RecurringTransactionsRepository {
     }
 
     const whereClause = and(...conditions);
+    const sortColumn = SORT_COLUMN_MAP[sortBy];
+    const sortDirection = sortOrder === 'asc' ? asc : desc;
 
     const [data, totalResult] = await Promise.all([
       this.db
@@ -133,7 +158,7 @@ export class RecurringTransactionsRepository {
         .where(whereClause)
         .limit(pageSize)
         .offset((page - 1) * pageSize)
-        .orderBy(recurringTransactions.createdAt),
+        .orderBy(sortDirection(sortColumn)),
       this.db.select({ count: count() }).from(recurringTransactions).where(whereClause),
     ]);
 

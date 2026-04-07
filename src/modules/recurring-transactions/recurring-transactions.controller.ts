@@ -51,6 +51,8 @@ export class RecurringTransactionsController {
       categoryId: query.categoryId,
       currencyCode: query.currencyCode,
       frequency: query.frequency,
+      sortBy: query.sortBy,
+      sortOrder: query.sortOrder,
     });
 
     return buildPaginatedResponse(query, result);

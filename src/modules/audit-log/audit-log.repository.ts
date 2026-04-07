@@ -1,9 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, desc, eq, type SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, type SQL } from 'drizzle-orm';
 
 import { auditLogs } from '@/database/schemas/index.js';
 import { DB_TOKEN } from '@/database/types.js';
 import type { DrizzleDb } from '@/database/types.js';
+import type { SortOrder } from '@/shared/constants/sort.constants.js';
+
+import type { SortByField } from './audit-log.constants.js';
 
 export interface AuditLogData {
   action: string;
@@ -36,7 +39,13 @@ export interface AuditLogListQuery {
   pageSize: number;
   actorId?: string;
   action?: string;
+  sortBy?: SortByField;
+  sortOrder?: SortOrder;
 }
+
+const SORT_COLUMN_MAP = {
+  createdAt: auditLogs.createdAt,
+} as const;
 
 export interface AuditLogListResult {
   data: AuditLogRecord[];
@@ -65,7 +74,7 @@ export class AuditLogRepository {
   }
 
   async findAll(query: AuditLogListQuery): Promise<AuditLogListResult> {
-    const { page, pageSize, actorId, action } = query;
+    const { page, pageSize, actorId, action, sortBy = 'createdAt', sortOrder = 'desc' } = query;
 
     const conditions: SQL[] = [];
     if (actorId) {
@@ -76,13 +85,15 @@ export class AuditLogRepository {
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+    const sortColumn = SORT_COLUMN_MAP[sortBy];
+    const sortDirection = sortOrder === 'asc' ? asc : desc;
 
     const [rows, totalResult] = await Promise.all([
       this.db
         .select()
         .from(auditLogs)
         .where(whereClause)
-        .orderBy(desc(auditLogs.createdAt))
+        .orderBy(sortDirection(sortColumn))
         .limit(pageSize)
         .offset((page - 1) * pageSize),
       this.db.select({ count: count() }).from(auditLogs).where(whereClause),

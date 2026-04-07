@@ -47,6 +47,8 @@ export class UserController {
       pageSize: query.pageSize ?? 20,
       search: query.search,
       role: query.role,
+      sortBy: query.sortBy,
+      sortOrder: query.sortOrder,
     });
 
     return buildPaginatedResponse(query, result);

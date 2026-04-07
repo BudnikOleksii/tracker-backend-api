@@ -23,7 +23,7 @@ export class UpdateBudgetDto {
   @IsUUIDField()
   categoryId?: string;
 
-  @ApiPropertyOptional({ example: '2026-06-30T23:59:59.999Z' })
+  @ApiPropertyOptional({ example: '2026-06-30T23:59:59.999+02:00' })
   @IsOptional()
   @IsISO8601Field()
   endDate?: string;

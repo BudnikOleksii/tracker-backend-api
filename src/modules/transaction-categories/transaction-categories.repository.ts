@@ -1,11 +1,14 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, eq, isNull, ne, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, isNull, ne, sql } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 
 import { transactionCategories, transactions } from '@/database/schemas/index.js';
 import { DB_TOKEN } from '@/database/types.js';
 import type { DrizzleDb } from '@/database/types.js';
+import type { SortOrder } from '@/shared/constants/sort.constants.js';
 import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
+
+import type { SortByField } from './transaction-categories.constants.js';
 
 export interface CategoryInfo {
   id: string;
@@ -23,6 +26,8 @@ export interface CategoryListQuery {
   type?: TransactionType;
   parentCategoryId?: string;
   root?: boolean;
+  sortBy?: SortByField;
+  sortOrder?: SortOrder;
 }
 
 export interface CategoryListResult {
@@ -42,6 +47,11 @@ export interface UpdateCategoryData {
   parentCategoryId?: string | null;
 }
 
+const SORT_COLUMN_MAP = {
+  name: transactionCategories.name,
+  createdAt: transactionCategories.createdAt,
+} as const;
+
 @Injectable()
 export class TransactionCategoryRepository {
   constructor(
@@ -50,7 +60,16 @@ export class TransactionCategoryRepository {
   ) {}
 
   async findAll(query: CategoryListQuery): Promise<CategoryListResult> {
-    const { userId, page, pageSize, type, parentCategoryId, root } = query;
+    const {
+      userId,
+      page,
+      pageSize,
+      type,
+      parentCategoryId,
+      root,
+      sortBy = 'name',
+      sortOrder = 'asc',
+    } = query;
 
     const conditions: SQL[] = [
       eq(transactionCategories.userId, userId),
@@ -70,6 +89,8 @@ export class TransactionCategoryRepository {
     }
 
     const whereClause = and(...conditions);
+    const sortColumn = SORT_COLUMN_MAP[sortBy];
+    const sortDirection = sortOrder === 'asc' ? asc : desc;
 
     const [data, totalResult] = await Promise.all([
       this.db
@@ -78,7 +99,7 @@ export class TransactionCategoryRepository {
         .where(whereClause)
         .limit(pageSize)
         .offset((page - 1) * pageSize)
-        .orderBy(transactionCategories.name),
+        .orderBy(sortDirection(sortColumn)),
       this.db.select({ count: count() }).from(transactionCategories).where(whereClause),
     ]);
 
