@@ -1,13 +1,16 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, eq, gte, lte, or, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte, lte, or, sql } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 
 import { budgets, transactionCategories, transactions } from '@/database/schemas/index.js';
 import { DB_TOKEN } from '@/database/types.js';
 import type { DrizzleDb } from '@/database/types.js';
+import type { SortOrder } from '@/shared/constants/sort.constants.js';
 import type { BudgetPeriod, BudgetStatus } from '@/shared/enums/budget.enum.js';
 import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
+
+import type { SortByField } from './budgets.constants.js';
 
 export interface BudgetInfo {
   id: string;
@@ -32,6 +35,8 @@ export interface BudgetListQuery {
   period?: BudgetPeriod;
   categoryId?: string;
   currencyCode?: CurrencyCode;
+  sortBy?: SortByField;
+  sortOrder?: SortOrder;
 }
 
 export interface BudgetListResult {
@@ -62,6 +67,13 @@ export interface CategoryValidationInfo {
   type: TransactionType;
 }
 
+const SORT_COLUMN_MAP = {
+  amount: budgets.amount,
+  startDate: budgets.startDate,
+  endDate: budgets.endDate,
+  createdAt: budgets.createdAt,
+} as const;
+
 @Injectable()
 export class BudgetRepository {
   constructor(
@@ -74,7 +86,17 @@ export class BudgetRepository {
   }
 
   async findAll(query: BudgetListQuery): Promise<BudgetListResult> {
-    const { userId, page, pageSize, status, period, categoryId, currencyCode } = query;
+    const {
+      userId,
+      page,
+      pageSize,
+      status,
+      period,
+      categoryId,
+      currencyCode,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+    } = query;
 
     const conditions: SQL[] = [eq(budgets.userId, userId)];
 
@@ -95,6 +117,8 @@ export class BudgetRepository {
     }
 
     const whereClause = and(...conditions);
+    const sortColumn = SORT_COLUMN_MAP[sortBy];
+    const sortDirection = sortOrder === 'asc' ? asc : desc;
 
     const [data, totalResult] = await Promise.all([
       this.db
@@ -103,7 +127,7 @@ export class BudgetRepository {
         .where(whereClause)
         .limit(pageSize)
         .offset((page - 1) * pageSize)
-        .orderBy(budgets.createdAt),
+        .orderBy(sortDirection(sortColumn)),
       this.db.select({ count: count() }).from(budgets).where(whereClause),
     ]);
 

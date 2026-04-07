@@ -44,6 +44,8 @@ export class TransactionCategoriesController {
       type: query.type,
       parentCategoryId: query.parentCategoryId,
       root: query.root,
+      sortBy: query.sortBy,
+      sortOrder: query.sortOrder,
     });
 
     return buildPaginatedResponse(query, result);

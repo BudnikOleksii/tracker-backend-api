@@ -1,6 +1,6 @@
 ### Requirement: Sort transactions by field and direction
 
-The system SHALL support optional `sortBy` and `sortOrder` query parameters on `GET /transactions`. The `sortBy` parameter SHALL accept `date`, `amount`, or `createdAt`. The `sortOrder` parameter SHALL accept `asc` or `desc`. When omitted, the system SHALL default to `sortBy=date` and `sortOrder=desc`.
+The transactions module SHALL import `SortOrder` and `SORT_ORDERS` from `src/shared/constants/sort.constants.ts` instead of defining them locally. The module SHALL retain its own `SORT_BY_FIELDS` (`date`, `amount`, `createdAt`) and `SortByField` type in `transactions.constants.ts`. The system SHALL support optional `sortBy` and `sortOrder` query parameters on `GET /transactions`. The `sortBy` parameter SHALL accept `date`, `amount`, or `createdAt`. The `sortOrder` parameter SHALL accept `asc` or `desc`. When omitted, the system SHALL default to `sortBy=date` and `sortOrder=desc`.
 
 #### Scenario: Default sort order (no params)
 

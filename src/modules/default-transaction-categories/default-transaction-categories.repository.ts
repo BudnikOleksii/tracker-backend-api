@@ -1,11 +1,14 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, eq, isNull, ne, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, isNull, ne, sql } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 
 import { defaultTransactionCategories, transactionCategories } from '@/database/schemas/index.js';
 import { DB_TOKEN } from '@/database/types.js';
 import type { DrizzleDb } from '@/database/types.js';
+import type { SortOrder } from '@/shared/constants/sort.constants.js';
 import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
+
+import type { SortByField } from './default-transaction-categories.constants.js';
 
 export interface DefaultCategoryInfo {
   id: string;
@@ -21,6 +24,8 @@ export interface DefaultCategoryListQuery {
   pageSize: number;
   type?: TransactionType;
   root?: boolean;
+  sortBy?: SortByField;
+  sortOrder?: SortOrder;
 }
 
 export interface DefaultCategoryListResult {
@@ -39,6 +44,11 @@ export interface UpdateDefaultCategoryData {
   parentDefaultTransactionCategoryId?: string | null;
 }
 
+const SORT_COLUMN_MAP = {
+  name: defaultTransactionCategories.name,
+  createdAt: defaultTransactionCategories.createdAt,
+} as const;
+
 @Injectable()
 export class DefaultTransactionCategoryRepository {
   constructor(
@@ -47,7 +57,7 @@ export class DefaultTransactionCategoryRepository {
   ) {}
 
   async findAll(query: DefaultCategoryListQuery): Promise<DefaultCategoryListResult> {
-    const { page, pageSize, type, root } = query;
+    const { page, pageSize, type, root, sortBy = 'name', sortOrder = 'asc' } = query;
 
     const conditions: SQL[] = [isNull(defaultTransactionCategories.deletedAt)];
 
@@ -60,6 +70,8 @@ export class DefaultTransactionCategoryRepository {
     }
 
     const whereClause = and(...conditions);
+    const sortColumn = SORT_COLUMN_MAP[sortBy];
+    const sortDirection = sortOrder === 'asc' ? asc : desc;
 
     const [data, totalResult] = await Promise.all([
       this.db
@@ -68,7 +80,7 @@ export class DefaultTransactionCategoryRepository {
         .where(whereClause)
         .limit(pageSize)
         .offset((page - 1) * pageSize)
-        .orderBy(defaultTransactionCategories.name),
+        .orderBy(sortDirection(sortColumn)),
       this.db.select({ count: count() }).from(defaultTransactionCategories).where(whereClause),
     ]);
 

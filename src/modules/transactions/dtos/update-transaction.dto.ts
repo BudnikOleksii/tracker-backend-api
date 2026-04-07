@@ -47,7 +47,7 @@ export class UpdateTransactionDto {
   @IsIn(CURRENCY_CODES)
   currencyCode?: CurrencyCode;
 
-  @ApiPropertyOptional({ example: '2026-03-15T00:00:00.000Z' })
+  @ApiPropertyOptional({ example: '2026-03-15T00:00:00.000+02:00' })
   @IsOptional()
   @IsISO8601Field()
   date?: string;

@@ -12,12 +12,12 @@ export class AnalyticsQueryDto {
   @IsInField([...CURRENCY_CODES])
   currencyCode!: CurrencyCode;
 
-  @ApiPropertyOptional({ example: '2026-03-01T00:00:00.000Z' })
+  @ApiPropertyOptional({ example: '2026-03-01T00:00:00.000+02:00' })
   @IsOptional()
   @IsISO8601Field()
   dateFrom?: string;
 
-  @ApiPropertyOptional({ example: '2026-03-31T23:59:59.999Z' })
+  @ApiPropertyOptional({ example: '2026-03-31T23:59:59.999+02:00' })
   @IsOptional()
   @IsISO8601Field()
   dateTo?: string;
