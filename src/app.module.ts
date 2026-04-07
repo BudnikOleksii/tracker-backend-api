@@ -40,7 +40,10 @@ import { UserModule } from './modules/user/user.module.js';
       cache: true,
     }),
     ClsModule.forRoot(createClsConfig()),
-    EventEmitterModule.forRoot(),
+    EventEmitterModule.forRoot({
+      wildcard: true,
+      delimiter: '.',
+    }),
     ScheduleModule.forRoot(),
     ThrottlerModule.forRootAsync({
       imports: [ThrottlerStorageModule],

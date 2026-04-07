@@ -324,6 +324,7 @@ export class RecurringTransactionsService {
     let totalTransactionsCreated = 0;
     let processedCount = 0;
     const affectedUserIds = new Set<string>();
+    const usersWithCreatedTransactions = new Set<string>();
 
     for (const record of dueRecords) {
       try {
@@ -331,6 +332,9 @@ export class RecurringTransactionsService {
         totalTransactionsCreated += created;
         processedCount++;
         affectedUserIds.add(record.userId);
+        if (created > 0) {
+          usersWithCreatedTransactions.add(record.userId);
+        }
       } catch (error) {
         this.logger.error(
           `Failed to process recurring transaction ${record.id} for user ${record.userId}`,
@@ -341,6 +345,9 @@ export class RecurringTransactionsService {
 
     for (const userId of affectedUserIds) {
       await this.invalidateCache(userId);
+    }
+
+    for (const userId of usersWithCreatedTransactions) {
       this.eventEmitter.emit(
         TRANSACTION_EVENTS.BULK_PROCESSED,
         new TransactionMutationEvent(userId, 'bulk-processed'),
