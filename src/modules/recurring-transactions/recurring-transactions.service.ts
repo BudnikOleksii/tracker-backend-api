@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import type { DrizzleDb } from '@/database/types.js';
 import { buildCacheKey, buildCachePrefix } from '@/modules/cache/cache-key.utils.js';
@@ -6,6 +7,10 @@ import { CacheService } from '@/modules/cache/cache.service.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 import type { RecurringFrequency } from '@/shared/enums/recurring-frequency.enum.js';
 import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
+import {
+  TRANSACTION_EVENTS,
+  TransactionMutationEvent,
+} from '@/modules/transactions/events/transaction-mutation.event.js';
 
 import { CACHE_MODULE } from './recurring-transactions.constants.js';
 import { RecurringTransactionsRepository } from './recurring-transactions.repository.js';
@@ -24,6 +29,7 @@ export class RecurringTransactionsService {
   constructor(
     private readonly repository: RecurringTransactionsRepository,
     private readonly cacheService: CacheService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async findAll(query: RecurringTransactionListQuery): Promise<RecurringTransactionListResult> {
@@ -297,8 +303,10 @@ export class RecurringTransactionsService {
     }
 
     if (totalTransactionsCreated > 0) {
-      await this.cacheService.delByPrefix(buildCachePrefix('transactions', userId));
-      await this.cacheService.delByPrefix(buildCachePrefix('transactions-analytics', userId));
+      this.eventEmitter.emit(
+        TRANSACTION_EVENTS.BULK_PROCESSED,
+        new TransactionMutationEvent(userId, 'bulk-processed'),
+      );
     }
 
     return { processedCount, transactionsCreated: totalTransactionsCreated };
@@ -332,9 +340,11 @@ export class RecurringTransactionsService {
     }
 
     for (const userId of affectedUserIds) {
-      await this.cacheService.delByPrefix(buildCachePrefix('transactions', userId));
-      await this.cacheService.delByPrefix(buildCachePrefix('transactions-analytics', userId));
       await this.invalidateCache(userId);
+      this.eventEmitter.emit(
+        TRANSACTION_EVENTS.BULK_PROCESSED,
+        new TransactionMutationEvent(userId, 'bulk-processed'),
+      );
     }
 
     return { processedCount, transactionsCreated: totalTransactionsCreated };
