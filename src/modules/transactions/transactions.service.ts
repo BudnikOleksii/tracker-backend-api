@@ -1,6 +1,7 @@
 import path from 'node:path';
 import type { Readable } from 'node:stream';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { parse } from 'csv-parse';
 import { stringify as stringifyCsvStream } from 'csv-stringify';
 import { Decimal } from 'decimal.js';
@@ -13,6 +14,10 @@ import { buildCacheKey, buildCachePrefix } from '@/modules/cache/cache-key.utils
 import { CacheService } from '@/modules/cache/cache.service.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 
+import {
+  TRANSACTION_EVENTS,
+  TransactionMutationEvent,
+} from './events/transaction-mutation.event.js';
 import type { ExportFormat } from './dtos/export-transaction-query.dto.js';
 import { TransactionRepository } from './transactions.repository.js';
 import type {
@@ -40,6 +45,7 @@ export class TransactionsService {
   constructor(
     private readonly transactionRepository: TransactionRepository,
     private readonly cacheService: CacheService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async findAll(query: TransactionListQuery): Promise<TransactionListResult> {
@@ -87,8 +93,10 @@ export class TransactionsService {
     });
 
     await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE, data.userId));
-    await this.cacheService.delByPrefix(buildCachePrefix('transactions-analytics', data.userId));
-    await this.cacheService.delByPrefix(buildCachePrefix('budgets', data.userId));
+    this.eventEmitter.emit(
+      TRANSACTION_EVENTS.CREATED,
+      new TransactionMutationEvent(data.userId, 'created'),
+    );
 
     return result;
   }
@@ -129,8 +137,10 @@ export class TransactionsService {
     });
 
     await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE, userId));
-    await this.cacheService.delByPrefix(buildCachePrefix('transactions-analytics', userId));
-    await this.cacheService.delByPrefix(buildCachePrefix('budgets', userId));
+    this.eventEmitter.emit(
+      TRANSACTION_EVENTS.UPDATED,
+      new TransactionMutationEvent(userId, 'updated'),
+    );
 
     return result;
   }
@@ -145,8 +155,10 @@ export class TransactionsService {
     }
 
     await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE, userId));
-    await this.cacheService.delByPrefix(buildCachePrefix('transactions-analytics', userId));
-    await this.cacheService.delByPrefix(buildCachePrefix('budgets', userId));
+    this.eventEmitter.emit(
+      TRANSACTION_EVENTS.DELETED,
+      new TransactionMutationEvent(userId, 'deleted'),
+    );
   }
 
   async getTransactionsByCategory(
@@ -268,10 +280,14 @@ export class TransactionsService {
       return { transactionsCreated, categoriesCreated, subcategoriesCreated };
     });
 
-    await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE, userId));
-    await this.cacheService.delByPrefix(buildCachePrefix('transactions-analytics', userId));
-    await this.cacheService.delByPrefix(buildCachePrefix('budgets', userId));
-    await this.cacheService.delByPrefix(buildCachePrefix('categories', userId));
+    await Promise.all([
+      this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE, userId)),
+      this.cacheService.delByPrefix(buildCachePrefix('categories', userId)),
+    ]);
+    this.eventEmitter.emit(
+      TRANSACTION_EVENTS.IMPORTED,
+      new TransactionMutationEvent(userId, 'imported'),
+    );
 
     return result;
   }

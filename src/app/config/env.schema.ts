@@ -33,7 +33,7 @@ export const envSchema = z.object({
 
   JWT_EXPIRES_IN: z
     .string()
-    .default('1m')
+    .default('15m')
     .refine((value) => /^\d+[smhd]$/.test(value), {
       message: 'JWT_EXPIRES_IN format is invalid (e.g. 60s, 15m, 2h, 7d)',
     }),
@@ -103,6 +103,8 @@ export const envSchema = z.object({
 
   REFRESH_TOKEN_COOKIE_NAME: z.string().default('refresh_token'),
 
+  CSRF_TOKEN_COOKIE_NAME: z.string().default('csrf_token'),
+
   COOKIE_DOMAIN: z.string().optional(),
 
   COOKIE_SECURE: z
@@ -113,8 +115,6 @@ export const envSchema = z.object({
   COOKIE_SAME_SITE: z.enum(['strict', 'lax', 'none']).default('strict'),
 
   COOKIE_PATH: z.string().default('/'),
-
-  CSRF_TOKEN_COOKIE_NAME: z.string().default('csrf_token'),
 });
 
 export type Env = z.infer<typeof envSchema>;

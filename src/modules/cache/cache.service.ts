@@ -10,6 +10,8 @@ const SCAN_BATCH_SIZE = 100;
 
 @Injectable()
 export class CacheService implements CachePort {
+  private readonly inFlight = new Map<string, Promise<unknown>>();
+
   constructor(
     @Inject(CACHE_MANAGER)
     private readonly cacheManager: Cache,
@@ -59,9 +61,24 @@ export class CacheService implements CachePort {
     if (cached !== undefined) {
       return cached;
     }
-    const result = await fn();
-    await this.set(key, result, ttl);
 
-    return result;
+    const existing = this.inFlight.get(key);
+    if (existing) {
+      return existing as Promise<T>;
+    }
+
+    const promise = fn()
+      .then(async (result) => {
+        await this.set(key, result, ttl);
+
+        return result;
+      })
+      .finally(() => {
+        this.inFlight.delete(key);
+      });
+
+    this.inFlight.set(key, promise);
+
+    return promise;
   }
 }
