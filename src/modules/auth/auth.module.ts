@@ -8,6 +8,7 @@ import type { Env } from '@/app/config/env.schema.js';
 import { DefaultTransactionCategoriesModule } from '../default-transaction-categories/default-transaction-categories.module.js';
 import { UserModule } from '../user/user.module.js';
 import { AuthController } from './auth.controller.js';
+import { AuthSessionListener } from './auth-session.listener.js';
 import { AuthService } from './auth.service.js';
 import { JwtStrategy } from './jwt.strategy.js';
 import { LoginLogRepository } from './login-log.repository.js';
@@ -33,6 +34,7 @@ import { TokenBlacklistService } from './token-blacklist.service.js';
   controllers: [AuthController],
   providers: [
     AuthService,
+    AuthSessionListener,
     JwtStrategy,
     RefreshTokenRepository,
     LoginLogRepository,

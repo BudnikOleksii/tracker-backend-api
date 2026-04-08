@@ -36,3 +36,26 @@ export interface GenerateTokensResult {
   refreshExpiresAt: Date;
   user: { id: string; email: string; role: UserRole };
 }
+
+export interface RefreshTokenInfo {
+  user: { id: string; email: string; role: UserRole };
+  refreshToken: {
+    id: string;
+    expiresAt: Date;
+    ipAddress: string | null;
+    userAgent: string | null;
+  };
+}
+
+export interface RefreshTokenListItem {
+  id: string;
+  ipAddress: string | null;
+  userAgent: string | null;
+  createdAt: Date;
+  expiresAt: Date;
+  isCurrent: boolean;
+}
+
+export interface RefreshTokenListResult {
+  refreshTokens: RefreshTokenListItem[];
+}

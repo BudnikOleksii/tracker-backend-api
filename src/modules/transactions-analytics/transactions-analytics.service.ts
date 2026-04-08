@@ -10,6 +10,13 @@ import {
   type AnalyticsBaseQuery,
 } from '@/modules/transactions-analytics/transactions-analytics.repository.js';
 import type { Granularity } from '@/modules/transactions-analytics/dtos/trends-query.dto.js';
+import type {
+  CategoryBreakdownResponse,
+  DailySpendingResponse,
+  SummaryResponse,
+  TopCategoriesResponse,
+  TrendsResponse,
+} from '@/modules/transactions-analytics/transactions-analytics.types.js';
 
 const CACHE_MODULE = 'transactions-analytics';
 const TTL_DEFAULT = 300;
@@ -47,7 +54,7 @@ export class TransactionsAnalyticsService {
     private readonly cacheService: CacheService,
   ) {}
 
-  async getSummary(params: BaseParams) {
+  async getSummary(params: BaseParams): Promise<SummaryResponse> {
     const key = buildCacheKey({
       module: CACHE_MODULE,
       userId: params.userId,
@@ -72,7 +79,7 @@ export class TransactionsAnalyticsService {
     );
   }
 
-  async getCategoryBreakdown(params: BaseParams) {
+  async getCategoryBreakdown(params: BaseParams): Promise<CategoryBreakdownResponse> {
     const key = buildCacheKey({
       module: CACHE_MODULE,
       userId: params.userId,
@@ -103,7 +110,7 @@ export class TransactionsAnalyticsService {
     );
   }
 
-  async getTrends(params: TrendsParams) {
+  async getTrends(params: TrendsParams): Promise<TrendsResponse> {
     const query = this.buildQuery(params);
     const key = buildCacheKey({
       module: CACHE_MODULE,
@@ -129,7 +136,7 @@ export class TransactionsAnalyticsService {
     };
   }
 
-  async getTopCategories(params: TopCategoriesParams) {
+  async getTopCategories(params: TopCategoriesParams): Promise<TopCategoriesResponse> {
     const query = this.buildQuery(params);
     const limit = params.limit ?? 5;
     const key = buildCacheKey({
@@ -162,7 +169,7 @@ export class TransactionsAnalyticsService {
     };
   }
 
-  async getDailySpending(params: DailySpendingParams) {
+  async getDailySpending(params: DailySpendingParams): Promise<DailySpendingResponse> {
     const dateFrom = new Date(Date.UTC(params.year, params.month - 1, 1));
     const dateTo = new Date(Date.UTC(params.year, params.month, 0, 23, 59, 59, 999));
 

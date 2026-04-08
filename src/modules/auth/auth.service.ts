@@ -1,5 +1,11 @@
 import { randomUUID } from 'node:crypto';
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -18,6 +24,8 @@ import type {
   GenerateTokensParams,
   GenerateTokensResult,
   GetRefreshTokenParams,
+  RefreshTokenInfo,
+  RefreshTokenListResult,
   RevokeRefreshTokenParams,
 } from './auth.types.js';
 
@@ -47,7 +55,7 @@ export class AuthService {
     email: string,
     password: string,
     deviceContext?: DeviceContext & { firstName?: string; lastName?: string },
-  ) {
+  ): Promise<GenerateTokensResult> {
     const created = await this.userService.create({
       email,
       password,
@@ -72,7 +80,11 @@ export class AuthService {
     });
   }
 
-  async login(email: string, password: string, deviceContext?: DeviceContext) {
+  async login(
+    email: string,
+    password: string,
+    deviceContext?: DeviceContext,
+  ): Promise<GenerateTokensResult> {
     const user = await this.userService.findByEmail(email);
     if (!user) {
       // Perform a dummy bcrypt comparison to equalise response time with the
@@ -124,7 +136,10 @@ export class AuthService {
     });
   }
 
-  async refreshToken(refreshToken: string, deviceContext?: DeviceContext) {
+  async refreshToken(
+    refreshToken: string,
+    deviceContext?: DeviceContext,
+  ): Promise<GenerateTokensResult> {
     const token = await this.refreshTokenRepo.consumeToken(refreshToken);
     if (!token) {
       throw new UnauthorizedException({
@@ -143,17 +158,17 @@ export class AuthService {
     });
   }
 
-  async logout(refreshToken: string, accessTokenJti: string): Promise<boolean> {
+  async logout(refreshToken: string, accessTokenJti: string): Promise<void> {
     const token = await this.refreshTokenRepo.findByToken(refreshToken);
-    const deleted = token ? await this.refreshTokenRepo.delete(token.id) : false;
+    if (token) {
+      await this.refreshTokenRepo.delete(token.id);
+    }
 
     try {
       await this.blacklistAccessToken(accessTokenJti);
     } catch (error) {
       this.logger.warn('Failed to blacklist access token during logout', error);
     }
-
-    return deleted;
   }
 
   async blacklistAccessToken(jti: string): Promise<void> {
@@ -167,26 +182,30 @@ export class AuthService {
     return this.refreshTokenRepo.deleteAllByUserId(userId);
   }
 
-  async revokeRefreshToken(
-    params: RevokeRefreshTokenParams,
-  ): Promise<{ success: boolean; message: string }> {
+  async revokeRefreshToken(params: RevokeRefreshTokenParams): Promise<{ message: string }> {
     const { sessionId, userId, currentSessionId } = params;
 
     if (sessionId === currentSessionId) {
-      return { success: false, message: 'Cannot revoke the current session; use logout instead' };
+      throw new BadRequestException({
+        code: ErrorCode.BAD_REQUEST,
+        message: 'Cannot revoke the current session; use logout instead',
+      });
     }
 
     const token = await this.refreshTokenRepo.findById(sessionId);
     if (token?.userId !== userId) {
-      return { success: false, message: 'Refresh token not found or insufficient permissions' };
+      throw new NotFoundException({
+        code: ErrorCode.RESOURCE_NOT_FOUND,
+        message: 'Refresh token not found or insufficient permissions',
+      });
     }
 
-    const deleted = await this.refreshTokenRepo.delete(sessionId);
+    await this.refreshTokenRepo.delete(sessionId);
 
-    return { success: deleted, message: deleted ? 'Refresh token revoked' : 'Revocation failed' };
+    return { message: 'Refresh token revoked' };
   }
 
-  async getRefreshToken(params: GetRefreshTokenParams) {
+  async getRefreshToken(params: GetRefreshTokenParams): Promise<RefreshTokenInfo> {
     const { sessionId, id, email, role } = params;
 
     const token = await this.refreshTokenRepo.findById(sessionId);
@@ -208,7 +227,10 @@ export class AuthService {
     };
   }
 
-  async listRefreshTokens(userId: string, currentSessionId: string) {
+  async listRefreshTokens(
+    userId: string,
+    currentSessionId: string,
+  ): Promise<RefreshTokenListResult> {
     const tokens = await this.refreshTokenRepo.findActiveByUserId(userId);
 
     return {

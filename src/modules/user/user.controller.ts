@@ -17,6 +17,7 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { Roles } from '@/shared/decorators/roles.decorator.js';
+import { MessageResponseDto } from '@/shared/dtos/message-response.dto.js';
 import { JwtAuthGuard, RolesGuard } from '@/shared/guards/index.js';
 import type { AuthenticatedRequest } from '@/modules/auth/auth.types.js';
 import { buildPaginatedResponse } from '@/shared/utils/pagination.utils.js';
@@ -108,11 +109,13 @@ export class UserController {
   }
 
   @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Delete user' })
-  @ApiResponse({ status: 204, description: 'Deleted successfully' })
+  @ApiResponse({ status: 200, type: MessageResponseDto })
   @ApiResponse({ status: 404, description: 'User not found' })
   async delete(@Param('id', ParseUUIDPipe) id: string) {
     await this.userService.delete(id);
+
+    return { message: 'User deleted successfully' };
   }
 }

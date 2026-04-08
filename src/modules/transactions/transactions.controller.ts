@@ -44,6 +44,7 @@ import { TransactionQueryDto } from './dtos/transaction-query.dto.js';
 import { TransactionResponseDto } from './dtos/transaction-response.dto.js';
 import { TransactionsByCategoryResponseDto } from './dtos/transactions-by-category-response.dto.js';
 import { UpdateTransactionDto } from './dtos/update-transaction.dto.js';
+import { TransactionImportService } from './transaction-import.service.js';
 import { TransactionsService } from './transactions.service.js';
 
 @ApiTags('Transactions')
@@ -51,7 +52,10 @@ import { TransactionsService } from './transactions.service.js';
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class TransactionsController {
-  constructor(private readonly transactionsService: TransactionsService) {}
+  constructor(
+    private readonly transactionsService: TransactionsService,
+    private readonly transactionImportService: TransactionImportService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'List transactions' })
@@ -145,7 +149,7 @@ export class TransactionsController {
       });
     }
 
-    return this.transactionsService.importTransactions(file, req.user.id);
+    return this.transactionImportService.importTransactions(file, req.user.id);
   }
 
   @Get(':id')

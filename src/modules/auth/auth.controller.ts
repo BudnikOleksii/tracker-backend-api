@@ -147,16 +147,11 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const refreshToken = this.getRefreshTokenFromCookie(req);
-    const success = await this.authService.logout(refreshToken, req.user.jti);
+    await this.authService.logout(refreshToken, req.user.jti);
 
     this.clearRefreshTokenCookie(res);
 
-    return {
-      success,
-      message: success
-        ? 'Logged out successfully'
-        : 'Logout failed: refresh token not found or already expired',
-    };
+    return { message: 'Logged out successfully' };
   }
 
   @Post('revoke-refresh-token')
