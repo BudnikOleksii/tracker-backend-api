@@ -18,8 +18,6 @@ import type { CategoryDetail, CategoryJoinColumns } from '@/shared/types/categor
 
 import type { SortByField } from './recurring-transactions.constants.js';
 
-export type { CategoryDetail };
-
 export interface RecurringTransactionInfo {
   id: string;
   userId: string;

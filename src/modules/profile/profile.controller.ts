@@ -12,6 +12,7 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { JwtAuthGuard } from '@/shared/guards/index.js';
+import type { RequestWithUserId } from '@/shared/types/request.js';
 import { MessageResponseDto } from '@/shared/dtos/message-response.dto.js';
 import type { AuthUser } from '@/modules/auth/auth.types.js';
 
@@ -32,7 +33,7 @@ export class ProfileController {
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({ status: 200, type: ProfileResponseDto })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getProfile(@Request() req: { user: { id: string } }) {
+  async getProfile(@Request() req: RequestWithUserId) {
     return this.profileService.getProfile(req.user.id);
   }
 
@@ -41,7 +42,7 @@ export class ProfileController {
   @ApiResponse({ status: 200, type: ProfileResponseDto })
   @ApiResponse({ status: 400, description: 'Validation error' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async updateProfile(@Request() req: { user: { id: string } }, @Body() dto: UpdateProfileDto) {
+  async updateProfile(@Request() req: RequestWithUserId, @Body() dto: UpdateProfileDto) {
     return this.profileService.updateProfile(req.user.id, dto);
   }
 

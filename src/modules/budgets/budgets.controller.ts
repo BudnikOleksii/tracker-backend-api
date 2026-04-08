@@ -18,6 +18,7 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 import { MessageResponseDto } from '@/shared/dtos/message-response.dto.js';
 import { buildPaginatedResponse } from '@/shared/utils/pagination.utils.js';
 import { JwtAuthGuard } from '@/shared/guards/index.js';
+import type { RequestWithUserId } from '@/shared/types/request.js';
 
 import { BudgetsService } from './budgets.service.js';
 import { BudgetListResponseDto } from './dtos/budget-list-response.dto.js';
@@ -37,7 +38,7 @@ export class BudgetsController {
   @Get()
   @ApiOperation({ summary: 'List budgets' })
   @ApiResponse({ status: 200, type: BudgetListResponseDto })
-  async findAll(@Query() query: BudgetQueryDto, @Request() req: { user: { id: string } }) {
+  async findAll(@Query() query: BudgetQueryDto, @Request() req: RequestWithUserId) {
     const result = await this.budgetsService.findAll({
       userId: req.user.id,
       page: query.page ?? 1,
@@ -57,7 +58,7 @@ export class BudgetsController {
   @ApiOperation({ summary: 'Get a budget' })
   @ApiResponse({ status: 200, type: BudgetResponseDto })
   @ApiResponse({ status: 404, description: 'Budget not found' })
-  async findById(@Param('id', ParseUUIDPipe) id: string, @Request() req: { user: { id: string } }) {
+  async findById(@Param('id', ParseUUIDPipe) id: string, @Request() req: RequestWithUserId) {
     return this.budgetsService.findById(id, req.user.id);
   }
 
@@ -65,10 +66,7 @@ export class BudgetsController {
   @ApiOperation({ summary: 'Get budget progress' })
   @ApiResponse({ status: 200, type: BudgetProgressResponseDto })
   @ApiResponse({ status: 404, description: 'Budget not found' })
-  async getProgress(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Request() req: { user: { id: string } },
-  ) {
+  async getProgress(@Param('id', ParseUUIDPipe) id: string, @Request() req: RequestWithUserId) {
     return this.budgetsService.getProgress(id, req.user.id);
   }
 
@@ -79,7 +77,7 @@ export class BudgetsController {
   @ApiResponse({ status: 400, description: 'Validation error' })
   @ApiResponse({ status: 404, description: 'Category not found' })
   @ApiResponse({ status: 409, description: 'Overlapping budget exists' })
-  async create(@Body() dto: CreateBudgetDto, @Request() req: { user: { id: string } }) {
+  async create(@Body() dto: CreateBudgetDto, @Request() req: RequestWithUserId) {
     return this.budgetsService.create({
       userId: req.user.id,
       categoryId: dto.categoryId,
@@ -101,7 +99,7 @@ export class BudgetsController {
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateBudgetDto,
-    @Request() req: { user: { id: string } },
+    @Request() req: RequestWithUserId,
   ) {
     return this.budgetsService.update(id, req.user.id, {
       amount: dto.amount,
@@ -116,7 +114,7 @@ export class BudgetsController {
   @ApiOperation({ summary: 'Delete a budget' })
   @ApiResponse({ status: 200, type: MessageResponseDto })
   @ApiResponse({ status: 404, description: 'Budget not found' })
-  async delete(@Param('id', ParseUUIDPipe) id: string, @Request() req: { user: { id: string } }) {
+  async delete(@Param('id', ParseUUIDPipe) id: string, @Request() req: RequestWithUserId) {
     await this.budgetsService.delete(id, req.user.id);
 
     return { message: 'Budget deleted successfully' };
