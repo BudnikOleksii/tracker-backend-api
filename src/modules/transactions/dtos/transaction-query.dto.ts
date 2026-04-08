@@ -10,8 +10,8 @@ import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
 import { SORT_ORDERS } from '@/shared/constants/sort.constants.js';
 import type { SortOrder } from '@/shared/constants/sort.constants.js';
 
-import { SORT_BY_FIELDS } from '../transactions.constants.js';
-import type { SortByField } from '../transactions.constants.js';
+import { SORT_BY_FIELDS } from '@/modules/transactions/transactions.constants.js';
+import type { SortByField } from '@/modules/transactions/transactions.constants.js';
 
 export class TransactionQueryDto extends OffsetPaginationDto {
   @ApiPropertyOptional({

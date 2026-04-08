@@ -88,7 +88,7 @@ Documentation testing:
 - Screenshot updates
 - API response validation
 - Performance testing
-- SEO optimization
+- SEO
 - Accessibility testing
 
 Multi-version documentation:
