@@ -12,6 +12,7 @@ import { CURRENCY_CODES } from '@/shared/enums/currency-code.enum.js';
 import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 import { buildCacheKey, buildCachePrefix } from '@/modules/cache/cache-key.utils.js';
 import { CacheService } from '@/modules/cache/cache.service.js';
+import { TransactionCategoryRepository } from '@/modules/transaction-categories/transaction-categories.repository.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 
 import {
@@ -30,8 +31,7 @@ import type {
 } from './transactions.repository.js';
 import type { TransactionGroupDto } from './dtos/transactions-by-category-response.dto.js';
 import type { ImportResult, ParsedTransactionRow } from './transactions.types.js';
-
-const CACHE_MODULE = 'transactions';
+import { CACHE_MODULE } from './transactions.constants.js';
 const MAX_IMPORT_ROWS = 1000;
 const TYPE_MAP: Record<string, TransactionType> = {
   expense: 'EXPENSE',
@@ -42,8 +42,10 @@ const CURRENCY_SET = new Set<string>(CURRENCY_CODES);
 
 @Injectable()
 export class TransactionsService {
+  // eslint-disable-next-line @typescript-eslint/max-params
   constructor(
     private readonly transactionRepository: TransactionRepository,
+    private readonly categoryRepository: TransactionCategoryRepository,
     private readonly cacheService: CacheService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
@@ -707,11 +709,7 @@ export class TransactionsService {
     tx?: DrizzleDb;
   }): Promise<void> {
     const { categoryId, userId, transactionType, tx } = params;
-    const category = await this.transactionRepository.findCategoryByIdAndUserId(
-      categoryId,
-      userId,
-      tx,
-    );
+    const category = await this.categoryRepository.findForValidation(categoryId, userId, tx);
 
     if (!category) {
       throw new NotFoundException({

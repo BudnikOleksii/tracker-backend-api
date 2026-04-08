@@ -562,17 +562,17 @@ Following the initial security/performance audit (see `AUDIT.md`), this audit fo
 
 | #   | Finding                                            | Impact | Effort | Priority | Status |
 | --- | -------------------------------------------------- | ------ | ------ | -------- | ------ |
-| 1   | `AuthUser.role` typed as `string`                  | 5      | S      | P0       | Todo   |
-| 2   | `Record<string, unknown>` in Drizzle `.set()`      | 5      | M      | P0       | Todo   |
-| 3   | `ConflictException` with wrong error code          | 4      | S      | P0       | Todo   |
-| 4   | Wrong exception in profile service                 | 4      | S      | P0       | Todo   |
-| 5   | ADMIN guard + user-scoped process mismatch         | 4      | S      | P0       | Todo   |
-| 6   | Unify `RequestWithUserId` / `AuthenticatedRequest` | 4      | S      | P0       | Todo   |
-| 7   | `validateCategory` triplicated                     | 4      | M      | P1       | Todo   |
-| 8   | `CategoryValidationInfo` in 3 repositories         | 3      | S      | P1       | Todo   |
-| 9   | `isUniqueViolation` duplicated                     | 3      | S      | P1       | Todo   |
-| 10  | `BCRYPT_ROUNDS` duplicated                         | 3      | S      | P1       | Todo   |
-| 11  | `CACHE_MODULE` string duplicated                   | 3      | S      | P1       | Todo   |
+| 1   | `AuthUser.role` typed as `string`                  | 5      | S      | P0       | Done   |
+| 2   | `Record<string, unknown>` in Drizzle `.set()`      | 5      | M      | P0       | Done   |
+| 3   | `ConflictException` with wrong error code          | 4      | S      | P0       | Done   |
+| 4   | Wrong exception in profile service                 | 4      | S      | P0       | Done   |
+| 5   | ADMIN guard + user-scoped process mismatch         | 4      | S      | P0       | Done   |
+| 6   | Unify `RequestWithUserId` / `AuthenticatedRequest` | 4      | S      | P0       | Done   |
+| 7   | `validateCategory` triplicated                     | 4      | M      | P1       | Done   |
+| 8   | `CategoryValidationInfo` in 3 repositories         | 3      | S      | P1       | Done   |
+| 9   | `isUniqueViolation` duplicated                     | 3      | S      | P1       | Done   |
+| 10  | `BCRYPT_ROUNDS` duplicated                         | 3      | S      | P1       | Done   |
+| 11  | `CACHE_MODULE` string duplicated                   | 3      | S      | P1       | Done   |
 | 12  | Extract `TransactionImportService`                 | 4      | M      | P1       | Todo   |
 | 13  | `ProfileService` -> `AuthService` coupling         | 3      | M      | P1       | Todo   |
 | 14  | Missing explicit return types on services          | 3      | M      | P1       | Todo   |

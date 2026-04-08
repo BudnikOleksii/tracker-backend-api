@@ -148,7 +148,7 @@ export class DefaultTransactionCategoryRepository {
   }): Promise<DefaultCategoryInfo | null> {
     const { id, data, tx } = params;
     const db = tx ?? this.db;
-    const updates: Record<string, unknown> = {};
+    const updates: Partial<typeof defaultTransactionCategories.$inferInsert> = {};
 
     if (data.name !== undefined) {
       updates.name = data.name;

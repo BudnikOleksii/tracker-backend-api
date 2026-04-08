@@ -9,6 +9,7 @@ import { Decimal } from 'decimal.js';
 import type { DrizzleDb } from '@/database/types.js';
 import { buildCacheKey, buildCachePrefix } from '@/modules/cache/cache-key.utils.js';
 import { CacheService } from '@/modules/cache/cache.service.js';
+import { TransactionCategoryRepository } from '@/modules/transaction-categories/transaction-categories.repository.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 import type { BudgetPeriod, BudgetStatus } from '@/shared/enums/budget.enum.js';
 import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
@@ -45,6 +46,7 @@ export interface BudgetProgress {
 export class BudgetsService {
   constructor(
     private readonly budgetRepository: BudgetRepository,
+    private readonly categoryRepository: TransactionCategoryRepository,
     private readonly cacheService: CacheService,
   ) {}
 
@@ -294,7 +296,7 @@ export class BudgetsService {
     userId: string,
     tx?: DrizzleDb,
   ): Promise<void> {
-    const category = await this.budgetRepository.findCategoryByIdAndUserId(categoryId, userId, tx);
+    const category = await this.categoryRepository.findForValidation(categoryId, userId, tx);
 
     if (!category) {
       throw new NotFoundException({
@@ -325,7 +327,7 @@ export class BudgetsService {
 
     if (overlap) {
       throw new ConflictException({
-        code: ErrorCode.BAD_REQUEST,
+        code: ErrorCode.RESOURCE_CONFLICT,
         message: 'A budget already exists for this category and overlapping period',
       });
     }

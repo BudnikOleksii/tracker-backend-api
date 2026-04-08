@@ -9,14 +9,13 @@ import * as bcrypt from 'bcrypt';
 import type { User } from '@/database/schemas/users.js';
 import { buildCacheKey, buildCachePrefix } from '@/modules/cache/cache-key.utils.js';
 import { CacheService } from '@/modules/cache/cache.service.js';
+import { BCRYPT_ROUNDS } from '@/shared/constants/auth.constants.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 import { hasRequiredRole } from '@/shared/enums/role.enum.js';
 import type { UserRole } from '@/shared/enums/role.enum.js';
 
 import { UserRepository } from './user.repository.js';
 import type { UserInfo, UserListQuery, UserListResult, UserSummary } from './user.repository.js';
-
-const BCRYPT_ROUNDS = 12;
 const CACHE_MODULE = 'users';
 
 @Injectable()

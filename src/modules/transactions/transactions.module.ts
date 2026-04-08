@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { CacheModule } from '@/modules/cache/cache.module.js';
+import { TransactionCategoriesModule } from '@/modules/transaction-categories/transaction-categories.module.js';
 
 import { TransactionsCacheListener } from './transactions-cache.listener.js';
 import { TransactionsController } from './transactions.controller.js';
@@ -8,7 +9,7 @@ import { TransactionRepository } from './transactions.repository.js';
 import { TransactionsService } from './transactions.service.js';
 
 @Module({
-  imports: [CacheModule],
+  imports: [CacheModule, TransactionCategoriesModule],
   controllers: [TransactionsController],
   providers: [TransactionsService, TransactionRepository, TransactionsCacheListener],
   exports: [TransactionsService],

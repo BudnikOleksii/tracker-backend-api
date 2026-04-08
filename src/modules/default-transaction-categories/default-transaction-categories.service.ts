@@ -8,6 +8,7 @@ import {
 import type { DrizzleDb } from '@/database/types.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
+import { isUniqueViolation } from '@/shared/utils/pg-errors.js';
 
 import { DefaultTransactionCategoryRepository } from './default-transaction-categories.repository.js';
 import type {
@@ -67,7 +68,7 @@ export class DefaultTransactionCategoriesService {
       try {
         return await this.repository.create(data, tx);
       } catch (error) {
-        if (this.isUniqueViolation(error)) {
+        if (isUniqueViolation(error)) {
           throw new ConflictException({
             code: ErrorCode.RESOURCE_CONFLICT,
             message:
@@ -153,7 +154,7 @@ export class DefaultTransactionCategoriesService {
 
         return updated;
       } catch (error) {
-        if (this.isUniqueViolation(error)) {
+        if (isUniqueViolation(error)) {
           throw new ConflictException({
             code: ErrorCode.RESOURCE_CONFLICT,
             message:
@@ -218,14 +219,5 @@ export class DefaultTransactionCategoriesService {
         message: 'A default transaction category with this name, type, and parent already exists',
       });
     }
-  }
-
-  private isUniqueViolation(error: unknown): boolean {
-    return (
-      typeof error === 'object' &&
-      error !== null &&
-      'code' in error &&
-      (error as { code: string }).code === '23505'
-    );
   }
 }

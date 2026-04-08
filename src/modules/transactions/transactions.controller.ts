@@ -34,7 +34,7 @@ import { MessageResponseDto } from '@/shared/dtos/message-response.dto.js';
 import { buildPaginatedResponse } from '@/shared/utils/pagination.utils.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 import { JwtAuthGuard } from '@/shared/guards/index.js';
-import type { RequestWithUserId } from '@/shared/types/request.js';
+import type { AuthenticatedRequest } from '@/modules/auth/auth.types.js';
 
 import { CreateTransactionDto } from './dtos/create-transaction.dto.js';
 import { ExportTransactionQueryDto } from './dtos/export-transaction-query.dto.js';
@@ -56,7 +56,7 @@ export class TransactionsController {
   @Get()
   @ApiOperation({ summary: 'List transactions' })
   @ApiResponse({ status: 200, type: TransactionListResponseDto })
-  async findAll(@Query() query: TransactionQueryDto, @Request() req: RequestWithUserId) {
+  async findAll(@Query() query: TransactionQueryDto, @Request() req: AuthenticatedRequest) {
     const result = await this.transactionsService.findAll({
       userId: req.user.id,
       page: query.page ?? 1,
@@ -80,7 +80,7 @@ export class TransactionsController {
   @ApiResponse({ status: 404, description: 'Category not found' })
   async findByCategory(
     @Param('categoryId', ParseUUIDPipe) categoryId: string,
-    @Request() req: RequestWithUserId,
+    @Request() req: AuthenticatedRequest,
   ) {
     return this.transactionsService.getTransactionsByCategory(categoryId, req.user.id);
   }
@@ -92,7 +92,7 @@ export class TransactionsController {
   @ApiResponse({ status: 400, description: 'Invalid format or query parameters' })
   async exportTransactions(
     @Query() query: ExportTransactionQueryDto,
-    @Request() req: RequestWithUserId,
+    @Request() req: AuthenticatedRequest,
     @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile | string> {
     const result = await this.transactionsService.exportTransactions({
@@ -136,7 +136,7 @@ export class TransactionsController {
   @ApiResponse({ status: 400, description: 'Invalid file format or data' })
   async importTransactions(
     @UploadedFile() file: Express.Multer.File | undefined,
-    @Request() req: RequestWithUserId,
+    @Request() req: AuthenticatedRequest,
   ) {
     if (!file) {
       throw new BadRequestException({
@@ -152,7 +152,7 @@ export class TransactionsController {
   @ApiOperation({ summary: 'Get a transaction' })
   @ApiResponse({ status: 200, type: TransactionResponseDto })
   @ApiResponse({ status: 404, description: 'Transaction not found' })
-  async findById(@Param('id', ParseUUIDPipe) id: string, @Request() req: RequestWithUserId) {
+  async findById(@Param('id', ParseUUIDPipe) id: string, @Request() req: AuthenticatedRequest) {
     return this.transactionsService.findById(id, req.user.id);
   }
 
@@ -162,7 +162,7 @@ export class TransactionsController {
   @ApiResponse({ status: 201, type: TransactionResponseDto })
   @ApiResponse({ status: 400, description: 'Category type mismatch' })
   @ApiResponse({ status: 404, description: 'Category not found' })
-  async create(@Body() dto: CreateTransactionDto, @Request() req: RequestWithUserId) {
+  async create(@Body() dto: CreateTransactionDto, @Request() req: AuthenticatedRequest) {
     return this.transactionsService.create({
       userId: req.user.id,
       categoryId: dto.categoryId,
@@ -182,7 +182,7 @@ export class TransactionsController {
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateTransactionDto,
-    @Request() req: RequestWithUserId,
+    @Request() req: AuthenticatedRequest,
   ) {
     return this.transactionsService.update(id, req.user.id, {
       categoryId: dto.categoryId,
@@ -199,7 +199,7 @@ export class TransactionsController {
   @ApiOperation({ summary: 'Delete a transaction' })
   @ApiResponse({ status: 200, type: MessageResponseDto })
   @ApiResponse({ status: 404, description: 'Transaction not found' })
-  async delete(@Param('id', ParseUUIDPipe) id: string, @Request() req: RequestWithUserId) {
+  async delete(@Param('id', ParseUUIDPipe) id: string, @Request() req: AuthenticatedRequest) {
     await this.transactionsService.delete(id, req.user.id);
 
     return { message: 'Transaction deleted successfully' };

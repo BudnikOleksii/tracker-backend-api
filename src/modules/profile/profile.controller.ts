@@ -12,9 +12,8 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { JwtAuthGuard } from '@/shared/guards/index.js';
-import type { RequestWithUserId } from '@/shared/types/request.js';
 import { MessageResponseDto } from '@/shared/dtos/message-response.dto.js';
-import type { AuthUser } from '@/modules/auth/auth.types.js';
+import type { AuthenticatedRequest } from '@/modules/auth/auth.types.js';
 
 import { ChangePasswordDto } from './dtos/change-password.dto.js';
 import { DeleteAccountDto } from './dtos/delete-account.dto.js';
@@ -33,7 +32,7 @@ export class ProfileController {
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({ status: 200, type: ProfileResponseDto })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getProfile(@Request() req: RequestWithUserId) {
+  async getProfile(@Request() req: AuthenticatedRequest) {
     return this.profileService.getProfile(req.user.id);
   }
 
@@ -42,7 +41,7 @@ export class ProfileController {
   @ApiResponse({ status: 200, type: ProfileResponseDto })
   @ApiResponse({ status: 400, description: 'Validation error' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async updateProfile(@Request() req: RequestWithUserId, @Body() dto: UpdateProfileDto) {
+  async updateProfile(@Request() req: AuthenticatedRequest, @Body() dto: UpdateProfileDto) {
     return this.profileService.updateProfile(req.user.id, dto);
   }
 
@@ -51,7 +50,7 @@ export class ProfileController {
   @ApiOperation({ summary: 'Change password' })
   @ApiResponse({ status: 200, type: MessageResponseDto })
   @ApiResponse({ status: 401, description: 'Invalid current password' })
-  async changePassword(@Request() req: { user: AuthUser }, @Body() dto: ChangePasswordDto) {
+  async changePassword(@Request() req: AuthenticatedRequest, @Body() dto: ChangePasswordDto) {
     await this.profileService.changePassword(req.user.id, dto, req.user.jti);
 
     return { message: 'Password changed successfully' };
@@ -62,7 +61,7 @@ export class ProfileController {
   @ApiOperation({ summary: 'Delete account' })
   @ApiResponse({ status: 200, type: MessageResponseDto })
   @ApiResponse({ status: 401, description: 'Invalid password' })
-  async deleteAccount(@Request() req: { user: AuthUser }, @Body() dto: DeleteAccountDto) {
+  async deleteAccount(@Request() req: AuthenticatedRequest, @Body() dto: DeleteAccountDto) {
     await this.profileService.deleteAccount(req.user.id, dto, req.user.jti);
 
     return { message: 'Account deleted successfully' };

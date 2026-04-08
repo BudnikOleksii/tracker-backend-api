@@ -10,6 +10,6 @@ import { TransactionCategoriesService } from './transaction-categories.service.j
   imports: [CacheModule],
   controllers: [TransactionCategoriesController],
   providers: [TransactionCategoriesService, TransactionCategoryRepository],
-  exports: [TransactionCategoriesService],
+  exports: [TransactionCategoriesService, TransactionCategoryRepository],
 })
 export class TransactionCategoriesModule {}
