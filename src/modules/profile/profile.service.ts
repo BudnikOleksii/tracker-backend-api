@@ -76,7 +76,7 @@ export class ProfileService {
     const newHash = await bcrypt.hash(dto.newPassword, BCRYPT_ROUNDS);
     await this.userRepository.updatePasswordHash(userId, newHash);
 
-    this.eventEmitter.emit(
+    await this.eventEmitter.emitAsync(
       PROFILE_EVENTS.PASSWORD_CHANGED,
       new ProfileSessionInvalidationEvent(userId, accessTokenJti),
     );
@@ -107,7 +107,7 @@ export class ProfileService {
     await this.userRepository.softDelete(userId);
     await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE));
 
-    this.eventEmitter.emit(
+    await this.eventEmitter.emitAsync(
       PROFILE_EVENTS.ACCOUNT_DELETED,
       new ProfileSessionInvalidationEvent(userId, accessTokenJti),
     );

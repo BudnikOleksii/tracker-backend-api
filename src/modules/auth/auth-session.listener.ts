@@ -16,27 +16,30 @@ export class AuthSessionListener {
 
   @OnEvent(PROFILE_EVENTS.PASSWORD_CHANGED, { async: true })
   async handlePasswordChanged(event: ProfileSessionInvalidationEvent): Promise<void> {
-    try {
-      await this.authService.revokeAllRefreshTokens(event.userId);
-      await this.authService.blacklistAccessToken(event.accessTokenJti);
-    } catch (error) {
-      this.logger.error(
-        `Failed to invalidate sessions after password change for user ${event.userId}`,
-        error instanceof Error ? error.stack : undefined,
-      );
-    }
+    await this.invalidateSessions(event, 'password change');
   }
 
   @OnEvent(PROFILE_EVENTS.ACCOUNT_DELETED, { async: true })
   async handleAccountDeleted(event: ProfileSessionInvalidationEvent): Promise<void> {
-    try {
-      await this.authService.revokeAllRefreshTokens(event.userId);
-      await this.authService.blacklistAccessToken(event.accessTokenJti);
-    } catch (error) {
-      this.logger.error(
-        `Failed to invalidate sessions after account deletion for user ${event.userId}`,
-        error instanceof Error ? error.stack : undefined,
-      );
+    await this.invalidateSessions(event, 'account deletion');
+  }
+
+  private async invalidateSessions(
+    event: ProfileSessionInvalidationEvent,
+    reason: string,
+  ): Promise<void> {
+    const results = await Promise.allSettled([
+      this.authService.revokeAllRefreshTokens(event.userId),
+      this.authService.blacklistAccessToken(event.accessTokenJti),
+    ]);
+
+    for (const result of results) {
+      if (result.status === 'rejected') {
+        this.logger.error(
+          `Failed to invalidate sessions after ${reason} for user ${event.userId}`,
+          result.reason instanceof Error ? result.reason.stack : undefined,
+        );
+      }
     }
   }
 }
