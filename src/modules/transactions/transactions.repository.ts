@@ -1,18 +1,35 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, count, desc, eq, gte, inArray, isNull, lte, or } from 'drizzle-orm';
+import {
+  aliasedTable,
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  getTableColumns,
+  gte,
+  inArray,
+  isNull,
+  lte,
+  or,
+} from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 
 import { transactionCategories, transactions } from '@/database/schemas/index.js';
 import { DB_TOKEN } from '@/database/types.js';
 import type { DrizzleDb } from '@/database/types.js';
+import type { CategoryDetail, CategoryJoinColumns } from '@/shared/types/category-detail.js';
 import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
 
 import type { SortByField, SortOrder } from './transactions.constants.js';
 
+export type { CategoryDetail };
+
 export interface TransactionInfo {
   id: string;
   categoryId: string;
+  category: CategoryDetail;
   type: TransactionType;
   amount: string;
   currencyCode: CurrencyCode;
@@ -82,6 +99,16 @@ export interface ParentCategoryInfo {
 
 export const MAX_EXPORT_ROWS = 10_000;
 
+const category = aliasedTable(transactionCategories, 'category');
+const parentCategory = aliasedTable(transactionCategories, 'parentCategory');
+
+const JOINED_COLUMNS = {
+  ...getTableColumns(transactions),
+  categoryName: category.name,
+  parentCatId: parentCategory.id,
+  parentCatName: parentCategory.name,
+} as const;
+
 const SORT_COLUMN_MAP = {
   date: transactions.date,
   amount: transactions.amount,
@@ -137,8 +164,10 @@ export class TransactionRepository {
 
     const [data, totalResult] = await Promise.all([
       this.db
-        .select()
+        .select(JOINED_COLUMNS)
         .from(transactions)
+        .leftJoin(category, eq(transactions.categoryId, category.id))
+        .leftJoin(parentCategory, eq(category.parentCategoryId, parentCategory.id))
         .where(whereClause)
         .limit(pageSize)
         .offset((page - 1) * pageSize)
@@ -184,8 +213,10 @@ export class TransactionRepository {
     }
 
     const data = await this.db
-      .select()
+      .select(JOINED_COLUMNS)
       .from(transactions)
+      .leftJoin(category, eq(transactions.categoryId, category.id))
+      .leftJoin(parentCategory, eq(category.parentCategoryId, parentCategory.id))
       .where(and(...conditions))
       .orderBy(desc(transactions.date))
       .limit(MAX_EXPORT_ROWS);
@@ -203,21 +234,24 @@ export class TransactionRepository {
   async findById(id: string, userId: string, tx?: DrizzleDb): Promise<TransactionInfo | null> {
     const db = tx ?? this.db;
     const result = await db
-      .select()
+      .select(JOINED_COLUMNS)
       .from(transactions)
+      .leftJoin(category, eq(transactions.categoryId, category.id))
+      .leftJoin(parentCategory, eq(category.parentCategoryId, parentCategory.id))
       .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
       .limit(1);
 
-    if (result.length === 0) {
+    const [row] = result;
+    if (!row) {
       return null;
     }
 
-    return this.toTransactionInfo(result[0] as typeof transactions.$inferSelect);
+    return this.toTransactionInfo(row);
   }
 
   async create(data: CreateTransactionData, tx?: DrizzleDb): Promise<TransactionInfo> {
     const db = tx ?? this.db;
-    const [transaction] = await db
+    const [inserted] = await db
       .insert(transactions)
       .values({
         userId: data.userId,
@@ -228,9 +262,11 @@ export class TransactionRepository {
         date: data.date,
         description: data.description,
       })
-      .returning();
+      .returning({ id: transactions.id });
 
-    return this.toTransactionInfo(transaction as typeof transactions.$inferSelect);
+    const result = await this.findById((inserted as { id: string }).id, data.userId, tx);
+
+    return result as TransactionInfo;
   }
 
   async update(params: {
@@ -267,17 +303,18 @@ export class TransactionRepository {
       updates.description = data.description;
     }
 
-    const result = await db
+    const updated = await db
       .update(transactions)
       .set(updates)
       .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
-      .returning();
+      .returning({ id: transactions.id });
 
-    if (result.length === 0) {
+    const [row] = updated;
+    if (!row) {
       return null;
     }
 
-    return this.toTransactionInfo(result[0] as typeof transactions.$inferSelect);
+    return this.findById(row.id, userId, tx);
   }
 
   async delete(id: string, userId: string): Promise<boolean> {
@@ -366,8 +403,10 @@ export class TransactionRepository {
     const allCategoryIds = [categoryId, ...subcategoryIds];
 
     const data = await this.db
-      .select()
+      .select(JOINED_COLUMNS)
       .from(transactions)
+      .leftJoin(category, eq(transactions.categoryId, category.id))
+      .leftJoin(parentCategory, eq(category.parentCategoryId, parentCategory.id))
       .where(and(eq(transactions.userId, userId), inArray(transactions.categoryId, allCategoryIds)))
       .orderBy(desc(transactions.date));
 
@@ -448,10 +487,20 @@ export class TransactionRepository {
     return result.length;
   }
 
-  private toTransactionInfo(row: typeof transactions.$inferSelect): TransactionInfo {
+  private toTransactionInfo(
+    row: typeof transactions.$inferSelect & CategoryJoinColumns,
+  ): TransactionInfo {
     return {
       id: row.id,
       categoryId: row.categoryId,
+      category: {
+        id: row.categoryId,
+        name: row.categoryName ?? 'Unknown',
+        parentCategory:
+          row.parentCatId && row.parentCatName
+            ? { id: row.parentCatId, name: row.parentCatName }
+            : null,
+      },
       type: row.type,
       amount: row.amount,
       currencyCode: row.currencyCode,

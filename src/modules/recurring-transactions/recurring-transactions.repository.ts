@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, count, desc, eq, isNull, lte } from 'drizzle-orm';
+import { aliasedTable, and, asc, count, desc, eq, getTableColumns, isNull, lte } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 
 import {
@@ -14,13 +14,17 @@ import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 import type { RecurringFrequency } from '@/shared/enums/recurring-frequency.enum.js';
 import type { RecurringTransactionStatus } from '@/shared/enums/recurring-transaction-status.enum.js';
 import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
+import type { CategoryDetail, CategoryJoinColumns } from '@/shared/types/category-detail.js';
 
 import type { SortByField } from './recurring-transactions.constants.js';
+
+export type { CategoryDetail };
 
 export interface RecurringTransactionInfo {
   id: string;
   userId: string;
   categoryId: string;
+  category: CategoryDetail;
   type: TransactionType;
   amount: string;
   currencyCode: CurrencyCode;
@@ -97,6 +101,16 @@ export interface CreateMaterializedTransactionData {
   recurringTransactionId: string;
 }
 
+const category = aliasedTable(transactionCategories, 'category');
+const parentCategory = aliasedTable(transactionCategories, 'parentCategory');
+
+const JOINED_COLUMNS = {
+  ...getTableColumns(recurringTransactions),
+  categoryName: category.name,
+  parentCatId: parentCategory.id,
+  parentCatName: parentCategory.name,
+} as const;
+
 const SORT_COLUMN_MAP = {
   amount: recurringTransactions.amount,
   startDate: recurringTransactions.startDate,
@@ -153,8 +167,10 @@ export class RecurringTransactionsRepository {
 
     const [data, totalResult] = await Promise.all([
       this.db
-        .select()
+        .select(JOINED_COLUMNS)
         .from(recurringTransactions)
+        .leftJoin(category, eq(recurringTransactions.categoryId, category.id))
+        .leftJoin(parentCategory, eq(category.parentCategoryId, parentCategory.id))
         .where(whereClause)
         .limit(pageSize)
         .offset((page - 1) * pageSize)
@@ -179,16 +195,19 @@ export class RecurringTransactionsRepository {
   ): Promise<RecurringTransactionInfo | null> {
     const db = tx ?? this.db;
     const result = await db
-      .select()
+      .select(JOINED_COLUMNS)
       .from(recurringTransactions)
+      .leftJoin(category, eq(recurringTransactions.categoryId, category.id))
+      .leftJoin(parentCategory, eq(category.parentCategoryId, parentCategory.id))
       .where(and(eq(recurringTransactions.id, id), eq(recurringTransactions.userId, userId)))
       .limit(1);
 
-    if (result.length === 0) {
+    const [row] = result;
+    if (!row) {
       return null;
     }
 
-    return this.toRecurringTransactionInfo(result[0] as typeof recurringTransactions.$inferSelect);
+    return this.toRecurringTransactionInfo(row);
   }
 
   async create(
@@ -196,7 +215,7 @@ export class RecurringTransactionsRepository {
     tx?: DrizzleDb,
   ): Promise<RecurringTransactionInfo> {
     const db = tx ?? this.db;
-    const [record] = await db
+    const [inserted] = await db
       .insert(recurringTransactions)
       .values({
         userId: data.userId,
@@ -211,9 +230,11 @@ export class RecurringTransactionsRepository {
         endDate: data.endDate,
         nextOccurrenceDate: data.nextOccurrenceDate,
       })
-      .returning();
+      .returning({ id: recurringTransactions.id });
 
-    return this.toRecurringTransactionInfo(record as typeof recurringTransactions.$inferSelect);
+    const created = await this.findById((inserted as { id: string }).id, data.userId, tx);
+
+    return created as RecurringTransactionInfo;
   }
 
   async update(params: {
@@ -260,17 +281,18 @@ export class RecurringTransactionsRepository {
       updates.status = data.status;
     }
 
-    const result = await db
+    const updated = await db
       .update(recurringTransactions)
       .set(updates)
       .where(and(eq(recurringTransactions.id, id), eq(recurringTransactions.userId, userId)))
-      .returning();
+      .returning({ id: recurringTransactions.id });
 
-    if (result.length === 0) {
+    const [updatedRow] = updated;
+    if (!updatedRow) {
       return null;
     }
 
-    return this.toRecurringTransactionInfo(result[0] as typeof recurringTransactions.$inferSelect);
+    return this.findById(updatedRow.id, userId, tx);
   }
 
   async findDueRecurringTransactions(
@@ -280,8 +302,10 @@ export class RecurringTransactionsRepository {
   ): Promise<RecurringTransactionInfo[]> {
     const db = tx ?? this.db;
     const result = await db
-      .select()
+      .select(JOINED_COLUMNS)
       .from(recurringTransactions)
+      .leftJoin(category, eq(recurringTransactions.categoryId, category.id))
+      .leftJoin(parentCategory, eq(category.parentCategoryId, parentCategory.id))
       .where(
         and(
           eq(recurringTransactions.userId, userId),
@@ -299,8 +323,10 @@ export class RecurringTransactionsRepository {
   ): Promise<RecurringTransactionInfo[]> {
     const db = tx ?? this.db;
     const result = await db
-      .select()
+      .select(JOINED_COLUMNS)
       .from(recurringTransactions)
+      .leftJoin(category, eq(recurringTransactions.categoryId, category.id))
+      .leftJoin(parentCategory, eq(category.parentCategoryId, parentCategory.id))
       .where(
         and(
           eq(recurringTransactions.status, 'ACTIVE'),
@@ -354,12 +380,20 @@ export class RecurringTransactionsRepository {
   }
 
   private toRecurringTransactionInfo(
-    row: typeof recurringTransactions.$inferSelect,
+    row: typeof recurringTransactions.$inferSelect & CategoryJoinColumns,
   ): RecurringTransactionInfo {
     return {
       id: row.id,
       userId: row.userId,
       categoryId: row.categoryId,
+      category: {
+        id: row.categoryId,
+        name: row.categoryName ?? 'Unknown',
+        parentCategory:
+          row.parentCatId && row.parentCatName
+            ? { id: row.parentCatId, name: row.parentCatName }
+            : null,
+      },
       type: row.type,
       amount: row.amount,
       currencyCode: row.currencyCode,
