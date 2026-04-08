@@ -265,8 +265,11 @@ export class TransactionRepository {
       .returning({ id: transactions.id });
 
     const result = await this.findById((inserted as { id: string }).id, data.userId, tx);
+    if (!result) {
+      throw new Error('Failed to retrieve newly created transaction');
+    }
 
-    return result as TransactionInfo;
+    return result;
   }
 
   async update(params: {

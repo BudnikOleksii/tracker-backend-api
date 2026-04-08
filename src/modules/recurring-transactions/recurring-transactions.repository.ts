@@ -233,8 +233,11 @@ export class RecurringTransactionsRepository {
       .returning({ id: recurringTransactions.id });
 
     const created = await this.findById((inserted as { id: string }).id, data.userId, tx);
+    if (!created) {
+      throw new Error('Failed to retrieve newly created recurring transaction');
+    }
 
-    return created as RecurringTransactionInfo;
+    return created;
   }
 
   async update(params: {
