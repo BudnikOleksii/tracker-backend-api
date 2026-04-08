@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+import { CategoryInfoDto } from '@/shared/dtos/category-info.dto.js';
 import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 import type { RecurringFrequency } from '@/shared/enums/recurring-frequency.enum.js';
 import type { RecurringTransactionStatus } from '@/shared/enums/recurring-transaction-status.enum.js';
@@ -21,6 +22,9 @@ export class RecurringTransactionResponseDto {
 
   @ApiProperty({ description: 'Category ID', example: '550e8400-e29b-41d4-a716-446655440002' })
   categoryId: string;
+
+  @ApiProperty({ description: 'Category details', type: CategoryInfoDto })
+  category: CategoryInfoDto;
 
   @ApiProperty({
     description: 'Transaction type',
