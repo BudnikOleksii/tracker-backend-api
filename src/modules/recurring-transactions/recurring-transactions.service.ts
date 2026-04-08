@@ -4,6 +4,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { DrizzleDb } from '@/database/types.js';
 import { buildCacheKey, buildCachePrefix } from '@/modules/cache/cache-key.utils.js';
 import { CacheService } from '@/modules/cache/cache.service.js';
+import { TransactionCategoryRepository } from '@/modules/transaction-categories/transaction-categories.repository.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 import type { RecurringFrequency } from '@/shared/enums/recurring-frequency.enum.js';
 import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
@@ -26,8 +27,10 @@ import type {
 export class RecurringTransactionsService {
   private readonly logger = new Logger(RecurringTransactionsService.name);
 
+  // eslint-disable-next-line @typescript-eslint/max-params
   constructor(
     private readonly repository: RecurringTransactionsRepository,
+    private readonly categoryRepository: TransactionCategoryRepository,
     private readonly cacheService: CacheService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
@@ -470,7 +473,7 @@ export class RecurringTransactionsService {
     tx?: DrizzleDb;
   }): Promise<void> {
     const { categoryId, userId, transactionType, tx } = params;
-    const category = await this.repository.findCategoryByIdAndUserId(categoryId, userId, tx);
+    const category = await this.categoryRepository.findForValidation(categoryId, userId, tx);
 
     if (!category) {
       throw new NotFoundException({

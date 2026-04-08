@@ -83,11 +83,6 @@ export interface ExportTransactionQuery {
   dateTo?: string;
 }
 
-export interface CategoryValidationInfo {
-  id: string;
-  type: TransactionType;
-}
-
 export interface ParentCategoryInfo {
   id: string;
   name: string;
@@ -279,7 +274,7 @@ export class TransactionRepository {
   }): Promise<TransactionInfo | null> {
     const { id, userId, data, tx } = params;
     const db = tx ?? this.db;
-    const updates: Record<string, unknown> = {};
+    const updates: Partial<typeof transactions.$inferInsert> = {};
 
     if (data.categoryId !== undefined) {
       updates.categoryId = data.categoryId;
@@ -326,34 +321,6 @@ export class TransactionRepository {
       .returning();
 
     return result.length > 0;
-  }
-
-  async findCategoryByIdAndUserId(
-    categoryId: string,
-    userId: string,
-    tx?: DrizzleDb,
-  ): Promise<CategoryValidationInfo | null> {
-    const db = tx ?? this.db;
-    const result = await db
-      .select({
-        id: transactionCategories.id,
-        type: transactionCategories.type,
-      })
-      .from(transactionCategories)
-      .where(
-        and(
-          eq(transactionCategories.id, categoryId),
-          eq(transactionCategories.userId, userId),
-          isNull(transactionCategories.deletedAt),
-        ),
-      )
-      .limit(1);
-
-    if (result.length === 0) {
-      return null;
-    }
-
-    return result[0] as CategoryValidationInfo;
   }
 
   async findCategoryWithSubcategories(

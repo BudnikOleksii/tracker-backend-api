@@ -8,7 +8,7 @@ export interface DeviceContext {
 export interface AuthUser {
   id: string;
   email: string;
-  role: string;
+  role: UserRole;
   sessionId: string;
   jti: string;
 }

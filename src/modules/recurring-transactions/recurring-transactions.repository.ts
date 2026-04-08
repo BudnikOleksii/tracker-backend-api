@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { aliasedTable, and, asc, count, desc, eq, getTableColumns, isNull, lte } from 'drizzle-orm';
+import { aliasedTable, and, asc, count, desc, eq, getTableColumns, lte } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 
 import {
@@ -81,11 +81,6 @@ export interface UpdateRecurringTransactionData {
   endDate?: Date;
   nextOccurrenceDate?: Date;
   status?: RecurringTransactionStatus;
-}
-
-export interface CategoryValidationInfo {
-  id: string;
-  type: TransactionType;
 }
 
 export interface CreateMaterializedTransactionData {
@@ -246,7 +241,7 @@ export class RecurringTransactionsRepository {
   }): Promise<RecurringTransactionInfo | null> {
     const { id, userId, data, tx } = params;
     const db = tx ?? this.db;
-    const updates: Record<string, unknown> = {};
+    const updates: Partial<typeof recurringTransactions.$inferInsert> = {};
 
     if (data.categoryId !== undefined) {
       updates.categoryId = data.categoryId;
@@ -350,34 +345,6 @@ export class RecurringTransactionsRepository {
       description: data.description,
       recurringTransactionId: data.recurringTransactionId,
     });
-  }
-
-  async findCategoryByIdAndUserId(
-    categoryId: string,
-    userId: string,
-    tx?: DrizzleDb,
-  ): Promise<CategoryValidationInfo | null> {
-    const db = tx ?? this.db;
-    const result = await db
-      .select({
-        id: transactionCategories.id,
-        type: transactionCategories.type,
-      })
-      .from(transactionCategories)
-      .where(
-        and(
-          eq(transactionCategories.id, categoryId),
-          eq(transactionCategories.userId, userId),
-          isNull(transactionCategories.deletedAt),
-        ),
-      )
-      .limit(1);
-
-    if (result.length === 0) {
-      return null;
-    }
-
-    return result[0] as CategoryValidationInfo;
   }
 
   private toRecurringTransactionInfo(

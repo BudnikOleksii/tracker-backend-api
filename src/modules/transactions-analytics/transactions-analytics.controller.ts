@@ -3,7 +3,7 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 import { Throttle } from '@nestjs/throttler';
 
 import { JwtAuthGuard } from '@/shared/guards/index.js';
-import type { RequestWithUserId } from '@/shared/types/request.js';
+import type { AuthenticatedRequest } from '@/modules/auth/auth.types.js';
 
 import { AnalyticsQueryDto } from './dtos/analytics-query.dto.js';
 import { CategoryBreakdownResponseDto } from './dtos/category-breakdown-response.dto.js';
@@ -27,7 +27,7 @@ export class TransactionsAnalyticsController {
   @Get('summary')
   @ApiOperation({ summary: 'Get financial summary' })
   @ApiResponse({ status: 200, type: SummaryResponseDto })
-  async getSummary(@Query() query: AnalyticsQueryDto, @Request() req: RequestWithUserId) {
+  async getSummary(@Query() query: AnalyticsQueryDto, @Request() req: AuthenticatedRequest) {
     return this.transactionsAnalyticsService.getSummary({
       userId: req.user.id,
       currencyCode: query.currencyCode,
@@ -41,7 +41,10 @@ export class TransactionsAnalyticsController {
   @Get('category-breakdown')
   @ApiOperation({ summary: 'Get spending/income by category' })
   @ApiResponse({ status: 200, type: CategoryBreakdownResponseDto })
-  async getCategoryBreakdown(@Query() query: AnalyticsQueryDto, @Request() req: RequestWithUserId) {
+  async getCategoryBreakdown(
+    @Query() query: AnalyticsQueryDto,
+    @Request() req: AuthenticatedRequest,
+  ) {
     return this.transactionsAnalyticsService.getCategoryBreakdown({
       userId: req.user.id,
       currencyCode: query.currencyCode,
@@ -55,7 +58,7 @@ export class TransactionsAnalyticsController {
   @Get('trends')
   @ApiOperation({ summary: 'Get income/expense trends over time' })
   @ApiResponse({ status: 200, type: TrendsResponseDto })
-  async getTrends(@Query() query: TrendsQueryDto, @Request() req: RequestWithUserId) {
+  async getTrends(@Query() query: TrendsQueryDto, @Request() req: AuthenticatedRequest) {
     return this.transactionsAnalyticsService.getTrends({
       userId: req.user.id,
       currencyCode: query.currencyCode,
@@ -70,7 +73,10 @@ export class TransactionsAnalyticsController {
   @Get('top-categories')
   @ApiOperation({ summary: 'Get top spending/income categories' })
   @ApiResponse({ status: 200, type: TopCategoriesResponseDto })
-  async getTopCategories(@Query() query: TopCategoriesQueryDto, @Request() req: RequestWithUserId) {
+  async getTopCategories(
+    @Query() query: TopCategoriesQueryDto,
+    @Request() req: AuthenticatedRequest,
+  ) {
     return this.transactionsAnalyticsService.getTopCategories({
       userId: req.user.id,
       currencyCode: query.currencyCode,
@@ -85,7 +91,10 @@ export class TransactionsAnalyticsController {
   @Get('daily-spending')
   @ApiOperation({ summary: 'Get daily spending totals for a month' })
   @ApiResponse({ status: 200, type: DailySpendingResponseDto })
-  async getDailySpending(@Query() query: DailySpendingQueryDto, @Request() req: RequestWithUserId) {
+  async getDailySpending(
+    @Query() query: DailySpendingQueryDto,
+    @Request() req: AuthenticatedRequest,
+  ) {
     return this.transactionsAnalyticsService.getDailySpending({
       userId: req.user.id,
       currencyCode: query.currencyCode,

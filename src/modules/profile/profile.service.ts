@@ -1,6 +1,7 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 
+import { BCRYPT_ROUNDS } from '@/shared/constants/auth.constants.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 import { AuthService } from '@/modules/auth/auth.service.js';
 import { buildCachePrefix } from '@/modules/cache/cache-key.utils.js';
@@ -10,8 +11,6 @@ import { UserRepository } from '../user/user.repository.js';
 import type { ProfileInfo, UpdateProfileData } from '../user/user.repository.js';
 import type { ChangePasswordDto } from './dtos/change-password.dto.js';
 import type { DeleteAccountDto } from './dtos/delete-account.dto.js';
-
-const BCRYPT_ROUNDS = 12;
 const CACHE_MODULE = 'users';
 
 @Injectable()
@@ -26,8 +25,8 @@ export class ProfileService {
     const profile = await this.userRepository.findProfileById(userId);
 
     if (!profile) {
-      throw new UnauthorizedException({
-        code: ErrorCode.UNAUTHORIZED,
+      throw new NotFoundException({
+        code: ErrorCode.RESOURCE_NOT_FOUND,
         message: 'User not found',
       });
     }
@@ -39,8 +38,8 @@ export class ProfileService {
     const updated = await this.userRepository.updateProfile(userId, data);
 
     if (!updated) {
-      throw new UnauthorizedException({
-        code: ErrorCode.UNAUTHORIZED,
+      throw new NotFoundException({
+        code: ErrorCode.RESOURCE_NOT_FOUND,
         message: 'User not found',
       });
     }

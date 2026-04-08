@@ -7,6 +7,7 @@ import { DB_TOKEN } from '@/database/types.js';
 import type { DrizzleDb } from '@/database/types.js';
 import type { SortOrder } from '@/shared/constants/sort.constants.js';
 import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
+import type { CategoryValidationInfo } from '@/shared/types/category-detail.js';
 
 import type { SortByField } from './transaction-categories.constants.js';
 
@@ -194,7 +195,7 @@ export class TransactionCategoryRepository {
   }): Promise<CategoryInfo | null> {
     const { id, userId, data, tx } = params;
     const db = tx ?? this.db;
-    const updates: Record<string, unknown> = {};
+    const updates: Partial<typeof transactionCategories.$inferInsert> = {};
 
     if (data.name !== undefined) {
       updates.name = data.name;
@@ -295,6 +296,30 @@ export class TransactionCategoryRepository {
     `);
 
     return result.rows[0]?.found === true;
+  }
+
+  async findForValidation(
+    categoryId: string,
+    userId: string,
+    tx?: DrizzleDb,
+  ): Promise<CategoryValidationInfo | null> {
+    const db = tx ?? this.db;
+    const result = await db
+      .select({
+        id: transactionCategories.id,
+        type: transactionCategories.type,
+      })
+      .from(transactionCategories)
+      .where(
+        and(
+          eq(transactionCategories.id, categoryId),
+          eq(transactionCategories.userId, userId),
+          isNull(transactionCategories.deletedAt),
+        ),
+      )
+      .limit(1);
+
+    return (result[0] as CategoryValidationInfo) ?? null;
   }
 
   private toCategoryInfo(row: typeof transactionCategories.$inferSelect): CategoryInfo {

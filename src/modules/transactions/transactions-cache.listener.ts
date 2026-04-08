@@ -5,8 +5,7 @@ import { buildCachePrefix } from '@/modules/cache/cache-key.utils.js';
 import { CacheService } from '@/modules/cache/cache.service.js';
 
 import type { TransactionMutationEvent } from './events/transaction-mutation.event.js';
-
-const CACHE_MODULE = 'transactions';
+import { CACHE_MODULE } from './transactions.constants.js';
 
 @Injectable()
 export class TransactionsCacheListener {

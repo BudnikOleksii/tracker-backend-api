@@ -18,7 +18,7 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 import { MessageResponseDto } from '@/shared/dtos/message-response.dto.js';
 import { buildPaginatedResponse } from '@/shared/utils/pagination.utils.js';
 import { JwtAuthGuard } from '@/shared/guards/index.js';
-import type { RequestWithUserId } from '@/shared/types/request.js';
+import type { AuthenticatedRequest } from '@/modules/auth/auth.types.js';
 
 import { CategoryListResponseDto } from './dtos/category-list-response.dto.js';
 import { CategoryQueryDto } from './dtos/category-query.dto.js';
@@ -37,7 +37,7 @@ export class TransactionCategoriesController {
   @Get()
   @ApiOperation({ summary: 'List transaction categories' })
   @ApiResponse({ status: 200, type: CategoryListResponseDto })
-  async findAll(@Query() query: CategoryQueryDto, @Request() req: RequestWithUserId) {
+  async findAll(@Query() query: CategoryQueryDto, @Request() req: AuthenticatedRequest) {
     const result = await this.categoriesService.findAll({
       userId: req.user.id,
       page: query.page ?? 1,
@@ -56,7 +56,7 @@ export class TransactionCategoriesController {
   @ApiOperation({ summary: 'Get a transaction category' })
   @ApiResponse({ status: 200, type: CategoryResponseDto })
   @ApiResponse({ status: 404, description: 'Category not found' })
-  async findById(@Param('id', ParseUUIDPipe) id: string, @Request() req: RequestWithUserId) {
+  async findById(@Param('id', ParseUUIDPipe) id: string, @Request() req: AuthenticatedRequest) {
     return this.categoriesService.findById(id, req.user.id);
   }
 
@@ -65,7 +65,7 @@ export class TransactionCategoriesController {
   @ApiOperation({ summary: 'Create a transaction category' })
   @ApiResponse({ status: 201, type: CategoryResponseDto })
   @ApiResponse({ status: 409, description: 'Duplicate category' })
-  async create(@Body() dto: CreateCategoryDto, @Request() req: RequestWithUserId) {
+  async create(@Body() dto: CreateCategoryDto, @Request() req: AuthenticatedRequest) {
     return this.categoriesService.create({
       userId: req.user.id,
       name: dto.name,
@@ -82,7 +82,7 @@ export class TransactionCategoriesController {
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateCategoryDto,
-    @Request() req: RequestWithUserId,
+    @Request() req: AuthenticatedRequest,
   ) {
     return this.categoriesService.update(id, req.user.id, {
       name: dto.name,
@@ -96,7 +96,7 @@ export class TransactionCategoriesController {
   @ApiResponse({ status: 200, type: MessageResponseDto })
   @ApiResponse({ status: 404, description: 'Category not found' })
   @ApiResponse({ status: 409, description: 'Category has transactions' })
-  async delete(@Param('id', ParseUUIDPipe) id: string, @Request() req: RequestWithUserId) {
+  async delete(@Param('id', ParseUUIDPipe) id: string, @Request() req: AuthenticatedRequest) {
     await this.categoriesService.delete(id, req.user.id);
 
     return { message: 'Category deleted successfully' };

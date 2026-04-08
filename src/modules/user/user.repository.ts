@@ -171,7 +171,7 @@ export class UserRepository {
   }
 
   async update(id: string, data: UpdateUserData): Promise<UserInfo | null> {
-    const updates: Record<string, unknown> = { updatedAt: new Date() };
+    const updates: Partial<typeof users.$inferInsert> = { updatedAt: new Date() };
     if (data.role !== undefined) {
       updates.role = data.role;
     }
@@ -233,7 +233,7 @@ export class UserRepository {
   }
 
   async updateProfile(id: string, data: UpdateProfileData): Promise<ProfileInfo | null> {
-    const updates: Record<string, unknown> = {};
+    const updates: Partial<typeof users.$inferInsert> = {};
 
     if (data.firstName !== undefined) {
       updates.firstName = data.firstName;

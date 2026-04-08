@@ -2,13 +2,12 @@ import { Inject, Injectable } from '@nestjs/common';
 import { and, asc, count, desc, eq, gte, lte, or, sql } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 
-import { budgets, transactionCategories, transactions } from '@/database/schemas/index.js';
+import { budgets, transactions } from '@/database/schemas/index.js';
 import { DB_TOKEN } from '@/database/types.js';
 import type { DrizzleDb } from '@/database/types.js';
 import type { SortOrder } from '@/shared/constants/sort.constants.js';
 import type { BudgetPeriod, BudgetStatus } from '@/shared/enums/budget.enum.js';
 import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
-import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
 
 import type { SortByField } from './budgets.constants.js';
 
@@ -60,11 +59,6 @@ export interface UpdateBudgetData {
   categoryId?: string | null;
   endDate?: Date;
   description?: string | null;
-}
-
-export interface CategoryValidationInfo {
-  id: string;
-  type: TransactionType;
 }
 
 const SORT_COLUMN_MAP = {
@@ -179,7 +173,7 @@ export class BudgetRepository {
   }): Promise<BudgetInfo | null> {
     const { id, userId, data, tx } = params;
     const db = tx ?? this.db;
-    const updates: Record<string, unknown> = {};
+    const updates: Partial<typeof budgets.$inferInsert> = {};
 
     if (data.amount !== undefined) {
       updates.amount = data.amount;
@@ -259,34 +253,6 @@ export class BudgetRepository {
     }
 
     return this.toBudgetInfo(result[0] as typeof budgets.$inferSelect);
-  }
-
-  async findCategoryByIdAndUserId(
-    categoryId: string,
-    userId: string,
-    tx?: DrizzleDb,
-  ): Promise<CategoryValidationInfo | null> {
-    const db = tx ?? this.db;
-    const result = await db
-      .select({
-        id: transactionCategories.id,
-        type: transactionCategories.type,
-      })
-      .from(transactionCategories)
-      .where(
-        and(
-          eq(transactionCategories.id, categoryId),
-          eq(transactionCategories.userId, userId),
-          sql`${transactionCategories.deletedAt} IS NULL`,
-        ),
-      )
-      .limit(1);
-
-    if (result.length === 0) {
-      return null;
-    }
-
-    return result[0] as CategoryValidationInfo;
   }
 
   async getSpentAmount(params: {
