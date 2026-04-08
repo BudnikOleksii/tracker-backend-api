@@ -18,13 +18,12 @@ import type { SQL } from 'drizzle-orm';
 import { transactionCategories, transactions } from '@/database/schemas/index.js';
 import { DB_TOKEN } from '@/database/types.js';
 import type { DrizzleDb } from '@/database/types.js';
-import type { CategoryDetail, CategoryJoinColumns } from '@/shared/types/category-detail.js';
+import type { SortOrder } from '@/shared/constants/sort.constants.js';
 import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
+import type { CategoryDetail, CategoryJoinColumns } from '@/shared/types/category-detail.js';
 
-import type { SortByField, SortOrder } from './transactions.constants.js';
-
-export type { CategoryDetail };
+import type { SortByField } from './transactions.constants.js';
 
 export interface TransactionInfo {
   id: string;

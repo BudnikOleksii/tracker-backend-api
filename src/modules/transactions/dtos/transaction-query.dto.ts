@@ -7,9 +7,11 @@ import { CURRENCY_CODES } from '@/shared/enums/currency-code.enum.js';
 import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 import { TRANSACTION_TYPES } from '@/shared/enums/transaction-type.enum.js';
 import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
+import { SORT_ORDERS } from '@/shared/constants/sort.constants.js';
+import type { SortOrder } from '@/shared/constants/sort.constants.js';
 
-import { SORT_BY_FIELDS, SORT_ORDERS } from '../transactions.constants.js';
-import type { SortByField, SortOrder } from '../transactions.constants.js';
+import { SORT_BY_FIELDS } from '../transactions.constants.js';
+import type { SortByField } from '../transactions.constants.js';
 
 export class TransactionQueryDto extends OffsetPaginationDto {
   @ApiPropertyOptional({
