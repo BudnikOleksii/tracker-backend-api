@@ -1,9 +1,9 @@
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as bcrypt from 'bcrypt';
 
 import { BCRYPT_ROUNDS } from '@/shared/constants/auth.constants.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
-import { AuthService } from '@/modules/auth/auth.service.js';
 import { buildCachePrefix } from '@/modules/cache/cache-key.utils.js';
 import { CacheService } from '@/modules/cache/cache.service.js';
 
@@ -11,14 +11,16 @@ import { UserRepository } from '../user/user.repository.js';
 import type { ProfileInfo, UpdateProfileData } from '../user/user.repository.js';
 import type { ChangePasswordDto } from './dtos/change-password.dto.js';
 import type { DeleteAccountDto } from './dtos/delete-account.dto.js';
+import { PROFILE_EVENTS, ProfileSessionInvalidationEvent } from './events/profile.event.js';
+
 const CACHE_MODULE = 'users';
 
 @Injectable()
 export class ProfileService {
   constructor(
     private readonly userRepository: UserRepository,
-    private readonly authService: AuthService,
     private readonly cacheService: CacheService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async getProfile(userId: string): Promise<ProfileInfo> {
@@ -73,8 +75,11 @@ export class ProfileService {
 
     const newHash = await bcrypt.hash(dto.newPassword, BCRYPT_ROUNDS);
     await this.userRepository.updatePasswordHash(userId, newHash);
-    await this.authService.revokeAllRefreshTokens(userId);
-    await this.authService.blacklistAccessToken(accessTokenJti);
+
+    await this.eventEmitter.emitAsync(
+      PROFILE_EVENTS.PASSWORD_CHANGED,
+      new ProfileSessionInvalidationEvent(userId, accessTokenJti),
+    );
   }
 
   async deleteAccount(
@@ -100,8 +105,11 @@ export class ProfileService {
     }
 
     await this.userRepository.softDelete(userId);
-    await this.authService.revokeAllRefreshTokens(userId);
-    await this.authService.blacklistAccessToken(accessTokenJti);
     await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE));
+
+    await this.eventEmitter.emitAsync(
+      PROFILE_EVENTS.ACCOUNT_DELETED,
+      new ProfileSessionInvalidationEvent(userId, accessTokenJti),
+    );
   }
 }

@@ -573,11 +573,11 @@ Following the initial security/performance audit (see `AUDIT.md`), this audit fo
 | 9   | `isUniqueViolation` duplicated                     | 3      | S      | P1       | Done   |
 | 10  | `BCRYPT_ROUNDS` duplicated                         | 3      | S      | P1       | Done   |
 | 11  | `CACHE_MODULE` string duplicated                   | 3      | S      | P1       | Done   |
-| 12  | Extract `TransactionImportService`                 | 4      | M      | P1       | Todo   |
-| 13  | `ProfileService` -> `AuthService` coupling         | 3      | M      | P1       | Todo   |
-| 14  | Missing explicit return types on services          | 3      | M      | P1       | Todo   |
-| 15  | DELETE 200 vs 204 inconsistency                    | 3      | S      | P1       | Todo   |
-| 16  | Logout returns `200 { success: false }`            | 3      | S      | P1       | Todo   |
+| 12  | Extract `TransactionImportService`                 | 4      | M      | P1       | Done   |
+| 13  | `ProfileService` -> `AuthService` coupling         | 3      | M      | P1       | Done   |
+| 14  | Missing explicit return types on services          | 3      | M      | P1       | Done   |
+| 15  | DELETE 200 vs 204 inconsistency                    | 3      | S      | P1       | Done   |
+| 16  | Logout returns `200 { success: false }`            | 3      | S      | P1       | Done   |
 | 17  | `PUT /users/:id/role` should be `PATCH`            | 3      | S      | P2       | Todo   |
 | 18  | GET vs POST `/auth/refresh-token` collision        | 2      | S      | P2       | Todo   |
 | 19  | `totalPages` missing from Swagger schema           | 3      | S      | P2       | Todo   |
