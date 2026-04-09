@@ -1,7 +1,13 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsIn, IsOptional } from 'class-validator';
 
-import { IsISO8601Field, IsNotBeforeField, IsUUIDField } from '@/shared/decorators/validators.js';
+import {
+  IsISO8601Field,
+  IsNotBeforeField,
+  IsStringField,
+  IsUUIDField,
+  MaxLengthField,
+} from '@/shared/decorators/validators.js';
 import { OffsetPaginationDto } from '@/shared/dtos/pagination.dto.js';
 import { CURRENCY_CODES } from '@/shared/enums/currency-code.enum.js';
 import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
@@ -13,6 +19,15 @@ import { SORT_BY_FIELDS } from '@/modules/transactions/transactions.constants.js
 import type { SortByField } from '@/modules/transactions/transactions.constants.js';
 
 export class TransactionQueryDto extends OffsetPaginationDto {
+  @ApiPropertyOptional({
+    example: 'grocery',
+    description: 'Search transactions by description (case-insensitive)',
+  })
+  @IsOptional()
+  @IsStringField()
+  @MaxLengthField(200)
+  search?: string;
+
   @ApiPropertyOptional({
     example: 'EXPENSE',
     type: String,

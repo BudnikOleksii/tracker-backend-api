@@ -9,6 +9,7 @@ import {
   IsStringField,
   IsUUIDField,
   MatchesField,
+  MaxField,
   MaxLengthField,
   MinField,
 } from '@/shared/decorators/validators.js';
@@ -63,6 +64,7 @@ export class CreateRecurringTransactionDto {
   @Type(() => Number)
   @IsIntField()
   @MinField(1)
+  @MaxField(365)
   interval?: number;
 
   @ApiProperty({ example: '2026-04-01T00:00:00.000+02:00' })

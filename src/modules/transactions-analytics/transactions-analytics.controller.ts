@@ -20,6 +20,7 @@ import { TransactionsAnalyticsService } from './transactions-analytics.service.j
 @Controller('transactions-analytics')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
+@ApiResponse({ status: 401, description: 'Unauthorized' })
 @Throttle({ default: { limit: 10, ttl: 60000 } })
 export class TransactionsAnalyticsController {
   constructor(private readonly transactionsAnalyticsService: TransactionsAnalyticsService) {}

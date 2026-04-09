@@ -51,6 +51,7 @@ import { TransactionsService } from './transactions.service.js';
 @Controller('transactions')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
+@ApiResponse({ status: 401, description: 'Unauthorized' })
 export class TransactionsController {
   constructor(
     private readonly transactionsService: TransactionsService,
@@ -65,6 +66,7 @@ export class TransactionsController {
       userId: req.user.id,
       page: query.page ?? 1,
       pageSize: query.pageSize ?? 20,
+      search: query.search,
       type: query.type,
       categoryId: query.categoryId,
       currencyCode: query.currencyCode,

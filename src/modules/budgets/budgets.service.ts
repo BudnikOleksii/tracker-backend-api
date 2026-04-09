@@ -233,20 +233,18 @@ export class BudgetsService {
 
     const spentByBudgetId = new Map(spentAmounts.map(({ budgetId, spent }) => [budgetId, spent]));
 
-    const statusUpdates = activeBudgets.flatMap((budget) => {
+    const statusUpdates: { id: string; status: BudgetStatus }[] = [];
+
+    for (const budget of activeBudgets) {
       const spent = new Decimal(spentByBudgetId.get(budget.id) ?? '0');
       const amount = new Decimal(budget.amount);
 
       if (spent.gt(amount) && budget.status === 'ACTIVE') {
-        return [{ id: budget.id, status: 'EXCEEDED' as BudgetStatus }];
+        statusUpdates.push({ id: budget.id, status: 'EXCEEDED' });
+      } else if (spent.lte(amount) && budget.status === 'EXCEEDED') {
+        statusUpdates.push({ id: budget.id, status: 'ACTIVE' });
       }
-
-      if (spent.lte(amount) && budget.status === 'EXCEEDED') {
-        return [{ id: budget.id, status: 'ACTIVE' as BudgetStatus }];
-      }
-
-      return [];
-    });
+    }
 
     if (statusUpdates.length > 0) {
       await this.budgetRepository.bulkUpdateStatuses(statusUpdates);
@@ -285,6 +283,7 @@ export class BudgetsService {
       case 'QUARTERLY':
         return new Date(year, month + 4, 0);
       case 'YEARLY':
+        // day=0 yields the last day of the previous month, so (year+1, month+1, 0) gives the last day of month `month` in `year+1`
         return new Date(year + 1, month + 1, 0);
       default:
         return new Date(startDate);

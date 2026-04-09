@@ -64,6 +64,7 @@ export class CacheService implements CachePort {
 
     const existing = this.inFlight.get(key);
     if (existing) {
+      // Safe: same cache key always produces the same T
       return existing as Promise<T>;
     }
 

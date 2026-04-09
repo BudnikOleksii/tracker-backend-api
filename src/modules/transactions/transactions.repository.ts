@@ -8,6 +8,7 @@ import {
   eq,
   getTableColumns,
   gte,
+  ilike,
   inArray,
   isNull,
   lte,
@@ -43,6 +44,7 @@ export interface TransactionListQuery {
   userId: string;
   page: number;
   pageSize: number;
+  search?: string;
   type?: TransactionType;
   categoryId?: string;
   currencyCode?: CurrencyCode;
@@ -121,6 +123,7 @@ export class TransactionRepository {
       userId,
       page,
       pageSize,
+      search,
       type,
       categoryId,
       currencyCode,
@@ -131,6 +134,10 @@ export class TransactionRepository {
     } = query;
 
     const conditions: SQL[] = [eq(transactions.userId, userId)];
+
+    if (search) {
+      conditions.push(ilike(transactions.description, `%${search}%`));
+    }
 
     if (type) {
       conditions.push(eq(transactions.type, type));

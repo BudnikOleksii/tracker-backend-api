@@ -31,6 +31,8 @@ import { DefaultTransactionCategoriesService } from './default-transaction-categ
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN')
 @ApiBearerAuth()
+@ApiResponse({ status: 401, description: 'Unauthorized' })
+@ApiResponse({ status: 403, description: 'Forbidden' })
 export class DefaultTransactionCategoriesController {
   constructor(private readonly service: DefaultTransactionCategoriesService) {}
 

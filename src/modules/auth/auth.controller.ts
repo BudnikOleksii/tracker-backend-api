@@ -123,6 +123,7 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current refresh token info' })
   @ApiResponse({ status: 200, type: RefreshTokenInfoDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getRefreshToken(@Request() req: AuthenticatedRequest) {
     return this.authService.getRefreshToken(req.user);
   }
@@ -132,6 +133,7 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'List active refresh tokens' })
   @ApiResponse({ status: 200, type: RefreshTokenListDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async listRefreshTokens(@Request() req: AuthenticatedRequest) {
     return this.authService.listRefreshTokens(req.user.id, req.user.sessionId);
   }
@@ -142,6 +144,7 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Logout (single device)' })
   @ApiResponse({ status: 200, type: LogoutResponseDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async logout(
     @Request() req: AuthenticatedRequest & { cookies?: Record<string, string> },
     @Res({ passthrough: true }) res: Response,
@@ -161,6 +164,7 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Revoke a specific refresh token' })
   @ApiResponse({ status: 200, type: RevokeTokenResponseDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async revokeRefreshToken(
     @Body() dto: RevokeRefreshTokenDto,
     @Request() req: AuthenticatedRequest,
@@ -179,6 +183,7 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Revoke all refresh tokens' })
   @ApiResponse({ status: 200, type: RevokeAllTokensResponseDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async revokeRefreshTokens(
     @Request() req: AuthenticatedRequest,
     @Res({ passthrough: true }) res: Response,

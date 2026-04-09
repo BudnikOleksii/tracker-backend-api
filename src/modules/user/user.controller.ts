@@ -35,6 +35,8 @@ import { UserService } from './user.service.js';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN')
 @ApiBearerAuth()
+@ApiResponse({ status: 401, description: 'Unauthorized' })
+@ApiResponse({ status: 403, description: 'Forbidden' })
 export class UserController {
   constructor(private readonly userService: UserService) {}
 

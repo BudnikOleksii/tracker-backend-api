@@ -32,6 +32,7 @@ import { UpdateBudgetDto } from './dtos/update-budget.dto.js';
 @Controller('budgets')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
+@ApiResponse({ status: 401, description: 'Unauthorized' })
 export class BudgetsController {
   constructor(private readonly budgetsService: BudgetsService) {}
 
