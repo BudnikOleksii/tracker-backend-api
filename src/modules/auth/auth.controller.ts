@@ -225,7 +225,13 @@ export class AuthController {
   async verifyEmail(@Query('token') token: string, @Res() res: Response): Promise<void> {
     const redirectUrl =
       this.configService.get('EMAIL_VERIFICATION_REDIRECT_URL', { infer: true }) ??
-      (this.socialAuthRedirectUrl as string);
+      this.socialAuthRedirectUrl;
+
+    if (!redirectUrl) {
+      res.status(500).json({ message: 'Email verification redirect URL is not configured' });
+
+      return;
+    }
 
     if (!token) {
       const url = new URL(redirectUrl);

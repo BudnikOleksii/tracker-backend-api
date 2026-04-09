@@ -332,6 +332,23 @@ export class TransactionCategoryRepository {
     return result.map((row) => this.toCategoryInfo(row));
   }
 
+  async bulkCreate(
+    items: { userId: string; name: string; type: TransactionType; parentCategoryId?: string }[],
+    tx?: DrizzleDb,
+  ): Promise<{ id: string; name: string; type: TransactionType }[]> {
+    if (items.length === 0) {
+      return [];
+    }
+
+    const db = tx ?? this.db;
+
+    return db.insert(transactionCategories).values(items).returning({
+      id: transactionCategories.id,
+      name: transactionCategories.name,
+      type: transactionCategories.type,
+    });
+  }
+
   async countByUserId(userId: string): Promise<number> {
     const result = await this.db
       .select({ count: count() })

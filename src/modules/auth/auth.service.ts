@@ -86,6 +86,7 @@ export class AuthService {
         `Failed to set email verification token for user ${created.id}`,
         error instanceof Error ? error.stack : undefined,
       );
+      throw error;
     }
 
     return this.generateTokens({

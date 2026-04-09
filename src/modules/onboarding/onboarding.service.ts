@@ -1,7 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 
-import { transactionCategories } from '@/database/schemas/index.js';
 import { BCRYPT_ROUNDS } from '@/shared/constants/auth.constants.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
@@ -60,15 +59,15 @@ export class OnboardingService {
       });
     }
 
-    await this.userRepository.updateProfile(userId, {
-      baseCurrencyCode: dto.baseCurrencyCode as CurrencyCode,
-      onboardingCompleted: true,
-    });
-
     if (dto.password && !user.passwordHash) {
       const passwordHash = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
       await this.userRepository.updatePasswordHash(userId, passwordHash);
     }
+
+    await this.userRepository.updateProfile(userId, {
+      baseCurrencyCode: dto.baseCurrencyCode as CurrencyCode,
+      onboardingCompleted: true,
+    });
 
     return this.getStatus(userId);
   }
@@ -110,14 +109,10 @@ export class OnboardingService {
       }
 
       if (missingParents.length > 0) {
-        const inserted = await tx
-          .insert(transactionCategories)
-          .values(missingParents.map((p) => ({ userId, name: p.name, type: p.type })))
-          .returning({
-            id: transactionCategories.id,
-            name: transactionCategories.name,
-            type: transactionCategories.type,
-          });
+        const inserted = await this.categoryRepository.bulkCreate(
+          missingParents.map((p) => ({ userId, name: p.name, type: p.type })),
+          tx,
+        );
 
         for (const row of inserted) {
           parentIdMap.set(`${row.name}::${row.type}`, row.id);
@@ -148,9 +143,7 @@ export class OnboardingService {
         })
         .filter((v): v is NonNullable<typeof v> => v !== null);
 
-      if (missingChildValues.length > 0) {
-        await tx.insert(transactionCategories).values(missingChildValues);
-      }
+      await this.categoryRepository.bulkCreate(missingChildValues, tx);
     });
   }
 }

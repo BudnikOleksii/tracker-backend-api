@@ -35,7 +35,7 @@ export class MailerService {
 
   async sendMail(to: string, subject: string, html: string): Promise<void> {
     if (!this.transporter) {
-      this.logger.warn(`Skipping email to ${to} (SMTP not configured)`);
+      this.logger.warn('Skipping email because SMTP is not configured');
 
       return;
     }
@@ -49,6 +49,10 @@ export class MailerService {
   }
 
   async sendVerificationEmail(email: string, token: string): Promise<void> {
+    if (!this.appUrl) {
+      throw new Error('APP_URL is required to send verification emails');
+    }
+
     const verifyUrl = `${this.appUrl}/auth/verify-email?token=${token}`;
 
     const html = `

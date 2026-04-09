@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { and, asc, count, desc, eq, gte, ilike, isNull } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 
@@ -237,7 +237,7 @@ export class UserRepository {
 
     const user = result[0];
     if (!user) {
-      throw new Error(`User ${id} not found`);
+      throw new NotFoundException(`User ${id} not found`);
     }
 
     return user;

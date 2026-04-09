@@ -37,7 +37,6 @@ export class OnboardingController {
   @HttpCode(200)
   @ApiOperation({ summary: 'Assign default transaction categories' })
   @ApiResponse({ status: 200, description: 'Default categories assigned' })
-  @ApiResponse({ status: 400, description: 'Categories already exist' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async assignDefaultCategories(@Request() req: AuthenticatedRequest) {
     await this.onboardingService.assignDefaultCategories(req.user.id);
