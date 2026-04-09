@@ -19,7 +19,7 @@ export class MailerService {
     const pass = this.configService.get('SMTP_PASSWORD', { infer: true });
 
     this.from = this.configService.get('SMTP_FROM', { infer: true });
-    this.appUrl = this.configService.get('APP_URL', { infer: true });
+    this.appUrl = this.configService.get('API_BASE_URL', { infer: true });
 
     if (host && port) {
       this.transporter = createTransport({
@@ -49,10 +49,6 @@ export class MailerService {
   }
 
   async sendVerificationEmail(email: string, token: string): Promise<void> {
-    if (!this.appUrl) {
-      throw new Error('APP_URL is required to send verification emails');
-    }
-
     const verifyUrl = `${this.appUrl}/auth/verify-email?token=${token}`;
 
     const html = `

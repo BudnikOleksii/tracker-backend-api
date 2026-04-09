@@ -139,7 +139,6 @@ export const envSchema = z
     SMTP_PASSWORD: z.string().min(1).optional(),
     SMTP_FROM: z.string().min(1).optional(),
 
-    APP_URL: z.url().optional(),
     EMAIL_VERIFICATION_REDIRECT_URL: z.url().optional(),
   })
   .refine(
@@ -182,17 +181,6 @@ export const envSchema = z
     {
       message: 'SOCIAL_AUTH_REDIRECT_URL is required when any social auth provider is configured',
       path: ['SOCIAL_AUTH_REDIRECT_URL'],
-    },
-  )
-  .refine(
-    (env) => {
-      const hasSmtp = !!env.SMTP_HOST && !!env.SMTP_PORT;
-
-      return !hasSmtp || !!env.APP_URL;
-    },
-    {
-      message: 'APP_URL is required when SMTP is configured',
-      path: ['APP_URL'],
     },
   );
 

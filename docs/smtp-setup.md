@@ -4,15 +4,15 @@ The mailer module sends transactional emails (email verification, etc.) via SMTP
 
 ## Environment Variables
 
-| Variable                          | Required | Description                                             |
-| --------------------------------- | -------- | ------------------------------------------------------- |
-| `SMTP_HOST`                       | Yes      | SMTP server hostname                                    |
-| `SMTP_PORT`                       | Yes      | SMTP server port                                        |
-| `SMTP_USER`                       | No       | SMTP username (for authentication)                      |
-| `SMTP_PASSWORD`                   | No       | SMTP password (for authentication)                      |
-| `SMTP_FROM`                       | Yes      | Sender address (e.g. `"Tracker <noreply@example.com>"`) |
-| `APP_URL`                         | Yes      | Backend API URL, used to build verification links       |
-| `EMAIL_VERIFICATION_REDIRECT_URL` | No       | Frontend URL to redirect after email verification       |
+| Variable                          | Required | Description                                                                       |
+| --------------------------------- | -------- | --------------------------------------------------------------------------------- |
+| `SMTP_HOST`                       | Yes      | SMTP server hostname                                                              |
+| `SMTP_PORT`                       | Yes      | SMTP server port                                                                  |
+| `SMTP_USER`                       | No       | SMTP username (for authentication)                                                |
+| `SMTP_PASSWORD`                   | No       | SMTP password (for authentication)                                                |
+| `SMTP_FROM`                       | Yes      | Sender address (e.g. `"Tracker <noreply@example.com>"`)                           |
+| `API_BASE_URL`                    | Yes      | Backend API URL, used to build verification links (already required, has default) |
+| `EMAIL_VERIFICATION_REDIRECT_URL` | No       | Frontend URL to redirect after email verification                                 |
 
 ## Gmail Setup
 
@@ -36,7 +36,7 @@ SMTP_PORT=587
 SMTP_USER=your-email@gmail.com
 SMTP_PASSWORD=abcdefghijklmnop
 SMTP_FROM="Tracker <your-email@gmail.com>"
-APP_URL=http://localhost:3000
+API_BASE_URL=http://localhost:3000
 EMAIL_VERIFICATION_REDIRECT_URL=http://localhost:5173/onboarding
 ```
 
@@ -62,7 +62,7 @@ mailhog:
 SMTP_HOST=localhost
 SMTP_PORT=1025
 SMTP_FROM="Tracker <noreply@tracker.local>"
-APP_URL=http://localhost:3000
+API_BASE_URL=http://localhost:3000
 EMAIL_VERIFICATION_REDIRECT_URL=http://localhost:5173/onboarding
 ```
 
