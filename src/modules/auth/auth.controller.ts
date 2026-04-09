@@ -5,6 +5,7 @@ import {
   Controller,
   Get,
   HttpCode,
+  InternalServerErrorException,
   Logger,
   Post,
   Query,
@@ -228,13 +229,12 @@ export class AuthController {
       this.socialAuthRedirectUrl;
 
     if (!redirectUrl) {
-      res.status(500).json({ message: 'Email verification redirect URL is not configured' });
-
-      return;
+      throw new InternalServerErrorException('Email verification redirect URL is not configured');
     }
 
     if (!token) {
       const url = new URL(redirectUrl);
+      url.searchParams.set('status', 'error');
       url.searchParams.set('error', 'invalid_token');
       res.redirect(url.toString());
 
@@ -244,7 +244,10 @@ export class AuthController {
     const result = await this.authService.verifyEmail(token);
 
     const url = new URL(redirectUrl);
-    if (!result.success) {
+    if (result.success) {
+      url.searchParams.set('status', 'success');
+    } else {
+      url.searchParams.set('status', 'error');
       url.searchParams.set('error', result.reason);
     }
     res.redirect(url.toString());
