@@ -135,8 +135,10 @@ export class TransactionRepository {
 
     const conditions: SQL[] = [eq(transactions.userId, userId)];
 
-    if (search) {
-      conditions.push(ilike(transactions.description, `%${search}%`));
+    const normalizedSearch = search?.trim();
+    if (normalizedSearch) {
+      const escapedSearch = normalizedSearch.replace(/[\\%_]/g, '\\$&');
+      conditions.push(ilike(transactions.description, `%${escapedSearch}%`));
     }
 
     if (type) {
