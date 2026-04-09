@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsIn, IsOptional } from 'class-validator';
-import { Transform, Type } from 'class-transformer';
+import { Transform } from 'class-transformer';
 
 import { SORT_ORDERS } from '@/shared/constants/sort.constants.js';
 import type { SortOrder } from '@/shared/constants/sort.constants.js';
@@ -30,8 +30,16 @@ export class CategoryQueryDto extends OffsetPaginationDto {
 
   @ApiPropertyOptional({ example: true })
   @IsOptional()
-  @Type(() => Boolean)
-  @Transform(({ value }) => value === 'true' || value === true)
+  @Transform(({ value }: { value: unknown }) => {
+    if (value === 'true' || value === true) {
+      return true;
+    }
+    if (value === 'false' || value === false) {
+      return false;
+    }
+
+    return value;
+  })
   @IsBooleanField()
   root?: boolean;
 
