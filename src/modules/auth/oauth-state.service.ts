@@ -41,7 +41,14 @@ export class OAuthStateService {
       return false;
     }
 
-    return crypto.timingSafeEqual(Buffer.from(cookieState), Buffer.from(queryState));
+    const cookieBuffer = Buffer.from(cookieState);
+    const queryBuffer = Buffer.from(queryState);
+
+    if (cookieBuffer.length !== queryBuffer.length) {
+      return false;
+    }
+
+    return crypto.timingSafeEqual(cookieBuffer, queryBuffer);
   }
 
   clearState(res: Response): void {

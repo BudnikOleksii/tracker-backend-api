@@ -12,7 +12,7 @@ The system SHALL expose a `GET /auth/google` endpoint that redirects the user to
 #### Scenario: Google OAuth is not configured
 
 - **WHEN** `GOOGLE_CLIENT_ID` or `GOOGLE_CLIENT_SECRET` environment variables are not set
-- **THEN** the `GET /auth/google` endpoint MUST NOT be registered and MUST return 404
+- **THEN** the `GET /auth/google` endpoint MUST return 501 Not Implemented
 
 ### Requirement: Google OAuth callback endpoint
 
@@ -22,8 +22,8 @@ The system SHALL expose a `GET /auth/google/callback` endpoint that handles the 
 
 - **WHEN** Google redirects to `/auth/google/callback` with a valid authorization code
 - **THEN** the server MUST exchange the code for user profile data (email, name, Google ID)
-- **AND** the server MUST issue a JWT access token and set a refresh token cookie
-- **AND** the server MUST redirect to `SOCIAL_AUTH_REDIRECT_URL` with `accessToken` as a query parameter
+- **AND** the server MUST store the auth result in Redis with a short-lived authorization code (60s TTL)
+- **AND** the server MUST redirect to `SOCIAL_AUTH_REDIRECT_URL` with `code` as a query parameter
 
 #### Scenario: Google returns an error
 

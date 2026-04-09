@@ -40,6 +40,7 @@ import { RegisterDto } from './dtos/register.dto.js';
 import { RevokeRefreshTokenDto } from './dtos/revoke-refresh-token.dto.js';
 import { RevokeAllTokensResponseDto } from './dtos/revoke-all-tokens-response.dto.js';
 import { RevokeTokenResponseDto } from './dtos/revoke-token-response.dto.js';
+import { SocialExchangeResponseDto } from './dtos/social-exchange-response.dto.js';
 import type {
   AuthenticatedRequest,
   GenerateTokensResult,
@@ -286,7 +287,7 @@ export class AuthController {
   @Throttle({ auth: {} })
   @HttpCode(200)
   @ApiOperation({ summary: 'Exchange social auth code for tokens' })
-  @ApiResponse({ status: 200, type: AuthResponseDto })
+  @ApiResponse({ status: 200, type: SocialExchangeResponseDto })
   async exchangeSocialCode(
     @Body() dto: ExchangeSocialCodeDto,
     @Res({ passthrough: true }) res: Response,

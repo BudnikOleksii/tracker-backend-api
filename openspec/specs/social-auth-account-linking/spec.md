@@ -9,11 +9,11 @@ The auth service SHALL expose a `socialLogin` method that handles user lookup, c
 - **WHEN** `socialLogin` is called with a provider and provider ID that match an existing user
 - **THEN** the system MUST log the user in and issue tokens without modifying user data
 
-#### Scenario: Existing user matched by email (account linking)
+#### Scenario: Existing user matched by email (conflict)
 
 - **WHEN** `socialLogin` is called with an email that matches an existing user but no provider ID match
-- **THEN** the system MUST update the existing user's `authProvider` and `authProviderId` columns
-- **AND** the system MUST issue tokens for the existing user
+- **THEN** the system MUST reject the login with an `EMAIL_EXISTS` error code
+- **AND** the system MUST log the attempt with `failReason: 'email_already_exists'`
 
 #### Scenario: No existing user (new registration)
 
@@ -25,17 +25,17 @@ The auth service SHALL expose a `socialLogin` method that handles user lookup, c
 
 ### Requirement: Auth provider enum in database schema
 
-The users table SHALL have an `authProvider` column using an enum with values `local`, `google`, `github`.
+The users table SHALL have an `authProvider` column using an enum with values `LOCAL`, `GOOGLE`, `GITHUB`.
 
 #### Scenario: Default value for existing users
 
 - **WHEN** the migration runs on an existing database
-- **THEN** all existing users MUST have `authProvider` set to `local`
+- **THEN** all existing users MUST have `authProvider` set to `LOCAL`
 
 #### Scenario: Column constraints
 
 - **WHEN** a new user is created
-- **THEN** `authProvider` MUST default to `local` and MUST NOT be null
+- **THEN** `authProvider` MUST default to `LOCAL` and MUST NOT be null
 
 ### Requirement: Auth provider ID in database schema
 
@@ -60,10 +60,10 @@ The `passwordHash` column on the users table SHALL be nullable to support social
 - **WHEN** a user is created via social login
 - **THEN** `passwordHash` MUST be null
 
-#### Scenario: Email/password user retains password
+#### Scenario: Email/password user cannot link social account
 
-- **WHEN** an existing email/password user logs in via social auth (account linking)
-- **THEN** the existing `passwordHash` MUST NOT be modified
+- **WHEN** a social login is attempted with an email that matches an existing email/password user
+- **THEN** the system MUST reject with `EMAIL_EXISTS` error (no auto-linking for security)
 
 #### Scenario: Login validation for social-only users
 
@@ -92,12 +92,14 @@ The system SHALL use a `SOCIAL_AUTH_REDIRECT_URL` environment variable to determ
 #### Scenario: Redirect after success
 
 - **WHEN** social authentication succeeds
-- **THEN** the server MUST redirect to `SOCIAL_AUTH_REDIRECT_URL` with `accessToken` as a query parameter
+- **THEN** the server MUST store the auth result in Redis with a short-lived authorization code (60s TTL)
+- **AND** the server MUST redirect to `SOCIAL_AUTH_REDIRECT_URL` with `code` as a query parameter
+- **AND** the frontend MUST exchange the code via `POST /auth/social/exchange` to receive the access token and refresh token cookie
 
 #### Scenario: Redirect after failure
 
 - **WHEN** social authentication fails
-- **THEN** the server MUST redirect to `SOCIAL_AUTH_REDIRECT_URL` with `error` as a query parameter
+- **THEN** the server MUST redirect to `SOCIAL_AUTH_REDIRECT_URL` with `error` and `reason` as query parameters
 
 #### Scenario: Environment validation
 

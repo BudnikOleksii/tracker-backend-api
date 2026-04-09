@@ -67,7 +67,7 @@ GITHUB_CALLBACK_URL=http://localhost:3000/auth/github/callback
 After a successful social login, the server redirects the user's browser to `SOCIAL_AUTH_REDIRECT_URL` with an authorization code. This is required whenever any social provider is configured.
 
 ```env
-SOCIAL_AUTH_REDIRECT_URL=http://localhost:3000/auth/callback
+SOCIAL_AUTH_REDIRECT_URL=http://localhost:5173/auth/callback
 ```
 
 The frontend at this URL should:

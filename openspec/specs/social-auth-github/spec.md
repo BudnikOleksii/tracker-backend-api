@@ -12,7 +12,7 @@ The system SHALL expose a `GET /auth/github` endpoint that redirects the user to
 #### Scenario: GitHub OAuth is not configured
 
 - **WHEN** `GITHUB_CLIENT_ID` or `GITHUB_CLIENT_SECRET` environment variables are not set
-- **THEN** the `GET /auth/github` endpoint MUST NOT be registered and MUST return 404
+- **THEN** the `GET /auth/github` endpoint MUST return 501 Not Implemented
 
 ### Requirement: GitHub OAuth callback endpoint
 
@@ -22,8 +22,8 @@ The system SHALL expose a `GET /auth/github/callback` endpoint that handles the 
 
 - **WHEN** GitHub redirects to `/auth/github/callback` with a valid authorization code
 - **THEN** the server MUST exchange the code for user profile data (email, name, GitHub ID)
-- **AND** the server MUST issue a JWT access token and set a refresh token cookie
-- **AND** the server MUST redirect to `SOCIAL_AUTH_REDIRECT_URL` with `accessToken` as a query parameter
+- **AND** the server MUST store the auth result in Redis with a short-lived authorization code (60s TTL)
+- **AND** the server MUST redirect to `SOCIAL_AUTH_REDIRECT_URL` with `code` as a query parameter
 
 #### Scenario: GitHub returns an error
 
