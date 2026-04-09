@@ -8,7 +8,7 @@ export interface SummaryResponse {
   totalExpenses: string;
   netBalance: string;
   transactionCount: number;
-  currencyCode: CurrencyCode;
+  currencyCode?: CurrencyCode;
   dateFrom: string;
   dateTo: string;
 }
@@ -23,7 +23,7 @@ export interface CategoryBreakdownItem {
 }
 
 export interface CategoryBreakdownResponse {
-  currencyCode: CurrencyCode;
+  currencyCode?: CurrencyCode;
   dateFrom: string;
   dateTo: string;
   breakdown: CategoryBreakdownItem[];
@@ -39,7 +39,7 @@ export interface TrendPeriod {
 }
 
 export interface TrendsResponse {
-  currencyCode: CurrencyCode;
+  currencyCode?: CurrencyCode;
   granularity: Granularity;
   periods: TrendPeriod[];
 }
@@ -54,7 +54,7 @@ export interface TopCategoryItem {
 }
 
 export interface TopCategoriesResponse {
-  currencyCode: CurrencyCode;
+  currencyCode?: CurrencyCode;
   categories: TopCategoryItem[];
 }
 
@@ -65,7 +65,7 @@ export interface DailySpendingDay {
 }
 
 export interface DailySpendingResponse {
-  currencyCode: CurrencyCode;
+  currencyCode?: CurrencyCode;
   year: number;
   month: number;
   days: DailySpendingDay[];

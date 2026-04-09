@@ -1,16 +1,27 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional } from 'class-validator';
 
-import { IsISO8601Field, IsInField, IsUUIDField } from '@/shared/decorators/validators.js';
+import {
+  IsISO8601Field,
+  IsInField,
+  IsNotBeforeField,
+  IsUUIDField,
+} from '@/shared/decorators/validators.js';
 import { CURRENCY_CODES } from '@/shared/enums/currency-code.enum.js';
 import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 import { TRANSACTION_TYPES } from '@/shared/enums/transaction-type.enum.js';
 import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
 
 export class AnalyticsQueryDto {
-  @ApiProperty({ example: 'USD', type: String, enum: CURRENCY_CODES, enumName: 'CurrencyCode' })
+  @ApiPropertyOptional({
+    example: 'USD',
+    type: String,
+    enum: CURRENCY_CODES,
+    enumName: 'CurrencyCode',
+  })
+  @IsOptional()
   @IsInField([...CURRENCY_CODES])
-  currencyCode!: CurrencyCode;
+  currencyCode?: CurrencyCode;
 
   @ApiPropertyOptional({ example: '2026-03-01T00:00:00.000+02:00' })
   @IsOptional()
@@ -20,6 +31,7 @@ export class AnalyticsQueryDto {
   @ApiPropertyOptional({ example: '2026-03-31T23:59:59.999+02:00' })
   @IsOptional()
   @IsISO8601Field()
+  @IsNotBeforeField('dateFrom')
   dateTo?: string;
 
   @ApiPropertyOptional({

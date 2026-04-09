@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsIn, IsOptional } from 'class-validator';
 
-import { IsISO8601Field, IsUUIDField } from '@/shared/decorators/validators.js';
+import { IsISO8601Field, IsNotBeforeField, IsUUIDField } from '@/shared/decorators/validators.js';
 
 export const EXPORT_FORMATS = ['json', 'csv'] as const;
 export type ExportFormat = (typeof EXPORT_FORMATS)[number];
@@ -25,6 +25,7 @@ export class ExportTransactionQueryDto {
   @ApiPropertyOptional({ example: '2026-03-31T23:59:59.999+02:00' })
   @IsOptional()
   @IsISO8601Field()
+  @IsNotBeforeField('dateFrom')
   dateTo?: string;
 
   @ApiPropertyOptional({ example: '550e8400-e29b-41d4-a716-446655440000' })

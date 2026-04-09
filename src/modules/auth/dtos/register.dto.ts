@@ -13,7 +13,7 @@ import {
 export class RegisterDto {
   @ApiProperty({ example: 'user@example.com' })
   @IsEmailField({ message: 'Invalid email format' })
-  email: string;
+  email!: string;
 
   @ApiProperty({ example: 'Pass123456' })
   @IsStringField()
@@ -23,7 +23,7 @@ export class RegisterDto {
   @MatchesField(/^(?=.*[a-zA-Z])(?=.*\d)/, {
     message: 'Password must contain at least one letter and one digit',
   })
-  password: string;
+  password!: string;
 
   @ApiPropertyOptional({ example: 'John' })
   @IsOptional()

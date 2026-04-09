@@ -3,6 +3,7 @@ import { IsIn, IsOptional } from 'class-validator';
 
 import {
   IsISO8601Field,
+  IsNotBeforeField,
   IsNotEmptyField,
   IsStringField,
   IsUUIDField,
@@ -36,6 +37,7 @@ export class CreateBudgetDto {
   @ApiPropertyOptional({ example: '2026-03-31T23:59:59.999+02:00' })
   @IsOptional()
   @IsISO8601Field()
+  @IsNotBeforeField('startDate')
   endDate?: string;
 
   @ApiPropertyOptional({ example: '550e8400-e29b-41d4-a716-446655440000' })

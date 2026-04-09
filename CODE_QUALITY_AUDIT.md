@@ -578,19 +578,19 @@ Following the initial security/performance audit (see `AUDIT.md`), this audit fo
 | 14  | Missing explicit return types on services          | 3      | M      | P1       | Done   |
 | 15  | DELETE 200 vs 204 inconsistency                    | 3      | S      | P1       | Done   |
 | 16  | Logout returns `200 { success: false }`            | 3      | S      | P1       | Done   |
-| 17  | `PUT /users/:id/role` should be `PATCH`            | 3      | S      | P2       | Todo   |
-| 18  | GET vs POST `/auth/refresh-token` collision        | 2      | S      | P2       | Todo   |
-| 19  | `totalPages` missing from Swagger schema           | 3      | S      | P2       | Todo   |
-| 20  | `currencyCode` required in analytics only          | 2      | S      | P2       | Todo   |
-| 21  | No `dateFrom <= dateTo` cross-field validation     | 3      | S      | P2       | Todo   |
-| 22  | `AuditLogQueryDto` in controller file              | 2      | S      | P2       | Todo   |
-| 23  | Redundant `@Global()` CacheModule imports          | 2      | S      | P2       | Todo   |
-| 24  | Auth revoke missing throttle band                  | 3      | S      | P2       | Todo   |
-| 25  | `RegisterDto` missing `!` on properties            | 2      | S      | P2       | Todo   |
-| 26  | `CreateUserDto.name` vs `firstName/lastName`       | 3      | S      | P2       | Todo   |
-| 27  | `CategoryQueryDto.root` no boolean validation      | 2      | S      | P2       | Todo   |
-| 28  | Audit interceptor inline type casts                | 2      | S      | P2       | Todo   |
-| 29  | Missing `import type` for `AnyPgColumn`            | 1      | S      | P2       | Todo   |
+| 17  | `PUT /users/:id/role` should be `PATCH`            | 3      | S      | P2       | Done   |
+| 18  | GET vs POST `/auth/refresh-token` collision        | 2      | S      | P2       | Done   |
+| 19  | `totalPages` missing from Swagger schema           | 3      | S      | P2       | Done   |
+| 20  | `currencyCode` required in analytics only          | 2      | S      | P2       | Done   |
+| 21  | No `dateFrom <= dateTo` cross-field validation     | 3      | S      | P2       | Done   |
+| 22  | `AuditLogQueryDto` in controller file              | 2      | S      | P2       | Done   |
+| 23  | Redundant `@Global()` CacheModule imports          | 2      | S      | P2       | Done   |
+| 24  | Auth revoke missing throttle band                  | 3      | S      | P2       | Done   |
+| 25  | `RegisterDto` missing `!` on properties            | 2      | S      | P2       | Done   |
+| 26  | `CreateUserDto.name` vs `firstName/lastName`       | 3      | S      | P2       | Done   |
+| 27  | `CategoryQueryDto.root` no boolean validation      | 2      | S      | P2       | Done   |
+| 28  | Audit interceptor inline type casts                | 2      | S      | P2       | Done   |
+| 29  | Missing `import type` for `AnyPgColumn`            | 1      | S      | P2       | Done   |
 | 30  | No text search on transactions                     | 3      | M      | P3       | Todo   |
 | 31  | Response DTOs expose `userId`                      | 2      | S      | P3       | Todo   |
 | 32  | `interval` has no maximum                          | 2      | S      | P3       | Todo   |

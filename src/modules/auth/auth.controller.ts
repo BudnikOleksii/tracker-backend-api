@@ -118,7 +118,7 @@ export class AuthController {
     return { accessToken: result.accessToken, user: result.user };
   }
 
-  @Get('refresh-token')
+  @Get('refresh-token/info')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current refresh token info' })
@@ -155,6 +155,7 @@ export class AuthController {
   }
 
   @Post('revoke-refresh-token')
+  @Throttle({ auth: {} })
   @HttpCode(200)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -172,6 +173,7 @@ export class AuthController {
   }
 
   @Post('revoke-refresh-tokens')
+  @Throttle({ auth: {} })
   @HttpCode(200)
   @UseGuards(JwtAuthGuard, CsrfGuard)
   @ApiBearerAuth()
