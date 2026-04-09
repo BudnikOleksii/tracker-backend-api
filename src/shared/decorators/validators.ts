@@ -13,8 +13,14 @@ import {
   MaxLength,
   Min,
   MinLength,
+  Validate,
+  ValidatorConstraint,
 } from 'class-validator';
-import type { ValidationOptions } from 'class-validator';
+import type {
+  ValidationArguments,
+  ValidationOptions,
+  ValidatorConstraintInterface,
+} from 'class-validator';
 
 import { ErrorCode } from '../enums/error-code.enum.js';
 
@@ -77,5 +83,33 @@ export function IsBooleanField(options?: ValidationOptions) {
 export function IsISO8601Field(options?: ValidationOptions) {
   return applyDecorators(
     IsISO8601({ strict: true }, { ...options, context: { code: ErrorCode.INVALID_FORMAT } }),
+  );
+}
+
+@ValidatorConstraint({ name: 'isNotBefore', async: false })
+class IsNotBeforeConstraint implements ValidatorConstraintInterface {
+  validate(value: unknown, args: ValidationArguments): boolean {
+    const [relatedPropertyName] = args.constraints as [string];
+    const relatedValue = (args.object as Record<string, unknown>)[relatedPropertyName];
+    if (!value || !relatedValue) {
+      return true;
+    }
+
+    return new Date(value as string) >= new Date(relatedValue as string);
+  }
+
+  defaultMessage(args: ValidationArguments): string {
+    const [relatedPropertyName] = args.constraints as [string];
+
+    return `$property must not be before ${relatedPropertyName}`;
+  }
+}
+
+export function IsNotBeforeField(property: string, options?: ValidationOptions) {
+  return applyDecorators(
+    Validate(IsNotBeforeConstraint, [property], {
+      ...options,
+      context: { code: ErrorCode.VALIDATION_ERROR },
+    }),
   );
 }

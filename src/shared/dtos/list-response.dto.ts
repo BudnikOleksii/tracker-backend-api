@@ -18,6 +18,9 @@ export class OffsetListResponseDto<T> extends ListResponseDto<T> {
   @ApiProperty({ description: 'Total number of matching records', example: 100 })
   total: number;
 
+  @ApiProperty({ description: 'Total number of pages', example: 5 })
+  totalPages: number;
+
   @ApiProperty({ description: 'Whether more pages are available', example: true })
   hasMore: boolean;
 }

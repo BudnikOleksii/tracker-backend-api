@@ -9,7 +9,6 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
-  Put,
   Query,
   Request,
   UseGuards,
@@ -80,6 +79,8 @@ export class UserController {
       email: dto.email,
       password: dto.password,
       role: dto.role,
+      firstName: dto.firstName,
+      lastName: dto.lastName,
     });
   }
 
@@ -93,7 +94,7 @@ export class UserController {
     });
   }
 
-  @Put(':id/role')
+  @Patch(':id/role')
   @Roles('ADMIN')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Assign user role (ADMIN only)' })

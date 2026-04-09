@@ -5,7 +5,7 @@ import { Transform, Type } from 'class-transformer';
 import { SORT_ORDERS } from '@/shared/constants/sort.constants.js';
 import type { SortOrder } from '@/shared/constants/sort.constants.js';
 import { OffsetPaginationDto } from '@/shared/dtos/pagination.dto.js';
-import { IsUUIDField } from '@/shared/decorators/validators.js';
+import { IsBooleanField, IsUUIDField } from '@/shared/decorators/validators.js';
 import { TRANSACTION_TYPES } from '@/shared/enums/transaction-type.enum.js';
 import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
 
@@ -32,6 +32,7 @@ export class CategoryQueryDto extends OffsetPaginationDto {
   @IsOptional()
   @Type(() => Boolean)
   @Transform(({ value }) => value === 'true' || value === true)
+  @IsBooleanField()
   root?: boolean;
 
   @ApiPropertyOptional({

@@ -23,9 +23,15 @@ export class DailySpendingQueryDto {
   @MaxField(12)
   month!: number;
 
-  @ApiProperty({ example: 'USD', type: String, enum: CURRENCY_CODES, enumName: 'CurrencyCode' })
+  @ApiPropertyOptional({
+    example: 'USD',
+    type: String,
+    enum: CURRENCY_CODES,
+    enumName: 'CurrencyCode',
+  })
+  @IsOptional()
   @IsInField([...CURRENCY_CODES])
-  currencyCode!: CurrencyCode;
+  currencyCode?: CurrencyCode;
 
   @ApiPropertyOptional({
     example: 'EXPENSE',

@@ -14,15 +14,9 @@ import { ROLES } from '@/shared/enums/role.enum.js';
 import type { UserRole } from '@/shared/enums/role.enum.js';
 
 export class CreateUserDto {
-  @ApiProperty({ example: 'John Doe' })
-  @IsStringField()
-  @MinLengthField(1)
-  @MaxLengthField(50)
-  name: string;
-
   @ApiProperty({ example: 'user@example.com' })
   @IsEmailField()
-  email: string;
+  email!: string;
 
   @ApiProperty({ example: 'Pass123456' })
   @IsStringField()
@@ -32,7 +26,21 @@ export class CreateUserDto {
   @MatchesField(/^(?=.*[a-zA-Z])(?=.*\d)/, {
     message: 'Password must contain at least one letter and one digit',
   })
-  password: string;
+  password!: string;
+
+  @ApiPropertyOptional({ example: 'John' })
+  @IsOptional()
+  @IsStringField()
+  @MinLengthField(1)
+  @MaxLengthField(50)
+  firstName?: string;
+
+  @ApiPropertyOptional({ example: 'Doe' })
+  @IsOptional()
+  @IsStringField()
+  @MinLengthField(1)
+  @MaxLengthField(50)
+  lastName?: string;
 
   @ApiPropertyOptional({ example: 'USER', enum: ROLES, enumName: 'UserRole' })
   @IsOptional()

@@ -12,7 +12,7 @@ import type { Granularity } from './dtos/trends-query.dto.js';
 
 export interface AnalyticsBaseQuery {
   userId: string;
-  currencyCode: CurrencyCode;
+  currencyCode?: CurrencyCode;
   dateFrom: Date;
   dateTo: Date;
   type?: TransactionType;
@@ -203,10 +203,13 @@ export class TransactionsAnalyticsRepository {
   private buildBaseConditions(query: AnalyticsBaseQuery): SQL[] {
     const conditions: SQL[] = [
       eq(transactions.userId, query.userId),
-      eq(transactions.currencyCode, query.currencyCode),
       gte(transactions.date, query.dateFrom),
       lte(transactions.date, query.dateTo),
     ];
+
+    if (query.currencyCode) {
+      conditions.push(eq(transactions.currencyCode, query.currencyCode));
+    }
 
     if (query.type) {
       conditions.push(eq(transactions.type, query.type));

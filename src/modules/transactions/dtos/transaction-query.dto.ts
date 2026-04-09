@@ -1,7 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsIn, IsOptional } from 'class-validator';
 
-import { IsISO8601Field, IsUUIDField } from '@/shared/decorators/validators.js';
+import { IsISO8601Field, IsNotBeforeField, IsUUIDField } from '@/shared/decorators/validators.js';
 import { OffsetPaginationDto } from '@/shared/dtos/pagination.dto.js';
 import { CURRENCY_CODES } from '@/shared/enums/currency-code.enum.js';
 import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
@@ -46,6 +46,7 @@ export class TransactionQueryDto extends OffsetPaginationDto {
   @ApiPropertyOptional({ example: '2026-03-31T23:59:59.999+02:00' })
   @IsOptional()
   @IsISO8601Field()
+  @IsNotBeforeField('dateFrom')
   dateTo?: string;
 
   @ApiPropertyOptional({

@@ -4,6 +4,8 @@ import type { NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/com
 import type { Request } from 'express';
 import type { Observable } from 'rxjs';
 
+import type { AuthUser } from '@/modules/auth/auth.types.js';
+
 import { AuditLogService } from './audit-log.service.js';
 
 const MUTATING_METHODS = new Set(['POST', 'PATCH', 'PUT', 'DELETE']);
@@ -14,8 +16,8 @@ export class AuditLogInterceptor implements NestInterceptor {
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const req = context.switchToHttp().getRequest<Request>();
-    const { method, url, params } = req;
-    const user = req.user as { id: string; email?: string } | undefined;
+    const { method, url } = req;
+    const user = req.user as AuthUser | undefined;
 
     if (!MUTATING_METHODS.has(method) || !user) {
       return next.handle();
@@ -27,7 +29,7 @@ export class AuditLogInterceptor implements NestInterceptor {
           action: `${method} ${url}`,
           actorId: user.id,
           actorEmail: user.email,
-          resourceId: (params as Record<string, string>)?.id,
+          resourceId: (req.params as Record<string, string>)?.id,
         });
       }),
     );

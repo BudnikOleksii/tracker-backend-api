@@ -24,7 +24,7 @@ const TTL_TRENDS = 600;
 
 interface BaseParams {
   userId: string;
-  currencyCode: CurrencyCode;
+  currencyCode?: CurrencyCode;
   dateFrom?: string;
   dateTo?: string;
   type?: TransactionType;
@@ -41,7 +41,7 @@ interface TopCategoriesParams extends BaseParams {
 
 interface DailySpendingParams {
   userId: string;
-  currencyCode: CurrencyCode;
+  currencyCode?: CurrencyCode;
   year: number;
   month: number;
   type?: TransactionType;
