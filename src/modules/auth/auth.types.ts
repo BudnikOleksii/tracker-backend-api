@@ -1,3 +1,4 @@
+import type { AuthProvider } from '@/shared/enums/auth-provider.enum.js';
 import type { UserRole } from '@/shared/enums/role.enum.js';
 
 export interface DeviceContext {
@@ -58,4 +59,17 @@ export interface RefreshTokenListItem {
 
 export interface RefreshTokenListResult {
   refreshTokens: RefreshTokenListItem[];
+}
+
+export interface SocialLoginParams {
+  provider: AuthProvider;
+  providerId: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  deviceContext?: DeviceContext;
+}
+
+export interface SocialLoginResult extends GenerateTokensResult {
+  isNewUser: boolean;
 }

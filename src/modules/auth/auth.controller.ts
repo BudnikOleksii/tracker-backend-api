@@ -1,9 +1,11 @@
 import crypto from 'node:crypto';
 import {
   Body,
+  ConflictException,
   Controller,
   Get,
   HttpCode,
+  Logger,
   Post,
   Request,
   Res,
@@ -11,7 +13,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiResponse,
+  ApiExcludeEndpoint,
+} from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import type { CookieOptions, Response } from 'express';
 
@@ -20,6 +28,10 @@ import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 import { CsrfGuard, JwtAuthGuard } from '@/shared/guards/index.js';
 
 import { AuthService } from './auth.service.js';
+import { ExchangeSocialCodeDto } from './dtos/exchange-social-code.dto.js';
+import { GitHubOAuthGuard } from './github-oauth.guard.js';
+import { GoogleOAuthGuard } from './google-oauth.guard.js';
+import { SocialAuthCodeService } from './social-auth-code.service.js';
 import { LoginDto, AuthResponseDto } from './dtos/login.dto.js';
 import { LogoutResponseDto } from './dtos/logout-response.dto.js';
 import { RefreshTokenInfoDto } from './dtos/refresh-token-info.dto.js';
@@ -28,19 +40,26 @@ import { RegisterDto } from './dtos/register.dto.js';
 import { RevokeRefreshTokenDto } from './dtos/revoke-refresh-token.dto.js';
 import { RevokeAllTokensResponseDto } from './dtos/revoke-all-tokens-response.dto.js';
 import { RevokeTokenResponseDto } from './dtos/revoke-token-response.dto.js';
-import type { AuthenticatedRequest, GenerateTokensResult } from './auth.types.js';
+import type {
+  AuthenticatedRequest,
+  GenerateTokensResult,
+  SocialLoginParams,
+} from './auth.types.js';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
   private readonly cookieName: string;
   private readonly cookieOptions: CookieOptions;
   private readonly csrfCookieName: string;
   private readonly sameSite: string;
+  private readonly socialAuthRedirectUrl: string | undefined;
 
   constructor(
     private readonly authService: AuthService,
     private readonly configService: ConfigService<Env, true>,
+    private readonly socialAuthCodeService: SocialAuthCodeService,
   ) {
     this.cookieName = this.configService.get('REFRESH_TOKEN_COOKIE_NAME', { infer: true });
     this.csrfCookieName = this.configService.get('CSRF_TOKEN_COOKIE_NAME', { infer: true });
@@ -54,6 +73,9 @@ export class AuthController {
       path: this.configService.get('COOKIE_PATH', { infer: true }),
       ...(domain ? { domain } : {}),
     };
+    this.socialAuthRedirectUrl = this.configService.get('SOCIAL_AUTH_REDIRECT_URL', {
+      infer: true,
+    });
   }
 
   @Post('register')
@@ -196,6 +218,144 @@ export class AuthController {
       revokedCount,
       message: `All refresh tokens revoked successfully. Total: ${revokedCount}`,
     };
+  }
+
+  @Get('providers')
+  @ApiOperation({ summary: 'List enabled authentication providers' })
+  @ApiResponse({ status: 200 })
+  getProviders() {
+    return {
+      providers: [
+        { id: 'google', enabled: !!this.configService.get('GOOGLE_CLIENT_ID', { infer: true }) },
+        { id: 'github', enabled: !!this.configService.get('GITHUB_CLIENT_ID', { infer: true }) },
+      ],
+    };
+  }
+
+  @Get('google')
+  @Throttle({ auth: {} })
+  @UseGuards(GoogleOAuthGuard)
+  @ApiOperation({ summary: 'Initiate Google OAuth login' })
+  @ApiResponse({ status: 302, description: 'Redirects to Google OAuth consent screen' })
+  googleLogin(): void {
+    // Guard handles redirect
+  }
+
+  @Get('google/callback')
+  @Throttle({ auth: {} })
+  @UseGuards(GoogleOAuthGuard)
+  @ApiExcludeEndpoint()
+  async googleCallback(
+    @Request()
+    req: {
+      user: SocialLoginParams;
+      headers: Record<string, string | string[] | undefined>;
+      socket?: { remoteAddress?: string };
+    },
+    @Res() res: Response,
+  ): Promise<void> {
+    await this.handleSocialCallback(req, res);
+  }
+
+  @Get('github')
+  @Throttle({ auth: {} })
+  @UseGuards(GitHubOAuthGuard)
+  @ApiOperation({ summary: 'Initiate GitHub OAuth login' })
+  @ApiResponse({ status: 302, description: 'Redirects to GitHub OAuth authorization screen' })
+  githubLogin(): void {
+    // Guard handles redirect
+  }
+
+  @Get('github/callback')
+  @Throttle({ auth: {} })
+  @UseGuards(GitHubOAuthGuard)
+  @ApiExcludeEndpoint()
+  async githubCallback(
+    @Request()
+    req: {
+      user: SocialLoginParams;
+      headers: Record<string, string | string[] | undefined>;
+      socket?: { remoteAddress?: string };
+    },
+    @Res() res: Response,
+  ): Promise<void> {
+    await this.handleSocialCallback(req, res);
+  }
+
+  @Post('social/exchange')
+  @Throttle({ auth: {} })
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Exchange social auth code for tokens' })
+  @ApiResponse({ status: 200, type: AuthResponseDto })
+  async exchangeSocialCode(
+    @Body() dto: ExchangeSocialCodeDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const stored = await this.socialAuthCodeService.exchangeCode(dto.code);
+
+    if (!stored) {
+      throw new UnauthorizedException({
+        code: ErrorCode.TOKEN_INVALID,
+        message: 'Invalid or expired authorization code',
+      });
+    }
+
+    const refreshExpiresAt = new Date(stored.refreshExpiresAt);
+    this.setRefreshTokenCookie(res, { ...stored, refreshExpiresAt });
+
+    return { accessToken: stored.accessToken, user: stored.user, isNewUser: stored.isNewUser };
+  }
+
+  private async handleSocialCallback(
+    req: {
+      user: SocialLoginParams;
+      headers: Record<string, string | string[] | undefined>;
+      socket?: { remoteAddress?: string };
+    },
+    res: Response,
+  ): Promise<void> {
+    const redirectUrl = this.socialAuthRedirectUrl as string;
+
+    try {
+      const deviceContext = {
+        ipAddress:
+          (req.headers['x-forwarded-for'] as string | undefined)?.split(',')[0]?.trim() ??
+          req.socket?.remoteAddress,
+        userAgent: req.headers['user-agent'] as string | undefined,
+      };
+
+      const result = await this.authService.socialLogin({
+        ...req.user,
+        deviceContext,
+      });
+
+      const code = await this.socialAuthCodeService.createCode(result, result.isNewUser);
+
+      const url = new URL(redirectUrl);
+      url.searchParams.set('code', code);
+      res.redirect(url.toString());
+    } catch (error) {
+      this.logger.error(
+        'Social auth callback failed',
+        error instanceof Error ? error.stack : undefined,
+      );
+
+      const url = new URL(redirectUrl);
+      url.searchParams.set('error', 'auth_failed');
+      url.searchParams.set('reason', this.getSocialAuthErrorReason(error));
+      res.redirect(url.toString());
+    }
+  }
+
+  private getSocialAuthErrorReason(error: unknown): string {
+    if (error instanceof ConflictException) {
+      return 'email_exists';
+    }
+    if (error instanceof UnauthorizedException) {
+      return 'unauthorized';
+    }
+
+    return 'unknown';
   }
 
   private setRefreshTokenCookie(res: Response, result: GenerateTokensResult): void {

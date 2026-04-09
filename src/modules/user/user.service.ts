@@ -7,6 +7,7 @@ import {
 import * as bcrypt from 'bcrypt';
 
 import type { User } from '@/database/schemas/users.js';
+import type { AuthProvider } from '@/shared/enums/auth-provider.enum.js';
 import { buildCacheKey, buildCachePrefix } from '@/modules/cache/cache-key.utils.js';
 import { CacheService } from '@/modules/cache/cache.service.js';
 import { BCRYPT_ROUNDS } from '@/shared/constants/auth.constants.js';
@@ -27,6 +28,51 @@ export class UserService {
 
   async findByEmail(email: string): Promise<User | null> {
     return this.userRepository.findByEmail(email);
+  }
+
+  async findByAuthProvider(
+    authProvider: AuthProvider,
+    authProviderId: string,
+  ): Promise<User | null> {
+    return this.userRepository.findByAuthProvider(authProvider, authProviderId);
+  }
+
+  async linkSocialAccount(
+    id: string,
+    authProvider: AuthProvider,
+    authProviderId: string,
+  ): Promise<void> {
+    await this.userRepository.linkSocialAccount(id, authProvider, authProviderId);
+    await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE));
+  }
+
+  async createSocialUser(data: {
+    email: string;
+    authProvider: AuthProvider;
+    authProviderId: string;
+    firstName?: string;
+    lastName?: string;
+  }): Promise<UserInfo> {
+    const exists = await this.userRepository.existsByEmail(data.email);
+    if (exists) {
+      throw new ConflictException({
+        code: ErrorCode.EMAIL_EXISTS,
+        message: 'This email address is already in use',
+      });
+    }
+
+    const result = await this.userRepository.create({
+      email: data.email,
+      passwordHash: null,
+      authProvider: data.authProvider,
+      authProviderId: data.authProviderId,
+      firstName: data.firstName,
+      lastName: data.lastName,
+    });
+
+    await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE));
+
+    return result;
   }
 
   async findAll(query: UserListQuery): Promise<UserListResult> {

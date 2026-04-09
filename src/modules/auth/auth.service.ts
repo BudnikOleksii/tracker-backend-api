@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   Logger,
   NotFoundException,
@@ -11,6 +12,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
+import { isUniqueViolation } from '@/shared/utils/pg-errors.js';
 import type { Env } from '@/app/config/env.schema.js';
 
 import { DefaultTransactionCategoriesService } from '../default-transaction-categories/default-transaction-categories.service.js';
@@ -27,6 +29,8 @@ import type {
   RefreshTokenInfo,
   RefreshTokenListResult,
   RevokeRefreshTokenParams,
+  SocialLoginParams,
+  SocialLoginResult,
 } from './auth.types.js';
 
 @Injectable()
@@ -104,6 +108,21 @@ export class AuthService {
       });
     }
 
+    if (!user.passwordHash) {
+      void this.loginLogRepo.create({
+        userId: user.id,
+        email,
+        status: 'failed',
+        ipAddress: deviceContext?.ipAddress,
+        userAgent: deviceContext?.userAgent,
+        failReason: 'social_account',
+      });
+      throw new UnauthorizedException({
+        code: ErrorCode.INVALID_CREDENTIALS,
+        message: 'This account uses social login. Please sign in with your social provider.',
+      });
+    }
+
     const isValid = await bcrypt.compare(password, user.passwordHash);
     if (!isValid) {
       void this.loginLogRepo.create({
@@ -134,6 +153,93 @@ export class AuthService {
       role: user.role,
       deviceContext,
     });
+  }
+
+  async socialLogin(params: SocialLoginParams): Promise<SocialLoginResult> {
+    const { provider, providerId, email, firstName, lastName, deviceContext } = params;
+
+    const existingByProvider = await this.userService.findByAuthProvider(provider, providerId);
+    if (existingByProvider) {
+      void this.loginLogRepo.create({
+        userId: existingByProvider.id,
+        email: existingByProvider.email,
+        status: 'success',
+        ipAddress: deviceContext?.ipAddress,
+        userAgent: deviceContext?.userAgent,
+      });
+
+      const tokens = await this.generateTokens({
+        userId: existingByProvider.id,
+        email: existingByProvider.email,
+        role: existingByProvider.role,
+        deviceContext,
+      });
+
+      return { ...tokens, isNewUser: false };
+    }
+
+    const existingByEmail = await this.userService.findByEmail(email);
+    if (existingByEmail) {
+      void this.loginLogRepo.create({
+        userId: existingByEmail.id,
+        email,
+        status: 'failed',
+        ipAddress: deviceContext?.ipAddress,
+        userAgent: deviceContext?.userAgent,
+        failReason: 'email_already_exists',
+      });
+      throw new ConflictException({
+        code: ErrorCode.EMAIL_EXISTS,
+        message:
+          'An account with this email already exists. Please sign in with your existing method.',
+      });
+    }
+
+    let newUser;
+    try {
+      newUser = await this.userService.createSocialUser({
+        email,
+        authProvider: provider,
+        authProviderId: providerId,
+        firstName,
+        lastName,
+      });
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        throw new ConflictException({
+          code: ErrorCode.EMAIL_EXISTS,
+          message:
+            'An account with this email already exists. Please sign in with your existing method.',
+        });
+      }
+      throw error;
+    }
+
+    try {
+      await this.defaultTransactionCategoriesService.assignDefaultCategoriesToUser(newUser.id);
+    } catch (error) {
+      this.logger.error(
+        `Failed to assign default transaction categories to user ${newUser.id}`,
+        error instanceof Error ? error.stack : undefined,
+      );
+    }
+
+    void this.loginLogRepo.create({
+      userId: newUser.id,
+      email: newUser.email,
+      status: 'success',
+      ipAddress: deviceContext?.ipAddress,
+      userAgent: deviceContext?.userAgent,
+    });
+
+    const tokens = await this.generateTokens({
+      userId: newUser.id,
+      email: newUser.email,
+      role: newUser.role,
+      deviceContext,
+    });
+
+    return { ...tokens, isNewUser: true };
   }
 
   async refreshToken(
