@@ -6,7 +6,6 @@ import type { Provider } from '@nestjs/common';
 
 import type { Env } from '@/app/config/env.schema.js';
 
-import { DefaultTransactionCategoriesModule } from '../default-transaction-categories/default-transaction-categories.module.js';
 import { UserModule } from '../user/user.module.js';
 import { AuthController } from './auth.controller.js';
 import { AuthSessionListener } from './auth-session.listener.js';
@@ -51,7 +50,6 @@ function buildSocialStrategyProviders(): Provider[] {
 
 @Module({
   imports: [
-    DefaultTransactionCategoriesModule,
     UserModule,
     PassportModule,
     JwtModule.registerAsync({

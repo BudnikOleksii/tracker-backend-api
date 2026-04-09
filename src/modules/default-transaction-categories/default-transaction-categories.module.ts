@@ -7,6 +7,6 @@ import { DefaultTransactionCategoriesService } from './default-transaction-categ
 @Module({
   controllers: [DefaultTransactionCategoriesController],
   providers: [DefaultTransactionCategoriesService, DefaultTransactionCategoryRepository],
-  exports: [DefaultTransactionCategoriesService],
+  exports: [DefaultTransactionCategoriesService, DefaultTransactionCategoryRepository],
 })
 export class DefaultTransactionCategoriesModule {}

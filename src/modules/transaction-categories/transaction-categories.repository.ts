@@ -322,6 +322,27 @@ export class TransactionCategoryRepository {
     return (result[0] as CategoryValidationInfo) ?? null;
   }
 
+  async findAllActiveByUserId(userId: string): Promise<CategoryInfo[]> {
+    const result = await this.db
+      .select()
+      .from(transactionCategories)
+      .where(and(eq(transactionCategories.userId, userId), isNull(transactionCategories.deletedAt)))
+      .orderBy(transactionCategories.name);
+
+    return result.map((row) => this.toCategoryInfo(row));
+  }
+
+  async countByUserId(userId: string): Promise<number> {
+    const result = await this.db
+      .select({ count: count() })
+      .from(transactionCategories)
+      .where(
+        and(eq(transactionCategories.userId, userId), isNull(transactionCategories.deletedAt)),
+      );
+
+    return result[0]?.count ?? 0;
+  }
+
   private toCategoryInfo(row: typeof transactionCategories.$inferSelect): CategoryInfo {
     return {
       id: row.id,

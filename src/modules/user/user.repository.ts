@@ -65,6 +65,7 @@ export interface CreateUserData {
   lastName?: string;
   authProvider?: AuthProvider;
   authProviderId?: string;
+  emailVerified?: boolean;
 }
 
 export interface UpdateUserData {
@@ -164,11 +165,11 @@ export class UserRepository {
         email: data.email.toLowerCase(),
         passwordHash: data.passwordHash ?? null,
         role: data.role ?? 'USER',
-        onboardingCompleted: false,
         firstName: data.firstName,
         lastName: data.lastName,
         authProvider: data.authProvider ?? 'LOCAL',
         authProviderId: data.authProviderId,
+        emailVerified: data.emailVerified ?? false,
       })
       .returning();
 
@@ -211,6 +212,35 @@ export class UserRepository {
       adminCount: adminResult[0]?.count ?? 0,
       newToday: newTodayResult[0]?.count ?? 0,
     };
+  }
+
+  async findFullById(id: string): Promise<{
+    id: string;
+    email: string;
+    emailVerified: boolean;
+    passwordHash: string | null;
+    baseCurrencyCode: string | null;
+    onboardingCompleted: boolean;
+  }> {
+    const result = await this.db
+      .select({
+        id: users.id,
+        email: users.email,
+        emailVerified: users.emailVerified,
+        passwordHash: users.passwordHash,
+        baseCurrencyCode: users.baseCurrencyCode,
+        onboardingCompleted: users.onboardingCompleted,
+      })
+      .from(users)
+      .where(and(eq(users.id, id), isNull(users.deletedAt)))
+      .limit(1);
+
+    const user = result[0];
+    if (!user) {
+      throw new Error(`User ${id} not found`);
+    }
+
+    return user;
   }
 
   async findProfileById(id: string): Promise<ProfileInfo | null> {
@@ -308,6 +338,56 @@ export class UserRepository {
       .update(users)
       .set({ authProvider, authProviderId, updatedAt: new Date() })
       .where(eq(users.id, id));
+  }
+
+  async setEmailVerificationToken(userId: string, token: string, expiresAt: Date): Promise<void> {
+    await this.db
+      .update(users)
+      .set({
+        emailVerificationToken: token,
+        emailVerificationTokenExpiresAt: expiresAt,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
+  }
+
+  async verifyEmail(
+    token: string,
+  ): Promise<{ success: true; userId: string } | { success: false; reason: string }> {
+    const result = await this.db
+      .select({
+        id: users.id,
+        emailVerified: users.emailVerified,
+        emailVerificationTokenExpiresAt: users.emailVerificationTokenExpiresAt,
+      })
+      .from(users)
+      .where(and(eq(users.emailVerificationToken, token), isNull(users.deletedAt)))
+      .limit(1);
+
+    const user = result[0];
+    if (!user) {
+      return { success: false, reason: 'invalid_token' };
+    }
+
+    if (user.emailVerified) {
+      return { success: true, userId: user.id };
+    }
+
+    if (user.emailVerificationTokenExpiresAt && user.emailVerificationTokenExpiresAt < new Date()) {
+      return { success: false, reason: 'token_expired' };
+    }
+
+    await this.db
+      .update(users)
+      .set({
+        emailVerified: true,
+        emailVerificationToken: null,
+        emailVerificationTokenExpiresAt: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, user.id));
+
+    return { success: true, userId: user.id };
   }
 
   async softDelete(id: string): Promise<boolean> {

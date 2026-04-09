@@ -126,6 +126,21 @@ export const envSchema = z
     GITHUB_CALLBACK_URL: z.url().optional(),
 
     SOCIAL_AUTH_REDIRECT_URL: z.url().optional(),
+
+    SMTP_HOST: z.string().min(1).optional(),
+    SMTP_PORT: z
+      .string()
+      .optional()
+      .transform((value) => (value ? Number.parseInt(value, 10) : undefined))
+      .refine((value) => value === undefined || (value > 0 && value < 65_536), {
+        message: 'SMTP_PORT must be between 1 and 65535',
+      }),
+    SMTP_USER: z.string().min(1).optional(),
+    SMTP_PASSWORD: z.string().min(1).optional(),
+    SMTP_FROM: z.string().min(1).optional(),
+
+    APP_URL: z.url().optional(),
+    EMAIL_VERIFICATION_REDIRECT_URL: z.url().optional(),
   })
   .refine(
     (env) => {

@@ -1,0 +1,1 @@
+ALTER TABLE "User" ALTER COLUMN "onboardingCompleted" SET DEFAULT false;
