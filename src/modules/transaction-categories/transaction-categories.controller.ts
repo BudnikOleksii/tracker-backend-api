@@ -31,6 +31,7 @@ import { TransactionCategoriesService } from './transaction-categories.service.j
 @Controller('transaction-categories')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
+@ApiResponse({ status: 401, description: 'Unauthorized' })
 export class TransactionCategoriesController {
   constructor(private readonly categoriesService: TransactionCategoriesService) {}
 

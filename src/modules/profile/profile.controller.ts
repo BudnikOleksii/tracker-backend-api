@@ -25,13 +25,13 @@ import { ProfileService } from './profile.service.js';
 @Controller('profile')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
+@ApiResponse({ status: 401, description: 'Unauthorized' })
 export class ProfileController {
   constructor(private readonly profileService: ProfileService) {}
 
   @Get()
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({ status: 200, type: ProfileResponseDto })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getProfile(@Request() req: AuthenticatedRequest) {
     return this.profileService.getProfile(req.user.id);
   }
@@ -40,7 +40,6 @@ export class ProfileController {
   @ApiOperation({ summary: 'Update current user profile' })
   @ApiResponse({ status: 200, type: ProfileResponseDto })
   @ApiResponse({ status: 400, description: 'Validation error' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async updateProfile(@Request() req: AuthenticatedRequest, @Body() dto: UpdateProfileDto) {
     return this.profileService.updateProfile(req.user.id, dto);
   }
@@ -49,7 +48,7 @@ export class ProfileController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Change password' })
   @ApiResponse({ status: 200, type: MessageResponseDto })
-  @ApiResponse({ status: 401, description: 'Invalid current password' })
+  @ApiResponse({ status: 400, description: 'Invalid current password' })
   async changePassword(@Request() req: AuthenticatedRequest, @Body() dto: ChangePasswordDto) {
     await this.profileService.changePassword(req.user.id, dto, req.user.jti);
 
@@ -60,7 +59,7 @@ export class ProfileController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Delete account' })
   @ApiResponse({ status: 200, type: MessageResponseDto })
-  @ApiResponse({ status: 401, description: 'Invalid password' })
+  @ApiResponse({ status: 400, description: 'Invalid password' })
   async deleteAccount(@Request() req: AuthenticatedRequest, @Body() dto: DeleteAccountDto) {
     await this.profileService.deleteAccount(req.user.id, dto, req.user.jti);
 

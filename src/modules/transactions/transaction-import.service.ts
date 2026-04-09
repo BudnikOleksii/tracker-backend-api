@@ -73,7 +73,13 @@ export class TransactionImportService {
         tx,
       );
 
-      return { transactionsCreated, categoriesCreated, subcategoriesCreated };
+      return {
+        transactionsCreated,
+        categoriesCreated,
+        subcategoriesCreated,
+        failedCount: 0,
+        errors: [],
+      };
     });
 
     await Promise.all([

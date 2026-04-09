@@ -296,8 +296,11 @@ export class RecurringTransactionsService {
         const created = await this.processOneRecurringTransaction(record, userId, today);
         totalTransactionsCreated += created;
         processedCount++;
-      } catch {
-        // Individual failures don't affect other records
+      } catch (error) {
+        this.logger.error(
+          `Failed to process recurring transaction ${record.id} for user ${userId}`,
+          error instanceof Error ? error.stack : undefined,
+        );
       }
     }
 

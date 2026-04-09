@@ -14,6 +14,8 @@ import { AuditLogQueryDto } from './dtos/audit-log-query.dto.js';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN')
 @ApiBearerAuth()
+@ApiResponse({ status: 401, description: 'Unauthorized' })
+@ApiResponse({ status: 403, description: 'Forbidden' })
 export class AuditLogController {
   constructor(private readonly auditLogService: AuditLogService) {}
 

@@ -33,6 +33,7 @@ import { RecurringTransactionsService } from './recurring-transactions.service.j
 @Controller('recurring-transactions')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
+@ApiResponse({ status: 401, description: 'Unauthorized' })
 export class RecurringTransactionsController {
   constructor(private readonly recurringTransactionsService: RecurringTransactionsService) {}
 

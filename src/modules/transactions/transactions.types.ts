@@ -14,4 +14,6 @@ export interface ImportResult {
   transactionsCreated: number;
   categoriesCreated: number;
   subcategoriesCreated: number;
+  failedCount: number;
+  errors: string[];
 }
