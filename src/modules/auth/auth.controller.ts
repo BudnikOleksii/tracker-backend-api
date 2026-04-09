@@ -5,8 +5,10 @@ import {
   Controller,
   Get,
   HttpCode,
+  InternalServerErrorException,
   Logger,
   Post,
+  Query,
   Request,
   Res,
   UnauthorizedException,
@@ -85,10 +87,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({ status: 201, type: AuthResponseDto })
   async register(@Body() dto: RegisterDto, @Res({ passthrough: true }) res: Response) {
-    const result = await this.authService.register(dto.email, dto.password, {
-      firstName: dto.firstName,
-      lastName: dto.lastName,
-    });
+    const result = await this.authService.register(dto.email, dto.password);
 
     this.setRefreshTokenCookie(res, result);
 
@@ -219,6 +218,39 @@ export class AuthController {
       revokedCount,
       message: `All refresh tokens revoked successfully. Total: ${revokedCount}`,
     };
+  }
+
+  @Get('verify-email')
+  @ApiOperation({ summary: 'Verify email address via token' })
+  @ApiResponse({ status: 302, description: 'Redirects to frontend with result' })
+  async verifyEmail(@Query('token') token: string, @Res() res: Response): Promise<void> {
+    const redirectUrl =
+      this.configService.get('EMAIL_VERIFICATION_REDIRECT_URL', { infer: true }) ??
+      this.socialAuthRedirectUrl;
+
+    if (!redirectUrl) {
+      throw new InternalServerErrorException('Email verification redirect URL is not configured');
+    }
+
+    if (!token) {
+      const url = new URL(redirectUrl);
+      url.searchParams.set('status', 'error');
+      url.searchParams.set('error', 'invalid_token');
+      res.redirect(url.toString());
+
+      return;
+    }
+
+    const result = await this.authService.verifyEmail(token);
+
+    const url = new URL(redirectUrl);
+    if (result.success) {
+      url.searchParams.set('status', 'success');
+    } else {
+      url.searchParams.set('status', 'error');
+      url.searchParams.set('error', result.reason);
+    }
+    res.redirect(url.toString());
   }
 
   @Get('providers')

@@ -1,5 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 import {
   IsEmailField,
@@ -24,18 +23,4 @@ export class RegisterDto {
     message: 'Password must contain at least one letter and one digit',
   })
   password!: string;
-
-  @ApiPropertyOptional({ example: 'John' })
-  @IsOptional()
-  @IsStringField()
-  @MinLengthField(1)
-  @MaxLengthField(50)
-  firstName?: string;
-
-  @ApiPropertyOptional({ example: 'Doe' })
-  @IsOptional()
-  @IsStringField()
-  @MinLengthField(1)
-  @MaxLengthField(50)
-  lastName?: string;
 }

@@ -30,6 +30,8 @@ import { RecurringTransactionsModule } from './modules/recurring-transactions/re
 import { TransactionsModule } from './modules/transactions/transactions.module.js';
 import { BudgetsModule } from './modules/budgets/budgets.module.js';
 import { ProfileModule } from './modules/profile/profile.module.js';
+import { MailerModule } from './modules/mailer/mailer.module.js';
+import { OnboardingModule } from './modules/onboarding/onboarding.module.js';
 import { UserModule } from './modules/user/user.module.js';
 
 @Module({
@@ -65,6 +67,7 @@ import { UserModule } from './modules/user/user.module.js';
       }),
     }),
     LoggerModule,
+    MailerModule,
     DatabaseModule.forRoot(),
     HealthModule,
     TransactionsAnalyticsModule,
@@ -72,6 +75,7 @@ import { UserModule } from './modules/user/user.module.js';
     CacheModule,
     AuthModule,
     UserModule,
+    OnboardingModule,
     ProfileModule,
     DefaultTransactionCategoriesModule,
     TransactionCategoriesModule,

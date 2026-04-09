@@ -1,4 +1,4 @@
-## ADDED Requirements
+## MODIFIED Requirements
 
 ### Requirement: Assign default transaction categories on user registration
 
@@ -18,22 +18,3 @@ The system SHALL NOT automatically assign default transaction categories during 
 
 - **WHEN** a user registers via any method (email or social auth)
 - **THEN** the user SHALL have zero transaction categories immediately after registration
-
-### Requirement: User ownership of assigned categories
-
-Users SHALL have full ownership of categories assigned from defaults. These categories SHALL behave identically to manually created categories.
-
-#### Scenario: User updates an assigned category
-
-- **WHEN** a user updates a category that was assigned from defaults (e.g., renames "Groceries" to "Supermarket")
-- **THEN** the system SHALL update the category normally with no restrictions
-
-#### Scenario: User deletes an assigned category
-
-- **WHEN** a user deletes a category that was assigned from defaults
-- **THEN** the system SHALL soft-delete the category normally, following the same rules as manually created categories
-
-#### Scenario: No link back to default transaction category
-
-- **WHEN** a user's assigned category is retrieved via the transaction categories API
-- **THEN** the response SHALL NOT contain any reference to the default transaction category it was copied from

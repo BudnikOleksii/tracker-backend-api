@@ -68,6 +68,7 @@ export class UserService {
       authProviderId: data.authProviderId,
       firstName: data.firstName,
       lastName: data.lastName,
+      emailVerified: true,
     });
 
     await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE));

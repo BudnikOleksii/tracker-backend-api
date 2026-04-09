@@ -15,8 +15,9 @@ import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 import { isUniqueViolation } from '@/shared/utils/pg-errors.js';
 import type { Env } from '@/app/config/env.schema.js';
 
-import { DefaultTransactionCategoriesService } from '../default-transaction-categories/default-transaction-categories.service.js';
+import { MailerService } from '../mailer/mailer.service.js';
 import { UserService } from '../user/user.service.js';
+import { UserRepository } from '../user/user.repository.js';
 import { RefreshTokenRepository } from './refresh-token.repository.js';
 import { LoginLogRepository } from './login-log.repository.js';
 import { TokenBlacklistService } from './token-blacklist.service.js';
@@ -47,33 +48,45 @@ export class AuthService {
   // eslint-disable-next-line @typescript-eslint/max-params
   constructor(
     private readonly userService: UserService,
-    private readonly defaultTransactionCategoriesService: DefaultTransactionCategoriesService,
+    private readonly userRepository: UserRepository,
     private readonly refreshTokenRepo: RefreshTokenRepository,
     private readonly loginLogRepo: LoginLogRepository,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService<Env, true>,
     private readonly tokenBlacklistService: TokenBlacklistService,
+    private readonly mailerService: MailerService,
   ) {}
 
   async register(
     email: string,
     password: string,
-    deviceContext?: DeviceContext & { firstName?: string; lastName?: string },
+    deviceContext?: DeviceContext,
   ): Promise<GenerateTokensResult> {
-    const created = await this.userService.create({
-      email,
-      password,
-      firstName: deviceContext?.firstName,
-      lastName: deviceContext?.lastName,
-    });
+    const created = await this.userService.create({ email, password });
+
+    const verificationToken = randomUUID();
+    const tokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     try {
-      await this.defaultTransactionCategoriesService.assignDefaultCategoriesToUser(created.id);
+      await this.userRepository.setEmailVerificationToken(
+        created.id,
+        verificationToken,
+        tokenExpiresAt,
+      );
+      void this.mailerService
+        .sendVerificationEmail(email, verificationToken)
+        .catch((error: unknown) => {
+          this.logger.error(
+            `Failed to send verification email to ${email}`,
+            error instanceof Error ? error.stack : undefined,
+          );
+        });
     } catch (error) {
       this.logger.error(
-        `Failed to assign default transaction categories to user ${created.id}`,
+        `Failed to set email verification token for user ${created.id}`,
         error instanceof Error ? error.stack : undefined,
       );
+      throw error;
     }
 
     return this.generateTokens({
@@ -215,15 +228,6 @@ export class AuthService {
       throw error;
     }
 
-    try {
-      await this.defaultTransactionCategoriesService.assignDefaultCategoriesToUser(newUser.id);
-    } catch (error) {
-      this.logger.error(
-        `Failed to assign default transaction categories to user ${newUser.id}`,
-        error instanceof Error ? error.stack : undefined,
-      );
-    }
-
     void this.loginLogRepo.create({
       userId: newUser.id,
       email: newUser.email,
@@ -240,6 +244,12 @@ export class AuthService {
     });
 
     return { ...tokens, isNewUser: true };
+  }
+
+  async verifyEmail(
+    token: string,
+  ): Promise<{ success: true } | { success: false; reason: string }> {
+    return this.userRepository.verifyEmail(token);
   }
 
   async refreshToken(
