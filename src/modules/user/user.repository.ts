@@ -10,6 +10,7 @@ import type { SortOrder } from '@/shared/constants/sort.constants.js';
 import type { CountryCode } from '@/shared/enums/country-code.enum.js';
 import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 import type { UserRole } from '@/shared/enums/role.enum.js';
+import type { AuthProvider } from '@/shared/enums/auth-provider.enum.js';
 
 import type { SortByField } from './user.constants.js';
 
@@ -58,10 +59,12 @@ export interface UserListResult {
 
 export interface CreateUserData {
   email: string;
-  passwordHash: string;
+  passwordHash?: string | null;
   role?: UserRole;
   firstName?: string;
   lastName?: string;
+  authProvider?: AuthProvider;
+  authProviderId?: string;
 }
 
 export interface UpdateUserData {
@@ -159,11 +162,13 @@ export class UserRepository {
       .insert(users)
       .values({
         email: data.email.toLowerCase(),
-        passwordHash: data.passwordHash,
+        passwordHash: data.passwordHash ?? null,
         role: data.role ?? 'USER',
         onboardingCompleted: false,
         firstName: data.firstName,
         lastName: data.lastName,
+        authProvider: data.authProvider ?? 'LOCAL',
+        authProviderId: data.authProviderId,
       })
       .returning();
 
@@ -222,7 +227,9 @@ export class UserRepository {
     return this.toProfileInfo(result[0] as User);
   }
 
-  async findWithPasswordHash(id: string): Promise<{ id: string; passwordHash: string } | null> {
+  async findWithPasswordHash(
+    id: string,
+  ): Promise<{ id: string; passwordHash: string | null } | null> {
     const result = await this.db
       .select({ id: users.id, passwordHash: users.passwordHash })
       .from(users)
@@ -270,6 +277,36 @@ export class UserRepository {
     await this.db
       .update(users)
       .set({ passwordHash, updatedAt: new Date() })
+      .where(eq(users.id, id));
+  }
+
+  async findByAuthProvider(
+    authProvider: AuthProvider,
+    authProviderId: string,
+  ): Promise<User | null> {
+    const result = await this.db
+      .select()
+      .from(users)
+      .where(
+        and(
+          eq(users.authProvider, authProvider),
+          eq(users.authProviderId, authProviderId),
+          isNull(users.deletedAt),
+        ),
+      )
+      .limit(1);
+
+    return result[0] ?? null;
+  }
+
+  async linkSocialAccount(
+    id: string,
+    authProvider: AuthProvider,
+    authProviderId: string,
+  ): Promise<void> {
+    await this.db
+      .update(users)
+      .set({ authProvider, authProviderId, updatedAt: new Date() })
       .where(eq(users.id, id));
   }
 

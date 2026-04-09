@@ -1,10 +1,12 @@
-import { ApiProperty } from '@nestjs/swagger';
-
-import { IsNotEmptyField, IsStringField } from '@/shared/decorators/validators.js';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsOptional, IsString } from 'class-validator';
 
 export class DeleteAccountDto {
-  @ApiProperty({ example: 'Pass123456' })
-  @IsStringField()
-  @IsNotEmptyField({ message: 'Password must not be empty' })
-  password: string;
+  @ApiPropertyOptional({
+    example: 'Pass123456',
+    description: 'Required for email/password accounts, optional for social-only accounts',
+  })
+  @IsOptional()
+  @IsString()
+  password?: string;
 }

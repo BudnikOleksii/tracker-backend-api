@@ -35,6 +35,8 @@ async function bootstrap() {
     exclude: [
       { path: 'health', method: RequestMethod.ALL },
       { path: 'health/{*path}', method: RequestMethod.ALL },
+      { path: 'auth/google/callback', method: RequestMethod.GET },
+      { path: 'auth/github/callback', method: RequestMethod.GET },
     ],
   });
 

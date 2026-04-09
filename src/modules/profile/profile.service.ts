@@ -65,6 +65,13 @@ export class ProfileService {
       });
     }
 
+    if (!user.passwordHash) {
+      throw new UnauthorizedException({
+        code: ErrorCode.INVALID_CREDENTIALS,
+        message: 'This account uses social login and has no password to change',
+      });
+    }
+
     const isValid = await bcrypt.compare(dto.currentPassword, user.passwordHash);
     if (!isValid) {
       throw new UnauthorizedException({
@@ -96,12 +103,20 @@ export class ProfileService {
       });
     }
 
-    const isValid = await bcrypt.compare(dto.password, user.passwordHash);
-    if (!isValid) {
-      throw new UnauthorizedException({
-        code: ErrorCode.INVALID_CREDENTIALS,
-        message: 'Password is incorrect',
-      });
+    if (user.passwordHash) {
+      if (!dto.password) {
+        throw new UnauthorizedException({
+          code: ErrorCode.INVALID_CREDENTIALS,
+          message: 'Password is required to delete this account',
+        });
+      }
+      const isValid = await bcrypt.compare(dto.password, user.passwordHash);
+      if (!isValid) {
+        throw new UnauthorizedException({
+          code: ErrorCode.INVALID_CREDENTIALS,
+          message: 'Password is incorrect',
+        });
+      }
     }
 
     await this.userRepository.softDelete(userId);

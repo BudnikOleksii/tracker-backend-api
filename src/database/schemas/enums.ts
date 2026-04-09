@@ -2,6 +2,8 @@ import { pgEnum } from 'drizzle-orm/pg-core';
 
 export const userRoleEnum = pgEnum('UserRole', ['USER', 'ADMIN', 'SUPER_ADMIN']);
 
+export const authProviderEnum = pgEnum('AuthProvider', ['LOCAL', 'GOOGLE', 'GITHUB']);
+
 export const transactionTypeEnum = pgEnum('TransactionType', ['EXPENSE', 'INCOME']);
 
 export const countryCodeEnum = pgEnum('CountryCode', [

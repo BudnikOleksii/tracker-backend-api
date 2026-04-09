@@ -1,121 +1,174 @@
 import { z } from 'zod';
 
-export const envSchema = z.object({
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+export const envSchema = z
+  .object({
+    NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 
-  PORT: z
-    .string()
-    .default('3000')
-    .transform((value) => Number.parseInt(value, 10))
-    .refine((value) => value > 0 && value < 65_536, {
-      message: 'PORT must be between 1 and 65535',
+    PORT: z
+      .string()
+      .default('3000')
+      .transform((value) => Number.parseInt(value, 10))
+      .refine((value) => value > 0 && value < 65_536, {
+        message: 'PORT must be between 1 and 65535',
+      }),
+
+    DATABASE_URL: z.url(),
+
+    DB_POOL_MAX: z
+      .string()
+      .default('20')
+      .transform((value) => Number.parseInt(value, 10))
+      .refine((value) => value > 0 && value <= 100, {
+        message: 'DB_POOL_MAX must be between 1 and 100',
+      }),
+
+    DB_POOL_MIN: z
+      .string()
+      .default('5')
+      .transform((value) => Number.parseInt(value, 10))
+      .refine((value) => value >= 0 && value <= 50, {
+        message: 'DB_POOL_MIN must be between 0 and 50',
+      }),
+
+    JWT_SECRET: z.string().min(32, { message: 'JWT_SECRET must be at least 32 characters long' }),
+
+    JWT_EXPIRES_IN: z
+      .string()
+      .default('15m')
+      .refine((value) => /^\d+[smhd]$/.test(value), {
+        message: 'JWT_EXPIRES_IN format is invalid (e.g. 60s, 15m, 2h, 7d)',
+      }),
+
+    JWT_REFRESH_EXPIRES_IN: z
+      .string()
+      .default('7d')
+      .refine((value) => /^\d+[smhd]$/.test(value), {
+        message: 'JWT_REFRESH_EXPIRES_IN format is invalid (e.g. 60s, 15m, 2h, 7d)',
+      }),
+
+    ALLOWED_ORIGINS: z
+      .string()
+      .optional()
+      .transform((value) =>
+        value
+          ?.split(',')
+          .map((s) => s.trim())
+          .filter(Boolean),
+      ),
+
+    REDIS_URL: z.string().refine((value) => /^rediss?:\/\/.+/.test(value), {
+      message: 'REDIS_URL must start with redis:// or rediss://',
     }),
 
-  DATABASE_URL: z.url(),
+    REDIS_TTL: z
+      .string()
+      .default('3600')
+      .transform((value) => Number.parseInt(value, 10))
+      .refine((value) => value > 0, {
+        message: 'REDIS_TTL must be greater than 0',
+      }),
 
-  DB_POOL_MAX: z
-    .string()
-    .default('20')
-    .transform((value) => Number.parseInt(value, 10))
-    .refine((value) => value > 0 && value <= 100, {
-      message: 'DB_POOL_MAX must be between 1 and 100',
-    }),
+    API_BASE_URL: z.url().default('https://api.example.com'),
 
-  DB_POOL_MIN: z
-    .string()
-    .default('5')
-    .transform((value) => Number.parseInt(value, 10))
-    .refine((value) => value >= 0 && value <= 50, {
-      message: 'DB_POOL_MIN must be between 0 and 50',
-    }),
+    THROTTLE_TTL: z
+      .string()
+      .default('60000')
+      .transform((value) => Number.parseInt(value, 10))
+      .refine((value) => value > 0, {
+        message: 'THROTTLE_TTL must be greater than 0',
+      }),
 
-  JWT_SECRET: z.string().min(32, { message: 'JWT_SECRET must be at least 32 characters long' }),
+    THROTTLE_LIMIT: z
+      .string()
+      .default('60')
+      .transform((value) => Number.parseInt(value, 10))
+      .refine((value) => value > 0, {
+        message: 'THROTTLE_LIMIT must be greater than 0',
+      }),
 
-  JWT_EXPIRES_IN: z
-    .string()
-    .default('15m')
-    .refine((value) => /^\d+[smhd]$/.test(value), {
-      message: 'JWT_EXPIRES_IN format is invalid (e.g. 60s, 15m, 2h, 7d)',
-    }),
+    THROTTLE_AUTH_TTL: z
+      .string()
+      .default('60000')
+      .transform((value) => Number.parseInt(value, 10))
+      .refine((value) => value > 0, {
+        message: 'THROTTLE_AUTH_TTL must be greater than 0',
+      }),
 
-  JWT_REFRESH_EXPIRES_IN: z
-    .string()
-    .default('7d')
-    .refine((value) => /^\d+[smhd]$/.test(value), {
-      message: 'JWT_REFRESH_EXPIRES_IN format is invalid (e.g. 60s, 15m, 2h, 7d)',
-    }),
+    THROTTLE_AUTH_LIMIT: z
+      .string()
+      .default('5')
+      .transform((value) => Number.parseInt(value, 10))
+      .refine((value) => value > 0, {
+        message: 'THROTTLE_AUTH_LIMIT must be greater than 0',
+      }),
 
-  ALLOWED_ORIGINS: z
-    .string()
-    .optional()
-    .transform((value) =>
-      value
-        ?.split(',')
-        .map((s) => s.trim())
-        .filter(Boolean),
-    ),
+    REFRESH_TOKEN_COOKIE_NAME: z.string().default('refresh_token'),
 
-  REDIS_URL: z.string().refine((value) => /^rediss?:\/\/.+/.test(value), {
-    message: 'REDIS_URL must start with redis:// or rediss://',
-  }),
+    CSRF_TOKEN_COOKIE_NAME: z.string().default('csrf_token'),
 
-  REDIS_TTL: z
-    .string()
-    .default('3600')
-    .transform((value) => Number.parseInt(value, 10))
-    .refine((value) => value > 0, {
-      message: 'REDIS_TTL must be greater than 0',
-    }),
+    COOKIE_DOMAIN: z.string().optional(),
 
-  API_BASE_URL: z.url().default('https://api.example.com'),
+    COOKIE_SECURE: z
+      .enum(['true', 'false'])
+      .default('true')
+      .transform((value) => value === 'true'),
 
-  THROTTLE_TTL: z
-    .string()
-    .default('60000')
-    .transform((value) => Number.parseInt(value, 10))
-    .refine((value) => value > 0, {
-      message: 'THROTTLE_TTL must be greater than 0',
-    }),
+    COOKIE_SAME_SITE: z.enum(['strict', 'lax', 'none']).default('strict'),
 
-  THROTTLE_LIMIT: z
-    .string()
-    .default('60')
-    .transform((value) => Number.parseInt(value, 10))
-    .refine((value) => value > 0, {
-      message: 'THROTTLE_LIMIT must be greater than 0',
-    }),
+    COOKIE_PATH: z.string().default('/'),
 
-  THROTTLE_AUTH_TTL: z
-    .string()
-    .default('60000')
-    .transform((value) => Number.parseInt(value, 10))
-    .refine((value) => value > 0, {
-      message: 'THROTTLE_AUTH_TTL must be greater than 0',
-    }),
+    GOOGLE_CLIENT_ID: z.string().min(1).optional(),
+    GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
+    GOOGLE_CALLBACK_URL: z.url().optional(),
 
-  THROTTLE_AUTH_LIMIT: z
-    .string()
-    .default('5')
-    .transform((value) => Number.parseInt(value, 10))
-    .refine((value) => value > 0, {
-      message: 'THROTTLE_AUTH_LIMIT must be greater than 0',
-    }),
+    GITHUB_CLIENT_ID: z.string().min(1).optional(),
+    GITHUB_CLIENT_SECRET: z.string().min(1).optional(),
+    GITHUB_CALLBACK_URL: z.url().optional(),
 
-  REFRESH_TOKEN_COOKIE_NAME: z.string().default('refresh_token'),
+    SOCIAL_AUTH_REDIRECT_URL: z.url().optional(),
+  })
+  .refine(
+    (env) => {
+      const googleVars = [env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET, env.GOOGLE_CALLBACK_URL];
+      const googleSet = googleVars.filter(Boolean).length;
 
-  CSRF_TOKEN_COOKIE_NAME: z.string().default('csrf_token'),
+      return googleSet === 0 || googleSet === 3;
+    },
+    {
+      message:
+        'Google OAuth requires all three variables: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_CALLBACK_URL',
+      path: ['GOOGLE_CLIENT_ID'],
+    },
+  )
+  .refine(
+    (env) => {
+      const githubVars = [env.GITHUB_CLIENT_ID, env.GITHUB_CLIENT_SECRET, env.GITHUB_CALLBACK_URL];
+      const githubSet = githubVars.filter(Boolean).length;
 
-  COOKIE_DOMAIN: z.string().optional(),
+      return githubSet === 0 || githubSet === 3;
+    },
+    {
+      message:
+        'GitHub OAuth requires all three variables: GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, GITHUB_CALLBACK_URL',
+      path: ['GITHUB_CLIENT_ID'],
+    },
+  )
+  .refine(
+    (env) => {
+      const hasGoogle = !!env.GOOGLE_CLIENT_ID;
+      const hasGitHub = !!env.GITHUB_CLIENT_ID;
 
-  COOKIE_SECURE: z
-    .enum(['true', 'false'])
-    .default('true')
-    .transform((value) => value === 'true'),
+      if ((hasGoogle || hasGitHub) && !env.SOCIAL_AUTH_REDIRECT_URL) {
+        return false;
+      }
 
-  COOKIE_SAME_SITE: z.enum(['strict', 'lax', 'none']).default('strict'),
-
-  COOKIE_PATH: z.string().default('/'),
-});
+      return true;
+    },
+    {
+      message: 'SOCIAL_AUTH_REDIRECT_URL is required when any social auth provider is configured',
+      path: ['SOCIAL_AUTH_REDIRECT_URL'],
+    },
+  );
 
 export type Env = z.infer<typeof envSchema>;
 
