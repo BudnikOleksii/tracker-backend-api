@@ -5,7 +5,7 @@ import { BCRYPT_ROUNDS } from '@/shared/constants/auth.constants.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 
-import { UserRepository } from '../user/user.repository.js';
+import { UserService } from '../user/user.service.js';
 import { TransactionCategoryRepository } from '../transaction-categories/transaction-categories.repository.js';
 import type { CategoryInfo } from '../transaction-categories/transaction-categories.repository.js';
 import { DefaultTransactionCategoryRepository } from '../default-transaction-categories/default-transaction-categories.repository.js';
@@ -23,13 +23,13 @@ export interface OnboardingStatus {
 @Injectable()
 export class OnboardingService {
   constructor(
-    private readonly userRepository: UserRepository,
+    private readonly userService: UserService,
     private readonly categoryRepository: TransactionCategoryRepository,
     private readonly defaultCategoryRepository: DefaultTransactionCategoryRepository,
   ) {}
 
   async getStatus(userId: string): Promise<OnboardingStatus> {
-    const user = await this.userRepository.findFullById(userId);
+    const user = await this.userService.findFullById(userId);
     const categoryCount = await this.categoryRepository.countByUserId(userId);
 
     return {
@@ -42,7 +42,7 @@ export class OnboardingService {
   }
 
   async complete(userId: string, dto: CompleteOnboardingDto): Promise<OnboardingStatus> {
-    const user = await this.userRepository.findFullById(userId);
+    const user = await this.userService.findFullById(userId);
 
     if (user.onboardingCompleted) {
       throw new BadRequestException({
@@ -61,10 +61,10 @@ export class OnboardingService {
 
     if (dto.password && !user.passwordHash) {
       const passwordHash = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
-      await this.userRepository.updatePasswordHash(userId, passwordHash);
+      await this.userService.updatePasswordHash(userId, passwordHash);
     }
 
-    await this.userRepository.updateProfile(userId, {
+    await this.userService.updateProfile(userId, {
       baseCurrencyCode: dto.baseCurrencyCode as CurrencyCode,
       onboardingCompleted: true,
     });

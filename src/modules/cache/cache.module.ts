@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import type { Redis } from 'ioredis';
 
 import type { Env } from '@/app/config/env.schema.js';
+import { MS_PER_SECOND } from '@/shared/constants/time.constants.js';
 
 import { CACHE_PORT } from './cache.port.js';
 import { CacheService } from './cache.service.js';
@@ -23,7 +24,7 @@ import { REDIS_CLIENT, redisClientProvider } from './redis.provider.js';
 
         return {
           stores: [new KeyvRedis(url)],
-          ttl: ttl * 1000,
+          ttl: ttl * MS_PER_SECOND,
         };
       },
     }),

@@ -30,6 +30,7 @@ import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 import { CsrfGuard, JwtAuthGuard } from '@/shared/guards/index.js';
 
 import { AuthService } from './auth.service.js';
+import { TokenService } from './token.service.js';
 import { ExchangeSocialCodeDto } from './dtos/exchange-social-code.dto.js';
 import { GitHubOAuthGuard } from './github-oauth.guard.js';
 import { GoogleOAuthGuard } from './google-oauth.guard.js';
@@ -59,8 +60,10 @@ export class AuthController {
   private readonly sameSite: Env['COOKIE_SAME_SITE'];
   private readonly socialAuthRedirectUrl: string | undefined;
 
+  // eslint-disable-next-line @typescript-eslint/max-params
   constructor(
     private readonly authService: AuthService,
+    private readonly tokenService: TokenService,
     private readonly configService: ConfigService<Env, true>,
     private readonly socialAuthCodeService: SocialAuthCodeService,
   ) {
@@ -147,7 +150,7 @@ export class AuthController {
   @ApiResponse({ status: 200, type: RefreshTokenInfoDto })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getRefreshToken(@Request() req: AuthenticatedRequest) {
-    return this.authService.getRefreshToken(req.user);
+    return this.tokenService.getRefreshToken(req.user);
   }
 
   @Get('refresh-tokens')
@@ -157,7 +160,7 @@ export class AuthController {
   @ApiResponse({ status: 200, type: RefreshTokenListDto })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async listRefreshTokens(@Request() req: AuthenticatedRequest) {
-    return this.authService.listRefreshTokens(req.user.id, req.user.sessionId);
+    return this.tokenService.listRefreshTokens(req.user.id, req.user.sessionId);
   }
 
   @Post('logout')
@@ -172,7 +175,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const refreshToken = this.getRefreshTokenFromCookie(req);
-    await this.authService.logout(refreshToken, req.user.jti);
+    await this.tokenService.logout(refreshToken, req.user.jti);
 
     this.clearRefreshTokenCookie(res);
 
@@ -191,7 +194,7 @@ export class AuthController {
     @Body() dto: RevokeRefreshTokenDto,
     @Request() req: AuthenticatedRequest,
   ) {
-    return this.authService.revokeRefreshToken({
+    return this.tokenService.revokeRefreshToken({
       sessionId: dto.sessionId,
       userId: req.user.id,
       currentSessionId: req.user.sessionId,
@@ -210,7 +213,7 @@ export class AuthController {
     @Request() req: AuthenticatedRequest,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const revokedCount = await this.authService.revokeAllRefreshTokens(req.user.id);
+    const revokedCount = await this.tokenService.revokeAllRefreshTokens(req.user.id);
 
     this.clearRefreshTokenCookie(res);
 

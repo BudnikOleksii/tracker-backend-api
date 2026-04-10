@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression, Interval, Timeout } from '@nestjs/schedule';
 
-import { RefreshTokenRepository } from '../auth/refresh-token.repository.js';
+import { TokenService } from '../auth/token.service.js';
 import { BudgetsService } from '../budgets/budgets.service.js';
 import { RecurringTransactionsService } from '../recurring-transactions/recurring-transactions.service.js';
 
@@ -13,14 +13,14 @@ export class ScheduledTasksService {
   private readonly logger = new Logger(ScheduledTasksService.name);
 
   constructor(
-    private readonly refreshTokenRepo: RefreshTokenRepository,
+    private readonly tokenService: TokenService,
     private readonly recurringTransactionsService: RecurringTransactionsService,
     private readonly budgetsService: BudgetsService,
   ) {}
 
   @Cron(CronExpression.EVERY_HOUR)
   async cleanExpiredSessions(): Promise<void> {
-    const deleted = await this.refreshTokenRepo.deleteExpired();
+    const deleted = await this.tokenService.deleteExpiredTokens();
     this.logger.log(`Cleaned ${deleted} expired session(s)`);
   }
 

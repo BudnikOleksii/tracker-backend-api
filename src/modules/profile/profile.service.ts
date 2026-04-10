@@ -4,27 +4,22 @@ import * as bcrypt from 'bcrypt';
 
 import { BCRYPT_ROUNDS } from '@/shared/constants/auth.constants.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
-import { buildCachePrefix } from '@/modules/cache/cache-key.utils.js';
-import { CacheService } from '@/modules/cache/cache.service.js';
 
-import { UserRepository } from '../user/user.repository.js';
+import { UserService } from '../user/user.service.js';
 import type { ProfileInfo, UpdateProfileData } from '../user/user.repository.js';
 import type { ChangePasswordDto } from './dtos/change-password.dto.js';
 import type { DeleteAccountDto } from './dtos/delete-account.dto.js';
 import { PROFILE_EVENTS, ProfileSessionInvalidationEvent } from './events/profile.event.js';
 
-const CACHE_MODULE = 'users';
-
 @Injectable()
 export class ProfileService {
   constructor(
-    private readonly userRepository: UserRepository,
-    private readonly cacheService: CacheService,
+    private readonly userService: UserService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async getProfile(userId: string): Promise<ProfileInfo> {
-    const profile = await this.userRepository.findProfileById(userId);
+    const profile = await this.userService.findProfileById(userId);
 
     if (!profile) {
       throw new NotFoundException({
@@ -37,7 +32,7 @@ export class ProfileService {
   }
 
   async updateProfile(userId: string, data: UpdateProfileData): Promise<ProfileInfo> {
-    const updated = await this.userRepository.updateProfile(userId, data);
+    const updated = await this.userService.updateProfile(userId, data);
 
     if (!updated) {
       throw new NotFoundException({
@@ -45,8 +40,6 @@ export class ProfileService {
         message: 'User not found',
       });
     }
-
-    await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE));
 
     return updated;
   }
@@ -56,7 +49,7 @@ export class ProfileService {
     dto: ChangePasswordDto,
     accessTokenJti: string,
   ): Promise<void> {
-    const user = await this.userRepository.findWithPasswordHash(userId);
+    const user = await this.userService.findWithPasswordHash(userId);
 
     if (!user) {
       throw new UnauthorizedException({
@@ -81,7 +74,7 @@ export class ProfileService {
     }
 
     const newHash = await bcrypt.hash(dto.newPassword, BCRYPT_ROUNDS);
-    await this.userRepository.updatePasswordHash(userId, newHash);
+    await this.userService.updatePasswordHash(userId, newHash);
 
     await this.eventEmitter.emitAsync(
       PROFILE_EVENTS.PASSWORD_CHANGED,
@@ -94,7 +87,7 @@ export class ProfileService {
     dto: DeleteAccountDto,
     accessTokenJti: string,
   ): Promise<void> {
-    const user = await this.userRepository.findWithPasswordHash(userId);
+    const user = await this.userService.findWithPasswordHash(userId);
 
     if (!user) {
       throw new UnauthorizedException({
@@ -119,8 +112,7 @@ export class ProfileService {
       }
     }
 
-    await this.userRepository.softDelete(userId);
-    await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE));
+    await this.userService.softDelete(userId);
 
     await this.eventEmitter.emitAsync(
       PROFILE_EVENTS.ACCOUNT_DELETED,

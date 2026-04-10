@@ -20,6 +20,7 @@ import { OAuthStateService } from './oauth-state.service.js';
 import { RefreshTokenRepository } from './refresh-token.repository.js';
 import { SocialAuthCodeService } from './social-auth-code.service.js';
 import { TokenBlacklistService } from './token-blacklist.service.js';
+import { TokenService } from './token.service.js';
 
 function buildSocialStrategyProviders(): Provider[] {
   return [
@@ -66,6 +67,7 @@ function buildSocialStrategyProviders(): Provider[] {
   controllers: [AuthController],
   providers: [
     AuthService,
+    TokenService,
     AuthSessionListener,
     JwtStrategy,
     RefreshTokenRepository,
@@ -77,6 +79,6 @@ function buildSocialStrategyProviders(): Provider[] {
     GitHubOAuthGuard,
     ...buildSocialStrategyProviders(),
   ],
-  exports: [AuthService, RefreshTokenRepository, TokenBlacklistService],
+  exports: [AuthService, TokenService, TokenBlacklistService],
 })
 export class AuthModule {}
