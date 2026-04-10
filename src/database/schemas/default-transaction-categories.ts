@@ -4,10 +4,10 @@ import {
   pgTable,
   text,
   timestamp,
-  unique,
+  uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 
 import { transactionTypeEnum } from './enums.js';
 
@@ -21,17 +21,19 @@ export const defaultTransactionCategories = pgTable(
       (): AnyPgColumn => defaultTransactionCategories.id,
       { onDelete: 'cascade' },
     ),
-    createdAt: timestamp('createdAt', { precision: 3, mode: 'date' }).notNull().defaultNow(),
-    updatedAt: timestamp('updatedAt', { precision: 3, mode: 'date' })
+    createdAt: timestamp('createdAt', { precision: 3, mode: 'date', withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updatedAt', { precision: 3, mode: 'date', withTimezone: true })
       .notNull()
       .defaultNow()
       .$onUpdate(() => new Date()),
-    deletedAt: timestamp('deletedAt', { precision: 3, mode: 'date' }),
+    deletedAt: timestamp('deletedAt', { precision: 3, mode: 'date', withTimezone: true }),
   },
   (table) => [
-    unique('DefaultTransactionCategory_name_type_parentDefaultTransactionCategoryId_key')
+    uniqueIndex('DefaultTransactionCategory_name_type_parentDefaultTransactionCategoryId_key')
       .on(table.name, table.type, table.parentDefaultTransactionCategoryId)
-      .nullsNotDistinct(),
+      .where(sql`"deletedAt" IS NULL`),
     index('DefaultTransactionCategory_type_idx').on(table.type),
     index('DefaultTransactionCategory_parentDefaultTransactionCategoryId_idx').on(
       table.parentDefaultTransactionCategoryId,

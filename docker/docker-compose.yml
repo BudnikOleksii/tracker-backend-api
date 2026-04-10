@@ -34,6 +34,7 @@ services:
       - '127.0.0.1:5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d
 
   redis:
     env_file: .env

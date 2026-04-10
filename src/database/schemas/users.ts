@@ -21,6 +21,7 @@ export const users = pgTable(
     emailVerificationTokenExpiresAt: timestamp('emailVerificationTokenExpiresAt', {
       precision: 3,
       mode: 'date',
+      withTimezone: true,
     }),
     countryCode: countryCodeEnum('countryCode'),
     baseCurrencyCode: currencyCodeEnum('baseCurrencyCode'),
@@ -28,12 +29,14 @@ export const users = pgTable(
     userAgent: text('userAgent'),
     onboardingCompleted: boolean('onboardingCompleted').notNull().default(false),
     role: userRoleEnum('role').notNull().default('USER'),
-    createdAt: timestamp('createdAt', { precision: 3, mode: 'date' }).notNull().defaultNow(),
-    updatedAt: timestamp('updatedAt', { precision: 3, mode: 'date' })
+    createdAt: timestamp('createdAt', { precision: 3, mode: 'date', withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updatedAt', { precision: 3, mode: 'date', withTimezone: true })
       .notNull()
       .defaultNow()
       .$onUpdate(() => new Date()),
-    deletedAt: timestamp('deletedAt', { precision: 3, mode: 'date' }),
+    deletedAt: timestamp('deletedAt', { precision: 3, mode: 'date', withTimezone: true }),
   },
   (table) => [
     uniqueIndex('User_authProvider_authProviderId_unique')
@@ -42,6 +45,9 @@ export const users = pgTable(
     index('User_emailVerificationToken_idx')
       .on(table.emailVerificationToken)
       .where(sql`${table.emailVerificationToken} IS NOT NULL`),
+    index('User_id_not_deleted_idx')
+      .on(table.id)
+      .where(sql`"deletedAt" IS NULL`),
   ],
 );
 

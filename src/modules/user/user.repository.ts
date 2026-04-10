@@ -98,8 +98,10 @@ export class UserRepository {
       conditions.push(eq(users.role, role));
     }
 
-    if (search) {
-      conditions.push(ilike(users.email, `%${search}%`));
+    const normalizedSearch = search?.trim();
+    if (normalizedSearch) {
+      const escapedSearch = normalizedSearch.replace(/[\\%_]/g, '\\$&');
+      conditions.push(ilike(users.email, `%${escapedSearch}%`));
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;

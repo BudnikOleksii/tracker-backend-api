@@ -256,7 +256,7 @@ export class TransactionRepository {
 
   async create(data: CreateTransactionData, tx?: DrizzleDb): Promise<TransactionInfo> {
     const db = tx ?? this.db;
-    const [inserted] = await db
+    const result = await db
       .insert(transactions)
       .values({
         userId: data.userId,
@@ -267,14 +267,16 @@ export class TransactionRepository {
         date: data.date,
         description: data.description,
       })
-      .returning({ id: transactions.id });
+      .returning();
 
-    const result = await this.findById((inserted as { id: string }).id, data.userId, tx);
-    if (!result) {
-      throw new Error('Failed to retrieve newly created transaction');
+    const [inserted] = result;
+    if (!inserted) {
+      throw new Error('Failed to create transaction');
     }
 
-    return result;
+    const categoryInfo = await this.getCategoryInfo(inserted.categoryId, db);
+
+    return this.toTransactionInfo({ ...inserted, ...categoryInfo });
   }
 
   async update(params: {
@@ -311,18 +313,20 @@ export class TransactionRepository {
       updates.description = data.description;
     }
 
-    const updated = await db
+    const updated = (await db
       .update(transactions)
       .set(updates)
       .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
-      .returning({ id: transactions.id });
+      .returning()) as (typeof transactions.$inferSelect)[];
 
     const [row] = updated;
     if (!row) {
       return null;
     }
 
-    return this.findById(row.id, userId, tx);
+    const categoryInfo = await this.getCategoryInfo(row.categoryId, db);
+
+    return this.toTransactionInfo({ ...row, ...categoryInfo });
   }
 
   async delete(id: string, userId: string): Promise<boolean> {
@@ -469,6 +473,27 @@ export class TransactionRepository {
       .returning({ id: transactions.id });
 
     return result.length;
+  }
+
+  private async getCategoryInfo(categoryId: string, db: DrizzleDb): Promise<CategoryJoinColumns> {
+    const result = (await db
+      .select({
+        categoryName: transactionCategories.name,
+        parentCatId: parentCategory.id,
+        parentCatName: parentCategory.name,
+      })
+      .from(transactionCategories)
+      .leftJoin(parentCategory, eq(transactionCategories.parentCategoryId, parentCategory.id))
+      .where(eq(transactionCategories.id, categoryId))
+      .limit(1)) as CategoryJoinColumns[];
+
+    const [row] = result;
+
+    return {
+      categoryName: row?.categoryName ?? null,
+      parentCatId: row?.parentCatId ?? null,
+      parentCatName: row?.parentCatName ?? null,
+    };
   }
 
   private toTransactionInfo(

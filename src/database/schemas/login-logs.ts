@@ -13,7 +13,9 @@ export const loginLogs = pgTable(
     ipAddress: text('ipAddress'),
     userAgent: text('userAgent'),
     failReason: text('failReason'),
-    createdAt: timestamp('createdAt', { precision: 3, mode: 'date' }).notNull().defaultNow(),
+    createdAt: timestamp('createdAt', { precision: 3, mode: 'date', withTimezone: true })
+      .notNull()
+      .defaultNow(),
   },
   (table) => [
     index('LoginLog_userId_idx').on(table.userId),

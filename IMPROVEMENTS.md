@@ -6,17 +6,10 @@
 
 | #   | Priority | Finding                                                               | Effort | Impact | Agent(s)                                                | Status  |
 | --- | -------- | --------------------------------------------------------------------- | ------ | ------ | ------------------------------------------------------- | ------- |
-| 9   | P1       | Soft-delete unique constraint blocks category recreation              | Medium | High   | postgres-pro                                            | Todo    |
-| 11  | P1       | Timestamps missing `withTimezone` across most tables                  | Medium | High   | database-optimizer, postgres-pro                        | Todo    |
-| 13  | P1       | Double-query pattern on create/update (transactions, recurring)       | Medium | High   | database-optimizer, performance-engineer                | Todo    |
-| 14  | P1       | Sequential processing in `processAllRecurringTransactions`            | Medium | High   | performance-engineer, architect-reviewer                | Todo    |
 | 15  | P1       | No API versioning strategy                                            | Medium | High   | api-designer                                            | Todo    |
 | 17  | P1       | `CountryCode`/`CurrencyCode` as PG enums (250+150 values)             | High   | High   | database-optimizer, postgres-pro                        | Todo    |
 | 18b | P1       | Remaining two Redis connections (ioredis vs node-redis mismatch)      | High   | High   | performance-engineer                                    | Todo    |
-| 22  | P1       | Missing partial indexes for `deletedAt IS NULL` queries               | Medium | High   | postgres-pro, database-optimizer                        | Todo    |
-| 23  | P1       | `ilike` search on `description` with no trigram/FTS index             | Medium | High   | postgres-pro, performance-engineer                      | Todo    |
 | 29  | P2       | `CachePort` abstraction exists but is dead code                       | Low    | Medium | architect-reviewer                                      | Todo    |
-| 30  | P2       | ILIKE wildcard not escaped in `UserRepository.findAll`                | Low    | Medium | architect-reviewer, security-auditor                    | Todo    |
 | 31  | P2       | `delByPrefix` uses SCAN + sequential DEL (O(N) Redis)                 | Medium | Medium | architect-reviewer, performance-engineer                | Todo    |
 | 32  | P2       | Export loads 10K rows + JSON.stringify into memory                    | Medium | Medium | architect-reviewer, performance-engineer                | Todo    |
 | 35  | P2       | Analytics `::date` cast ignores user timezone                         | Medium | Medium | database-optimizer                                      | Todo    |
@@ -49,54 +42,6 @@
 ## Active Findings (Detailed)
 
 ### P1 -- High
-
-#### 9. Soft-Delete Unique Constraint Blocks Category Recreation
-
-**Effort:** Medium | **Impact:** High | **Reported by:** postgres-pro
-
-The unique constraint on `TransactionCategory(userId, name, type, parentCategoryId)` applies to ALL rows including soft-deleted ones. If a user deletes a category and recreates it with the same name, the INSERT fails.
-
-**Fix:** Replace with a partial unique index `WHERE "deletedAt" IS NULL`. Same fix needed for `DefaultTransactionCategory`.
-
-**Files:** `src/database/schemas/transaction-categories.ts:37-39`, `src/database/schemas/default-transaction-categories.ts:32-34`
-
----
-
-#### 11. Timestamps Missing `withTimezone` Across Most Tables
-
-**Effort:** Medium | **Impact:** High | **Reported by:** database-optimizer, postgres-pro
-
-Business-domain timestamps (`Transaction.date`, `Budget.startDate/endDate`) correctly use `withTimezone: true`. However, all system/audit timestamps (`createdAt`, `updatedAt`, `deletedAt`, `expiresAt`) across every other table do not. Most dangerous case: `RefreshToken.expiresAt` without timezone -- token expiry comparisons using `new Date()` are ambiguous.
-
-**Fix:** Add `withTimezone: true` to all timestamp columns and generate a migration. This is non-destructive if the server runs UTC.
-
-**Files:** All `src/database/schemas/*.ts` files
-
----
-
-#### 13. Double-Query Pattern on Create/Update
-
-**Effort:** Medium | **Impact:** High | **Reported by:** database-optimizer, performance-engineer
-
-`TransactionRepository` and `RecurringTransactionsRepository` execute `INSERT ... RETURNING { id }` then immediately fire a second `SELECT` with JOINs. Every create/update costs an extra DB round-trip.
-
-**Fix:** Use `RETURNING *` or a CTE to fetch all needed columns in one query.
-
-**Files:** `src/modules/transactions/transactions.repository.ts:255-276,278-324`, `src/modules/recurring-transactions/recurring-transactions.repository.ts:206-234,236-292`
-
----
-
-#### 14. Sequential Processing in `processAllRecurringTransactions`
-
-**Effort:** Medium | **Impact:** High | **Reported by:** performance-engineer, architect-reviewer
-
-The outer loop processes each recurring transaction sequentially. The inner `while` loop creates transactions one at a time. A daily recurring paused for 3 months = 90 sequential INSERTs per record.
-
-**Fix:** Batch-insert within each record. Process records with `Promise.allSettled` + concurrency limit.
-
-**File:** `src/modules/recurring-transactions/recurring-transactions.service.ts:335-413`
-
----
 
 #### 15. No API Versioning Strategy
 
@@ -134,30 +79,6 @@ PostgreSQL `ALTER TYPE ... ADD VALUE` is non-transactional and cannot be rolled 
 
 ---
 
-#### 22. Missing Partial Indexes for `deletedAt IS NULL` Queries
-
-**Effort:** Medium | **Impact:** High | **Reported by:** postgres-pro, database-optimizer
-
-7+ repository methods filter `WHERE deletedAt IS NULL` on `User` and `TransactionCategory` tables with no supporting partial index.
-
-**Fix:** Add partial indexes: `CREATE INDEX ON "User" ("id") WHERE "deletedAt" IS NULL` and similar for `TransactionCategory`.
-
-**Files:** `src/database/schemas/users.ts`, `src/database/schemas/transaction-categories.ts`
-
----
-
-#### 23. `ilike` Search on `description` Without Trigram Index
-
-**Effort:** Medium | **Impact:** High | **Reported by:** postgres-pro, performance-engineer
-
-`ilike(transactions.description, '%term%')` forces a full sequential scan. No GIN trigram index exists.
-
-**Fix:** Add `pg_trgm` extension and a GIN trigram index on `Transaction.description`.
-
-**File:** `src/modules/transactions/transactions.repository.ts:139-142`
-
----
-
 ### P2 -- Medium
 
 #### 29. `CachePort` Abstraction Is Dead Code
@@ -169,18 +90,6 @@ PostgreSQL `ALTER TYPE ... ADD VALUE` is non-transactional and cannot be rolled 
 **Fix:** Either adopt the port pattern consistently or remove the dead code.
 
 **File:** `src/modules/cache/cache.port.ts`
-
----
-
-#### 30. ILIKE Wildcards Not Escaped in `UserRepository.findAll`
-
-**Effort:** Low | **Impact:** Medium | **Reported by:** architect-reviewer, security-auditor
-
-`search` param passed directly into `ilike()` without escaping `%` and `_`. The `TransactionRepository` correctly escapes these.
-
-**Fix:** Apply the same `replace(/[\\%_]/g, '\\$&')` pattern.
-
-**File:** `src/modules/user/user.repository.ts:101-103`
 
 ---
 
@@ -575,59 +484,66 @@ No documentation for required environment variables beyond the Zod schema. Incre
 
 ## Completed Fixes (History)
 
-| #    | Finding                                               | Impact | Effort | Priority | Status |
-| ---- | ----------------------------------------------------- | ------ | ------ | -------- | ------ |
-| 1    | Add Helmet security headers                           | 5      | S      | P0       | Done   |
-| 2    | Remove default JWT_SECRET                             | 5      | S      | P0       | Done   |
-| 3    | Fix CORS default to deny all                          | 5      | S      | P0       | Done   |
-| 4    | Enable graceful shutdown hooks                        | 5      | S      | P0       | Done   |
-| 5    | Filter soft-deleted users from login                  | 5      | S      | P0       | Done   |
-| 6    | Fix login timing side-channel                         | 4      | S      | P0       | Done   |
-| 7    | Fix N+1 budget overspend cron                         | 5      | M      | P1       | Done   |
-| 8    | Add composite database indexes                        | 5      | S      | P1       | Done   |
-| 9    | Push refresh token filters to SQL                     | 4      | S      | P1       | Done   |
-| 10   | Cap export with LIMIT + streaming                     | 5      | M      | P1       | Done   |
-| 11   | Replace isDescendantOf with CTE                       | 4      | S      | P1       | Done   |
-| 12   | Rate limiting fail-closed on Redis down               | 5      | M      | P1       | Done   |
-| 13   | Per-endpoint throttling on expensive ops              | 4      | S      | P1       | Done   |
-| 14   | Protect /process endpoint (admin-only)                | 4      | S      | P1       | Done   |
-| 15   | Align admin password policy                           | 4      | S      | P1       | Done   |
-| 16   | Fix service-to-DB architecture violation              | 4      | M      | P1       | Done   |
-| 17   | Add JWT session validation / blacklist                | 5      | L      | P1       | Done   |
-| 18   | Consolidate 3 Redis connections (3→2)                 | 4      | M      | P1       | Done   |
-| 19   | Domain events for cache invalidation                  | 4      | L      | P2       | Done   |
-| 20   | Extract pagination helper                             | 3      | S      | P2       | Done   |
-| 21   | Remove/complete TransformInterceptor                  | 3      | S      | P2       | Done   |
-| 23   | Async CSV parsing                                     | 4      | M      | P2       | Done   |
-| 24   | Cache stampede protection                             | 4      | M      | P2       | Done   |
-| 25   | Migrate date columns to timestamptz                   | 4      | M      | P2       | Done   |
-| 26   | CSRF protection for cookie auth                       | 4      | M      | P2       | Done   |
-| 27   | Disable Swagger in production                         | 3      | S      | P2       | Done   |
-| 28   | Consistent validator decorators                       | 3      | S      | P2       | Done   |
-| 29   | Add database CHECK constraints                        | 3      | S      | P2       | Done   |
-| 30   | Fix NULLS NOT DISTINCT on unique index                | 3      | S      | P2       | Done   |
-| 31   | Decimal arithmetic for money                          | 4      | M      | P2       | Done   |
-| 32   | HTTP response compression                             | 2      | S      | P3       | Done   |
-| 33   | Add statement_timeout                                 | 3      | S      | P3       | Done   |
-| 34   | Sort params on all collections                        | 2      | M      | P3       | Done   |
-| A-2  | No PostgreSQL config in Docker Compose                | 5      | S      | P0       | Done   |
-| A-4  | CSRF token missing from CORS allowedHeaders           | 4      | S      | P1       | Done   |
-| A-5  | Missing CsrfGuard on revoke-refresh-token             | 4      | S      | P1       | Done   |
-| A-6  | CSRF token comparison not timing-safe                 | 4      | S      | P1       | Done   |
-| A-12 | Missing index on emailVerificationToken               | 4      | S      | P1       | Done   |
-| A-16 | Throttler auth bypass returns true                    | 4      | S      | P1       | Done   |
-| A-19 | findByParentCategory has no LIMIT                     | 4      | S      | P1       | Done   |
-| A-20 | Docker PG port exposed on all interfaces              | 4      | S      | P1       | Done   |
-| A-21 | Docker default password in plaintext                  | 4      | S      | P1       | Done   |
-| A-25 | AllExceptionsFilter uses @Optional()                  | 4      | S      | P1       | Done   |
-| A-60 | sameSite stored as string losing type                 | 3      | S      | P2       | Done   |
-| A-7  | AuthService layer violation (UserRepository)          | 4      | M      | P1       | Done   |
-| A-8  | ProfileService layer violation (UserRepository)       | 4      | M      | P1       | Done   |
-| A-33 | Excessive constructor params (AuthService)            | 3      | M      | P2       | Done   |
-| 27   | Replace `result[0] as T` casts with destructuring     | High   | M      | P1       | Done   |
-| 28   | Extract duplicated category validation                | Medium | M      | P2       | Done   |
-| 34   | Move `loginStatusEnum` to enums.ts + UPPER_CASE       | Medium | S      | P2       | Done   |
-| 47   | Add ParseUUIDPipe to email verification token         | Medium | S      | P2       | Done   |
-| 49   | Remove `onboardingCompleted` from UpdateProfileDto    | Medium | S      | P2       | Done   |
-| 51   | Remove redundant pagination defaults from controllers | Medium | S      | P2       | Done   |
-| 52   | Register TimeoutInterceptor via DI                    | Medium | S      | P2       | Done   |
+| #    | Finding                                                    | Impact | Effort | Priority | Status |
+| ---- | ---------------------------------------------------------- | ------ | ------ | -------- | ------ |
+| 1    | Add Helmet security headers                                | 5      | S      | P0       | Done   |
+| 2    | Remove default JWT_SECRET                                  | 5      | S      | P0       | Done   |
+| 3    | Fix CORS default to deny all                               | 5      | S      | P0       | Done   |
+| 4    | Enable graceful shutdown hooks                             | 5      | S      | P0       | Done   |
+| 5    | Filter soft-deleted users from login                       | 5      | S      | P0       | Done   |
+| 6    | Fix login timing side-channel                              | 4      | S      | P0       | Done   |
+| 7    | Fix N+1 budget overspend cron                              | 5      | M      | P1       | Done   |
+| 8    | Add composite database indexes                             | 5      | S      | P1       | Done   |
+| 9    | Push refresh token filters to SQL                          | 4      | S      | P1       | Done   |
+| 10   | Cap export with LIMIT + streaming                          | 5      | M      | P1       | Done   |
+| 11   | Replace isDescendantOf with CTE                            | 4      | S      | P1       | Done   |
+| 12   | Rate limiting fail-closed on Redis down                    | 5      | M      | P1       | Done   |
+| 13   | Per-endpoint throttling on expensive ops                   | 4      | S      | P1       | Done   |
+| 14   | Protect /process endpoint (admin-only)                     | 4      | S      | P1       | Done   |
+| 15   | Align admin password policy                                | 4      | S      | P1       | Done   |
+| 16   | Fix service-to-DB architecture violation                   | 4      | M      | P1       | Done   |
+| 17   | Add JWT session validation / blacklist                     | 5      | L      | P1       | Done   |
+| 18   | Consolidate 3 Redis connections (3→2)                      | 4      | M      | P1       | Done   |
+| 19   | Domain events for cache invalidation                       | 4      | L      | P2       | Done   |
+| 20   | Extract pagination helper                                  | 3      | S      | P2       | Done   |
+| 21   | Remove/complete TransformInterceptor                       | 3      | S      | P2       | Done   |
+| 23   | Async CSV parsing                                          | 4      | M      | P2       | Done   |
+| 24   | Cache stampede protection                                  | 4      | M      | P2       | Done   |
+| 25   | Migrate date columns to timestamptz                        | 4      | M      | P2       | Done   |
+| 26   | CSRF protection for cookie auth                            | 4      | M      | P2       | Done   |
+| 27   | Disable Swagger in production                              | 3      | S      | P2       | Done   |
+| 28   | Consistent validator decorators                            | 3      | S      | P2       | Done   |
+| 29   | Add database CHECK constraints                             | 3      | S      | P2       | Done   |
+| 30   | Fix NULLS NOT DISTINCT on unique index                     | 3      | S      | P2       | Done   |
+| 31   | Decimal arithmetic for money                               | 4      | M      | P2       | Done   |
+| 32   | HTTP response compression                                  | 2      | S      | P3       | Done   |
+| 33   | Add statement_timeout                                      | 3      | S      | P3       | Done   |
+| 34   | Sort params on all collections                             | 2      | M      | P3       | Done   |
+| A-2  | No PostgreSQL config in Docker Compose                     | 5      | S      | P0       | Done   |
+| A-4  | CSRF token missing from CORS allowedHeaders                | 4      | S      | P1       | Done   |
+| A-5  | Missing CsrfGuard on revoke-refresh-token                  | 4      | S      | P1       | Done   |
+| A-6  | CSRF token comparison not timing-safe                      | 4      | S      | P1       | Done   |
+| A-12 | Missing index on emailVerificationToken                    | 4      | S      | P1       | Done   |
+| A-16 | Throttler auth bypass returns true                         | 4      | S      | P1       | Done   |
+| A-19 | findByParentCategory has no LIMIT                          | 4      | S      | P1       | Done   |
+| A-20 | Docker PG port exposed on all interfaces                   | 4      | S      | P1       | Done   |
+| A-21 | Docker default password in plaintext                       | 4      | S      | P1       | Done   |
+| A-25 | AllExceptionsFilter uses @Optional()                       | 4      | S      | P1       | Done   |
+| A-60 | sameSite stored as string losing type                      | 3      | S      | P2       | Done   |
+| A-7  | AuthService layer violation (UserRepository)               | 4      | M      | P1       | Done   |
+| A-8  | ProfileService layer violation (UserRepository)            | 4      | M      | P1       | Done   |
+| A-33 | Excessive constructor params (AuthService)                 | 3      | M      | P2       | Done   |
+| 27   | Replace `result[0] as T` casts with destructuring          | High   | M      | P1       | Done   |
+| 28   | Extract duplicated category validation                     | Medium | M      | P2       | Done   |
+| 34   | Move `loginStatusEnum` to enums.ts + UPPER_CASE            | Medium | S      | P2       | Done   |
+| 47   | Add ParseUUIDPipe to email verification token              | Medium | S      | P2       | Done   |
+| 49   | Remove `onboardingCompleted` from UpdateProfileDto         | Medium | S      | P2       | Done   |
+| 51   | Remove redundant pagination defaults from controllers      | Medium | S      | P2       | Done   |
+| 52   | Register TimeoutInterceptor via DI                         | Medium | S      | P2       | Done   |
+| 9    | Soft-delete unique constraint blocks category recreation   | 5      | M      | P1       | Done   |
+| 11   | Timestamps missing `withTimezone` across most tables       | 5      | M      | P1       | Done   |
+| 13   | Double-query pattern on create/update                      | 4      | M      | P1       | Done   |
+| 14   | Sequential processing in `processAllRecurringTransactions` | 4      | M      | P1       | Done   |
+| 22   | Missing partial indexes for `deletedAt IS NULL`            | 4      | M      | P1       | Done   |
+| 23   | `ilike` search on `description` with no trigram index      | 4      | M      | P1       | Done   |
+| 30   | ILIKE wildcards not escaped in `UserRepository.findAll`    | 3      | S      | P2       | Done   |

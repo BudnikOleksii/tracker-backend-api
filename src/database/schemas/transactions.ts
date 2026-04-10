@@ -32,8 +32,10 @@ export const transactions = pgTable(
       () => recurringTransactions.id,
       { onDelete: 'set null' },
     ),
-    createdAt: timestamp('createdAt', { precision: 3, mode: 'date' }).notNull().defaultNow(),
-    updatedAt: timestamp('updatedAt', { precision: 3, mode: 'date' })
+    createdAt: timestamp('createdAt', { precision: 3, mode: 'date', withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updatedAt', { precision: 3, mode: 'date', withTimezone: true })
       .notNull()
       .defaultNow()
       .$onUpdate(() => new Date()),
@@ -56,6 +58,7 @@ export const transactions = pgTable(
       foreignColumns: [transactionCategories.userId, transactionCategories.id],
     }).onDelete('restrict'),
     check('Transaction_amount_positive', sql`amount > 0`),
+    index('Transaction_description_trgm_idx').using('gin', sql`"description" gin_trgm_ops`),
   ],
 );
 
