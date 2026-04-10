@@ -1,4 +1,4 @@
-import { boolean, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { boolean, index, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
 
 import { authProviderEnum, countryCodeEnum, currencyCodeEnum, userRoleEnum } from './enums.js';
@@ -39,6 +39,9 @@ export const users = pgTable(
     uniqueIndex('User_authProvider_authProviderId_unique')
       .on(table.authProvider, table.authProviderId)
       .where(sql`${table.authProviderId} IS NOT NULL`),
+    index('User_emailVerificationToken_idx')
+      .on(table.emailVerificationToken)
+      .where(sql`${table.emailVerificationToken} IS NOT NULL`),
   ],
 );
 

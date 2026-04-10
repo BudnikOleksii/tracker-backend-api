@@ -56,7 +56,7 @@ export class AuthController {
   private readonly cookieName: string;
   private readonly cookieOptions: CookieOptions;
   private readonly csrfCookieName: string;
-  private readonly sameSite: string;
+  private readonly sameSite: Env['COOKIE_SAME_SITE'];
   private readonly socialAuthRedirectUrl: string | undefined;
 
   constructor(
@@ -182,7 +182,7 @@ export class AuthController {
   @Post('revoke-refresh-token')
   @Throttle({ auth: {} })
   @HttpCode(200)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, CsrfGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Revoke a specific refresh token' })
   @ApiResponse({ status: 200, type: RevokeTokenResponseDto })

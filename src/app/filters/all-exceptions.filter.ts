@@ -1,4 +1,4 @@
-import { Catch, HttpException, HttpStatus, Logger, Optional, Inject } from '@nestjs/common';
+import { Catch, HttpException, HttpStatus, Inject, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClsService } from 'nestjs-cls';
 import type { ExceptionFilter, ArgumentsHost } from '@nestjs/common';
@@ -14,11 +14,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name);
 
   constructor(
-    @Optional() private readonly cls?: ClsService,
-    @Optional()
+    private readonly cls: ClsService,
     @Inject(ProblemDetailsFilter)
-    private readonly problemDetailsFilter?: ProblemDetailsFilter,
-    @Optional() private readonly configService?: ConfigService<Env, true>,
+    private readonly problemDetailsFilter: ProblemDetailsFilter,
+    private readonly configService: ConfigService<Env, true>,
   ) {}
 
   catch(exception: unknown, host: ArgumentsHost) {
@@ -26,22 +25,22 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const response = context.getResponse<Response>();
     const request = context.getRequest<Request>();
 
-    if (exception instanceof HttpException && this.problemDetailsFilter) {
+    if (exception instanceof HttpException) {
       return this.problemDetailsFilter.catch(exception, host);
     }
 
     const status = HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const isProduction = this.configService?.get('NODE_ENV', { infer: true }) === 'production';
+    const isProduction = this.configService.get('NODE_ENV', { infer: true }) === 'production';
     let message = 'Internal server error';
     if (exception instanceof Error) {
       message = isProduction ? 'The server encountered an unexpected error' : exception.message;
     }
 
-    const requestId = this.cls?.getId();
+    const requestId = this.cls.getId();
 
     const baseUrl =
-      this.configService?.get('API_BASE_URL', { infer: true }) ?? 'https://api.example.com';
+      this.configService.get('API_BASE_URL', { infer: true }) ?? 'https://api.example.com';
     const problemDetails: ProblemDetailsDto = {
       type: `${baseUrl}/errors/internal-server-error`,
       title: 'Internal Server Error',
