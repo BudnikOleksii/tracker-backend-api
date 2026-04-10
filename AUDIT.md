@@ -666,52 +666,52 @@ No documentation for required environment variables beyond the Zod schema. Incre
 
 ## Completed Fixes (History)
 
-| #   | Finding                                         | Impact | Effort | Priority | Status |
-| --- | ----------------------------------------------- | ------ | ------ | -------- | ------ |
-| 1   | Add Helmet security headers                     | 5      | S      | P0       | Done   |
-| 2   | Remove default JWT_SECRET                       | 5      | S      | P0       | Done   |
-| 3   | Fix CORS default to deny all                    | 5      | S      | P0       | Done   |
-| 4   | Enable graceful shutdown hooks                  | 5      | S      | P0       | Done   |
-| 5   | Filter soft-deleted users from login            | 5      | S      | P0       | Done   |
-| 6   | Fix login timing side-channel                   | 4      | S      | P0       | Done   |
-| 7   | Fix N+1 budget overspend cron                   | 5      | M      | P1       | Done   |
-| 8   | Add composite database indexes                  | 5      | S      | P1       | Done   |
-| 9   | Push refresh token filters to SQL               | 4      | S      | P1       | Done   |
-| 10  | Cap export with LIMIT + streaming               | 5      | M      | P1       | Done   |
-| 11  | Replace isDescendantOf with CTE                 | 4      | S      | P1       | Done   |
-| 12  | Rate limiting fail-closed on Redis down         | 5      | M      | P1       | Done   |
-| 13  | Per-endpoint throttling on expensive ops        | 4      | S      | P1       | Done   |
-| 14  | Protect /process endpoint (admin-only)          | 4      | S      | P1       | Done   |
-| 15  | Align admin password policy                     | 4      | S      | P1       | Done   |
-| 16  | Fix service-to-DB architecture violation        | 4      | M      | P1       | Done   |
-| 17  | Add JWT session validation / blacklist          | 5      | L      | P1       | Done   |
-| 18  | Consolidate 3 Redis connections (3→2)           | 4      | M      | P1       | Done   |
-| 19  | Domain events for cache invalidation            | 4      | L      | P2       | Done   |
-| 20  | Extract pagination helper                       | 3      | S      | P2       | Done   |
-| 21  | Remove/complete TransformInterceptor            | 3      | S      | P2       | Done   |
-| 23  | Async CSV parsing                               | 4      | M      | P2       | Done   |
-| 24  | Cache stampede protection                       | 4      | M      | P2       | Done   |
-| 25  | Migrate date columns to timestamptz             | 4      | M      | P2       | Done   |
-| 26  | CSRF protection for cookie auth                 | 4      | M      | P2       | Done   |
-| 27  | Disable Swagger in production                   | 3      | S      | P2       | Done   |
-| 28  | Consistent validator decorators                 | 3      | S      | P2       | Done   |
-| 29  | Add database CHECK constraints                  | 3      | S      | P2       | Done   |
-| 30  | Fix NULLS NOT DISTINCT on unique index          | 3      | S      | P2       | Done   |
-| 31  | Decimal arithmetic for money                    | 4      | M      | P2       | Done   |
-| 32  | HTTP response compression                       | 2      | S      | P3       | Done   |
-| 33  | Add statement_timeout                           | 3      | S      | P3       | Done   |
-| 34  | Sort params on all collections                  | 2      | M      | P3       | Done   |
-| 35  | No PostgreSQL config in Docker Compose          | 5      | S      | P0       | Done   |
-| 36  | CSRF token missing from CORS allowedHeaders     | 4      | S      | P1       | Done   |
-| 37  | Missing CsrfGuard on revoke-refresh-token       | 4      | S      | P1       | Done   |
-| 38  | CSRF token comparison not timing-safe           | 4      | S      | P1       | Done   |
-| 39  | Missing index on emailVerificationToken         | 4      | S      | P1       | Done   |
-| 40  | Throttler auth bypass returns true              | 4      | S      | P1       | Done   |
-| 41  | findByParentCategory has no LIMIT               | 4      | S      | P1       | Done   |
-| 42  | Docker PG port exposed on all interfaces        | 4      | S      | P1       | Done   |
-| 43  | Docker default password in plaintext            | 4      | S      | P1       | Done   |
-| 44  | AllExceptionsFilter uses @Optional()            | 4      | S      | P1       | Done   |
-| 45  | sameSite stored as string losing type           | 3      | S      | P2       | Done   |
-| 46  | AuthService layer violation (UserRepository)    | 4      | M      | P1       | Done   |
-| 47  | ProfileService layer violation (UserRepository) | 4      | M      | P1       | Done   |
-| 48  | Excessive constructor params (AuthService)      | 3      | M      | P2       | Done   |
+| #    | Finding                                         | Impact | Effort | Priority | Status |
+| ---- | ----------------------------------------------- | ------ | ------ | -------- | ------ |
+| 1    | Add Helmet security headers                     | 5      | S      | P0       | Done   |
+| 2    | Remove default JWT_SECRET                       | 5      | S      | P0       | Done   |
+| 3    | Fix CORS default to deny all                    | 5      | S      | P0       | Done   |
+| 4    | Enable graceful shutdown hooks                  | 5      | S      | P0       | Done   |
+| 5    | Filter soft-deleted users from login            | 5      | S      | P0       | Done   |
+| 6    | Fix login timing side-channel                   | 4      | S      | P0       | Done   |
+| 7    | Fix N+1 budget overspend cron                   | 5      | M      | P1       | Done   |
+| 8    | Add composite database indexes                  | 5      | S      | P1       | Done   |
+| 9    | Push refresh token filters to SQL               | 4      | S      | P1       | Done   |
+| 10   | Cap export with LIMIT + streaming               | 5      | M      | P1       | Done   |
+| 11   | Replace isDescendantOf with CTE                 | 4      | S      | P1       | Done   |
+| 12   | Rate limiting fail-closed on Redis down         | 5      | M      | P1       | Done   |
+| 13   | Per-endpoint throttling on expensive ops        | 4      | S      | P1       | Done   |
+| 14   | Protect /process endpoint (admin-only)          | 4      | S      | P1       | Done   |
+| 15   | Align admin password policy                     | 4      | S      | P1       | Done   |
+| 16   | Fix service-to-DB architecture violation        | 4      | M      | P1       | Done   |
+| 17   | Add JWT session validation / blacklist          | 5      | L      | P1       | Done   |
+| 18   | Consolidate 3 Redis connections (3→2)           | 4      | M      | P1       | Done   |
+| 19   | Domain events for cache invalidation            | 4      | L      | P2       | Done   |
+| 20   | Extract pagination helper                       | 3      | S      | P2       | Done   |
+| 21   | Remove/complete TransformInterceptor            | 3      | S      | P2       | Done   |
+| 23   | Async CSV parsing                               | 4      | M      | P2       | Done   |
+| 24   | Cache stampede protection                       | 4      | M      | P2       | Done   |
+| 25   | Migrate date columns to timestamptz             | 4      | M      | P2       | Done   |
+| 26   | CSRF protection for cookie auth                 | 4      | M      | P2       | Done   |
+| 27   | Disable Swagger in production                   | 3      | S      | P2       | Done   |
+| 28   | Consistent validator decorators                 | 3      | S      | P2       | Done   |
+| 29   | Add database CHECK constraints                  | 3      | S      | P2       | Done   |
+| 30   | Fix NULLS NOT DISTINCT on unique index          | 3      | S      | P2       | Done   |
+| 31   | Decimal arithmetic for money                    | 4      | M      | P2       | Done   |
+| 32   | HTTP response compression                       | 2      | S      | P3       | Done   |
+| 33   | Add statement_timeout                           | 3      | S      | P3       | Done   |
+| 34   | Sort params on all collections                  | 2      | M      | P3       | Done   |
+| A-2  | No PostgreSQL config in Docker Compose          | 5      | S      | P0       | Done   |
+| A-4  | CSRF token missing from CORS allowedHeaders     | 4      | S      | P1       | Done   |
+| A-5  | Missing CsrfGuard on revoke-refresh-token       | 4      | S      | P1       | Done   |
+| A-6  | CSRF token comparison not timing-safe           | 4      | S      | P1       | Done   |
+| A-12 | Missing index on emailVerificationToken         | 4      | S      | P1       | Done   |
+| A-16 | Throttler auth bypass returns true              | 4      | S      | P1       | Done   |
+| A-19 | findByParentCategory has no LIMIT               | 4      | S      | P1       | Done   |
+| A-20 | Docker PG port exposed on all interfaces        | 4      | S      | P1       | Done   |
+| A-21 | Docker default password in plaintext            | 4      | S      | P1       | Done   |
+| A-25 | AllExceptionsFilter uses @Optional()            | 4      | S      | P1       | Done   |
+| A-60 | sameSite stored as string losing type           | 3      | S      | P2       | Done   |
+| A-7  | AuthService layer violation (UserRepository)    | 4      | M      | P1       | Done   |
+| A-8  | ProfileService layer violation (UserRepository) | 4      | M      | P1       | Done   |
+| A-33 | Excessive constructor params (AuthService)      | 3      | M      | P2       | Done   |
