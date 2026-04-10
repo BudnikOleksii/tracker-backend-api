@@ -1,0 +1,1 @@
+CREATE INDEX "User_emailVerificationToken_idx" ON "User" USING btree ("emailVerificationToken") WHERE "User"."emailVerificationToken" IS NOT NULL;

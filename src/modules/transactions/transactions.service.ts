@@ -154,7 +154,7 @@ export class TransactionsService {
   async getTransactionsByCategory(
     categoryId: string,
     userId: string,
-  ): Promise<{ groups: TransactionGroupDto[] }> {
+  ): Promise<{ groups: TransactionGroupDto[]; isTruncated: boolean }> {
     const key = buildCacheKey({
       module: CACHE_MODULE,
       userId,
@@ -184,11 +184,8 @@ export class TransactionsService {
       }
 
       const subcategoryIds = category.subcategories.map((s) => s.id);
-      const allTransactions = await this.transactionRepository.findByParentCategory(
-        categoryId,
-        subcategoryIds,
-        userId,
-      );
+      const { data: allTransactions, isTruncated } =
+        await this.transactionRepository.findByParentCategory(categoryId, subcategoryIds, userId);
 
       const subcategoryMap = new Map(category.subcategories.map((s) => [s.id, s]));
       const grouped = new Map<string | null, TransactionInfo[]>();
@@ -226,7 +223,7 @@ export class TransactionsService {
         });
       }
 
-      return { groups };
+      return { groups, isTruncated };
     });
   }
 

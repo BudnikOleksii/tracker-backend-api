@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Request } from 'express';
@@ -7,7 +8,7 @@ import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 
 @Injectable()
 export class CsrfGuard implements CanActivate {
-  private readonly sameSite: string;
+  private readonly sameSite: Env['COOKIE_SAME_SITE'];
   private readonly csrfCookieName: string;
 
   constructor(private readonly configService: ConfigService<Env, true>) {
@@ -21,10 +22,21 @@ export class CsrfGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest<Request>();
-    const headerToken = request.headers['x-csrf-token'] as string | undefined;
+    const rawHeader = request.headers['x-csrf-token'];
+    const headerToken = Array.isArray(rawHeader) ? rawHeader[0] : rawHeader;
     const cookieToken = request.cookies?.[this.csrfCookieName] as string | undefined;
 
-    if (!headerToken || !cookieToken || headerToken !== cookieToken) {
+    if (!headerToken || !cookieToken) {
+      throw new ForbiddenException({
+        code: ErrorCode.FORBIDDEN,
+        message: 'Invalid or missing CSRF token',
+      });
+    }
+
+    const headerBuf = Buffer.from(headerToken);
+    const cookieBuf = Buffer.from(cookieToken);
+
+    if (headerBuf.length !== cookieBuf.length || !crypto.timingSafeEqual(headerBuf, cookieBuf)) {
       throw new ForbiddenException({
         code: ErrorCode.FORBIDDEN,
         message: 'Invalid or missing CSRF token',

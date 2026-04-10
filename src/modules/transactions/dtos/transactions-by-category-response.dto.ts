@@ -45,4 +45,10 @@ export class TransactionGroupDto {
 export class TransactionsByCategoryResponseDto {
   @ApiProperty({ description: 'Transaction groups by subcategory', type: [TransactionGroupDto] })
   groups: TransactionGroupDto[];
+
+  @ApiProperty({
+    description: 'Whether the result set was truncated due to exceeding the maximum row limit',
+    example: false,
+  })
+  isTruncated: boolean;
 }

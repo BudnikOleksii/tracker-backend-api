@@ -16,7 +16,7 @@ export class AppThrottlerGuard extends ThrottlerGuard {
       );
 
       if (routeLimit === undefined) {
-        return true;
+        return super.handleRequest(requestProps);
       }
     }
 

@@ -111,6 +111,8 @@ const SORT_COLUMN_MAP = {
   createdAt: transactions.createdAt,
 } as const;
 
+const MAX_QUERY_TRANSACTIONS = 5000;
+
 @Injectable()
 export class TransactionRepository {
   constructor(
@@ -377,18 +379,22 @@ export class TransactionRepository {
     categoryId: string,
     subcategoryIds: string[],
     userId: string,
-  ): Promise<TransactionInfo[]> {
+  ): Promise<{ data: TransactionInfo[]; isTruncated: boolean }> {
     const allCategoryIds = [categoryId, ...subcategoryIds];
 
-    const data = await this.db
+    const rows = await this.db
       .select(JOINED_COLUMNS)
       .from(transactions)
       .leftJoin(category, eq(transactions.categoryId, category.id))
       .leftJoin(parentCategory, eq(category.parentCategoryId, parentCategory.id))
       .where(and(eq(transactions.userId, userId), inArray(transactions.categoryId, allCategoryIds)))
-      .orderBy(desc(transactions.date));
+      .orderBy(desc(transactions.date))
+      .limit(MAX_QUERY_TRANSACTIONS + 1);
 
-    return data.map((row) => this.toTransactionInfo(row));
+    return {
+      data: rows.slice(0, MAX_QUERY_TRANSACTIONS).map((row) => this.toTransactionInfo(row)),
+      isTruncated: rows.length > MAX_QUERY_TRANSACTIONS,
+    };
   }
 
   async findCategoriesByUser(
