@@ -14,6 +14,7 @@ import {
 import { CACHE_MODULE } from './recurring-transactions.constants.js';
 import { RecurringTransactionsRepository } from './recurring-transactions.repository.js';
 import type {
+  CreateMaterializedTransactionData,
   CreateRecurringTransactionData,
   RecurringTransactionInfo,
   RecurringTransactionListQuery,
@@ -335,26 +336,33 @@ export class RecurringTransactionsService {
     const affectedUserIds = new Set<string>();
     const usersWithCreatedTransactions = new Set<string>();
 
-    for (const record of dueRecords) {
-      try {
-        const created = await this.processOneRecurringTransaction(record, record.userId, today);
-        totalTransactionsCreated += created;
-        processedCount++;
-        affectedUserIds.add(record.userId);
-        if (created > 0) {
-          usersWithCreatedTransactions.add(record.userId);
+    const BATCH_SIZE = 5;
+
+    for (let i = 0; i < dueRecords.length; i += BATCH_SIZE) {
+      const chunk = dueRecords.slice(i, i + BATCH_SIZE);
+      const results = await Promise.allSettled(
+        chunk.map((record) => this.processOneRecurringTransaction(record, record.userId, today)),
+      );
+
+      chunk.forEach((record, j) => {
+        const result = results[j] as PromiseSettledResult<number>;
+        if (result.status === 'fulfilled') {
+          totalTransactionsCreated += result.value;
+          processedCount++;
+          affectedUserIds.add(record.userId);
+          if (result.value > 0) {
+            usersWithCreatedTransactions.add(record.userId);
+          }
+        } else {
+          this.logger.error(
+            `Failed to process recurring transaction ${record.id} for user ${record.userId}`,
+            result.reason instanceof Error ? result.reason.stack : undefined,
+          );
         }
-      } catch (error) {
-        this.logger.error(
-          `Failed to process recurring transaction ${record.id} for user ${record.userId}`,
-          error instanceof Error ? error.stack : undefined,
-        );
-      }
+      });
     }
 
-    for (const userId of affectedUserIds) {
-      await this.invalidateCache(userId);
-    }
+    await Promise.all([...affectedUserIds].map((userId) => this.invalidateCache(userId)));
 
     for (const userId of usersWithCreatedTransactions) {
       this.eventEmitter.emit(
@@ -375,29 +383,29 @@ export class RecurringTransactionsService {
       let nextDate = new Date(record.nextOccurrenceDate);
       const frequency = record.frequency;
       const interval = record.interval;
-      let transactionsCreated = 0;
+      const batch: CreateMaterializedTransactionData[] = [];
 
       while (nextDate <= today) {
         if (record.endDate && nextDate > record.endDate) {
           break;
         }
 
-        await this.repository.createTransaction(
-          {
-            userId,
-            categoryId: record.categoryId,
-            type: record.type,
-            amount: record.amount,
-            currencyCode: record.currencyCode,
-            date: nextDate,
-            description: record.description ?? undefined,
-            recurringTransactionId: record.id,
-          },
-          tx,
-        );
-        transactionsCreated++;
+        batch.push({
+          userId,
+          categoryId: record.categoryId,
+          type: record.type,
+          amount: record.amount,
+          currencyCode: record.currencyCode,
+          date: new Date(nextDate),
+          description: record.description ?? undefined,
+          recurringTransactionId: record.id,
+        });
 
         nextDate = this.advanceDate(nextDate, frequency, interval);
+      }
+
+      if (batch.length > 0) {
+        await this.repository.createTransactionsBatch(batch, tx);
       }
 
       const shouldCancel = record.endDate && nextDate > record.endDate;
@@ -412,7 +420,7 @@ export class RecurringTransactionsService {
         tx,
       });
 
-      return transactionsCreated;
+      return batch.length;
     });
   }
 

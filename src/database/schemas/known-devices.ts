@@ -12,8 +12,12 @@ export const knownDevices = pgTable(
       .references(() => users.id, { onDelete: 'cascade' }),
     ipAddress: text('ipAddress').notNull(),
     userAgent: text('userAgent').notNull(),
-    firstSeenAt: timestamp('firstSeenAt', { precision: 3, mode: 'date' }).notNull().defaultNow(),
-    lastSeenAt: timestamp('lastSeenAt', { precision: 3, mode: 'date' }).notNull().defaultNow(),
+    firstSeenAt: timestamp('firstSeenAt', { precision: 3, mode: 'date', withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    lastSeenAt: timestamp('lastSeenAt', { precision: 3, mode: 'date', withTimezone: true })
+      .notNull()
+      .defaultNow(),
   },
   (table) => [
     unique('KnownDevice_userId_ipAddress_userAgent_unique').on(

@@ -208,7 +208,7 @@ export class RecurringTransactionsRepository {
     tx?: DrizzleDb,
   ): Promise<RecurringTransactionInfo> {
     const db = tx ?? this.db;
-    const [inserted] = await db
+    const result = await db
       .insert(recurringTransactions)
       .values({
         userId: data.userId,
@@ -223,14 +223,16 @@ export class RecurringTransactionsRepository {
         endDate: data.endDate,
         nextOccurrenceDate: data.nextOccurrenceDate,
       })
-      .returning({ id: recurringTransactions.id });
+      .returning();
 
-    const created = await this.findById((inserted as { id: string }).id, data.userId, tx);
-    if (!created) {
-      throw new Error('Failed to retrieve newly created recurring transaction');
+    const [inserted] = result;
+    if (!inserted) {
+      throw new Error('Failed to create recurring transaction');
     }
 
-    return created;
+    const categoryInfo = await this.getCategoryInfo(inserted.categoryId, db);
+
+    return this.toRecurringTransactionInfo({ ...inserted, ...categoryInfo });
   }
 
   async update(params: {
@@ -277,18 +279,20 @@ export class RecurringTransactionsRepository {
       updates.status = data.status;
     }
 
-    const updated = await db
+    const updated = (await db
       .update(recurringTransactions)
       .set(updates)
       .where(and(eq(recurringTransactions.id, id), eq(recurringTransactions.userId, userId)))
-      .returning({ id: recurringTransactions.id });
+      .returning()) as (typeof recurringTransactions.$inferSelect)[];
 
     const [updatedRow] = updated;
     if (!updatedRow) {
       return null;
     }
 
-    return this.findById(updatedRow.id, userId, tx);
+    const categoryInfo = await this.getCategoryInfo(updatedRow.categoryId, db);
+
+    return this.toRecurringTransactionInfo({ ...updatedRow, ...categoryInfo });
   }
 
   async findDueRecurringTransactions(
@@ -345,6 +349,49 @@ export class RecurringTransactionsRepository {
       description: data.description,
       recurringTransactionId: data.recurringTransactionId,
     });
+  }
+
+  async createTransactionsBatch(
+    data: CreateMaterializedTransactionData[],
+    tx?: DrizzleDb,
+  ): Promise<void> {
+    if (data.length === 0) {
+      return;
+    }
+    const db = tx ?? this.db;
+    await db.insert(transactions).values(
+      data.map((d) => ({
+        userId: d.userId,
+        categoryId: d.categoryId,
+        type: d.type,
+        amount: d.amount,
+        currencyCode: d.currencyCode,
+        date: d.date,
+        description: d.description,
+        recurringTransactionId: d.recurringTransactionId,
+      })),
+    );
+  }
+
+  private async getCategoryInfo(categoryId: string, db: DrizzleDb): Promise<CategoryJoinColumns> {
+    const result = (await db
+      .select({
+        categoryName: transactionCategories.name,
+        parentCatId: parentCategory.id,
+        parentCatName: parentCategory.name,
+      })
+      .from(transactionCategories)
+      .leftJoin(parentCategory, eq(transactionCategories.parentCategoryId, parentCategory.id))
+      .where(eq(transactionCategories.id, categoryId))
+      .limit(1)) as CategoryJoinColumns[];
+
+    const [row] = result;
+
+    return {
+      categoryName: row?.categoryName ?? null,
+      parentCatId: row?.parentCatId ?? null,
+      parentCatName: row?.parentCatName ?? null,
+    };
   }
 
   private toRecurringTransactionInfo(

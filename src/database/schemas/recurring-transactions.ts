@@ -43,8 +43,10 @@ export const recurringTransactions = pgTable(
       withTimezone: true,
     }).notNull(),
     status: recurringTransactionStatusEnum('status').notNull().default('ACTIVE'),
-    createdAt: timestamp('createdAt', { precision: 3, mode: 'date' }).notNull().defaultNow(),
-    updatedAt: timestamp('updatedAt', { precision: 3, mode: 'date' })
+    createdAt: timestamp('createdAt', { precision: 3, mode: 'date', withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updatedAt', { precision: 3, mode: 'date', withTimezone: true })
       .notNull()
       .defaultNow()
       .$onUpdate(() => new Date()),

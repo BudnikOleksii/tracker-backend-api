@@ -22,8 +22,10 @@ export const budgets = pgTable(
     endDate: timestamp('endDate', { precision: 3, mode: 'date', withTimezone: true }).notNull(),
     status: budgetStatusEnum('status').notNull().default('ACTIVE'),
     description: text('description'),
-    createdAt: timestamp('createdAt', { precision: 3, mode: 'date' }).notNull().defaultNow(),
-    updatedAt: timestamp('updatedAt', { precision: 3, mode: 'date' })
+    createdAt: timestamp('createdAt', { precision: 3, mode: 'date', withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updatedAt', { precision: 3, mode: 'date', withTimezone: true })
       .notNull()
       .defaultNow()
       .$onUpdate(() => new Date()),

@@ -17,13 +17,16 @@ export const refreshTokens = pgTable(
     expiresAt: timestamp('expiresAt', {
       precision: 3,
       mode: 'date',
+      withTimezone: true,
     }).notNull(),
     replacedByTokenId: uuid('replacedByTokenId')
       .references((): AnyPgColumn => refreshTokens.id, { onDelete: 'set null' })
       .unique(),
-    revokedAt: timestamp('revokedAt', { precision: 3, mode: 'date' }),
-    createdAt: timestamp('createdAt', { precision: 3, mode: 'date' }).notNull().defaultNow(),
-    updatedAt: timestamp('updatedAt', { precision: 3, mode: 'date' })
+    revokedAt: timestamp('revokedAt', { precision: 3, mode: 'date', withTimezone: true }),
+    createdAt: timestamp('createdAt', { precision: 3, mode: 'date', withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updatedAt', { precision: 3, mode: 'date', withTimezone: true })
       .notNull()
       .defaultNow()
       .$onUpdate(() => new Date()),
