@@ -23,7 +23,7 @@
 | 15  | Align admin password policy              | 4      | S      | P1       | Done   |
 | 16  | Fix service-to-DB architecture violation | 4      | M      | P1       | Done   |
 | 17  | Add JWT session validation / blacklist   | 5      | L      | P1       | Done   |
-| 18  | Consolidate 3 Redis connections to 1     | 4      | M      | P1       | Done   |
+| 18  | Consolidate 3 Redis connections (3→2)    | 4      | M      | P1       | Done   |
 | 19  | Domain events for cache invalidation     | 4      | L      | P2       | Done   |
 | 20  | Extract pagination helper                | 3      | S      | P2       | Done   |
 | 21  | Remove/complete TransformInterceptor     | 3      | S      | P2       | Done   |
@@ -60,7 +60,7 @@
 | 15  | P1       | No API versioning strategy                                            | Medium | High     | api-designer                                            | Todo    |
 | 16  | P1       | Throttler auth bypass returns `true` instead of falling through       | Low    | High     | api-designer                                            | Done    |
 | 17  | P1       | `CountryCode`/`CurrencyCode` as PG enums (250+150 values)             | High   | High     | database-optimizer, postgres-pro                        | Todo    |
-| 18  | P1       | Two separate Redis connections for same server                        | High   | High     | performance-engineer                                    | Todo    |
+| 18b | P1       | Remaining two Redis connections (ioredis vs node-redis mismatch)      | High   | High     | performance-engineer                                    | Todo    |
 | 19  | P1       | `findByParentCategory` has no LIMIT (unbounded result set)            | Low    | High     | performance-engineer, database-optimizer                | Done    |
 | 20  | P1       | Docker PG port exposed on all interfaces                              | Low    | High     | postgres-pro                                            | Done    |
 | 21  | P1       | Docker default password `tracker123` in plaintext                     | Low    | High     | postgres-pro, security-auditor                          | Done    |
@@ -271,13 +271,15 @@ PostgreSQL `ALTER TYPE ... ADD VALUE` is non-transactional and cannot be rolled 
 
 ---
 
-#### 18. Two Separate Redis Connections for Same Server
+#### 18b. Remaining Two Redis Connections (ioredis vs node-redis Library Mismatch)
 
-**Effort:** Low | **Impact:** High | **Reported by:** performance-engineer
+**Effort:** High | **Impact:** High | **Reported by:** performance-engineer
 
-`NestCacheModule.registerAsync` creates a `KeyvRedis` connection, and `redisClientProvider` creates a second `ioredis` connection to the same URL.
+> **Note:** Prior fix #18 consolidated from 3 connections to 2 by removing the throttler's separate Redis instance. The remaining 2 connections cannot be shared because `@keyv/redis` v5 uses `node-redis` internally while `redisClientProvider` uses `ioredis` — they are incompatible client libraries.
 
-**Fix:** Pass the existing `Redis` instance into `KeyvRedis` constructor instead of a URL string.
+`NestCacheModule.registerAsync` creates a `KeyvRedis` (node-redis) connection, and `redisClientProvider` creates an `ioredis` connection to the same URL.
+
+**Fix:** Migrate one client library to match the other (replace `@keyv/redis` with an ioredis-compatible cache adapter, or replace direct `ioredis` usage with `node-redis`).
 
 **Files:** `src/modules/cache/cache.module.ts`, `src/modules/cache/redis.provider.ts`
 
@@ -793,16 +795,16 @@ Error message reveals "This account uses social login" for social-only accounts.
 
 ## Low Priority / Deferred
 
-| #   | Finding                                              | Impact   | Effort | Reason                                                                |
-| --- | ---------------------------------------------------- | -------- | ------ | --------------------------------------------------------------------- |
-| 1   | Add test coverage                                    | Critical | High   | Just a POC, no tests needed now                                       |
-| 2   | Table partitioning for transactions                  | 3        | XL     | Just a POC, not expected to reach 10M+ rows                           |
-| 3   | No backup/recovery strategy                          | Critical | Medium | Just a POC, not needed now                                            |
-| 4   | `users.findAll()` does not filter soft-deleted users | High     | Low    | By design -- admin should see all users including deleted             |
-| 5   | Swagger/OpenAPI disabled entirely in production      | High     | Low    | Intentional decision from prior audit, will rethink in the future     |
-| 6   | `strictPropertyInitialization: false` project-wide   | High     | Medium | Required by NestJS DTOs, risky to change for POC                      |
-| 7   | `passport-github2` package unmaintained              | Medium   | Medium | Version is pinned (exact), acceptable for now but keep in mind        |
-| 8   | No `.env.example` file                               | Low      | Low    | File exists but was not visible to audit agents, needs path fix later |
+| #   | Finding                                              | Impact   | Effort | Reason                                                               |
+| --- | ---------------------------------------------------- | -------- | ------ | -------------------------------------------------------------------- |
+| 1   | Add test coverage                                    | Critical | High   | Just a POC, no tests needed now                                      |
+| 2   | Table partitioning for transactions                  | 3        | XL     | Just a POC, not expected to reach 10M+ rows                          |
+| 3   | No backup/recovery strategy                          | Critical | Medium | Just a POC, not needed now                                           |
+| 4   | `users.findAll()` does not filter soft-deleted users | High     | Low    | By design -- admin should see all users including deleted            |
+| 5   | Swagger/OpenAPI disabled entirely in production      | High     | Low    | Intentional decision from prior audit, will rethink in the future    |
+| 6   | `strictPropertyInitialization: false` project-wide   | High     | Medium | Required by NestJS DTOs, risky to change for POC                     |
+| 7   | `passport-github2` package unmaintained              | Medium   | Medium | Version is pinned (exact), acceptable for now but keep in mind       |
+| 8   | No `.env.example` file                               | Low      | Low    | Done — `.env.example` created with all env vars from `env.schema.ts` |
 
 ---
 
