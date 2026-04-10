@@ -24,8 +24,8 @@ export class AuditLogController {
   @ApiResponse({ status: 200, type: AuditLogListResponseDto })
   async findAll(@Query() query: AuditLogQueryDto) {
     const result = await this.auditLogService.findAll({
-      page: query.page ?? 1,
-      pageSize: query.pageSize ?? 20,
+      page: query.page,
+      pageSize: query.pageSize,
       actorId: query.actorId,
       action: query.action,
       sortBy: query.sortBy,

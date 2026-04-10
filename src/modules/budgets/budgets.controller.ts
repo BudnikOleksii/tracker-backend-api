@@ -42,8 +42,8 @@ export class BudgetsController {
   async findAll(@Query() query: BudgetQueryDto, @Request() req: AuthenticatedRequest) {
     const result = await this.budgetsService.findAll({
       userId: req.user.id,
-      page: query.page ?? 1,
-      pageSize: query.pageSize ?? 20,
+      page: query.page,
+      pageSize: query.pageSize,
       status: query.status,
       period: query.period,
       categoryId: query.categoryId,

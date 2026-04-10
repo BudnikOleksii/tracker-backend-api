@@ -140,6 +140,14 @@ export const envSchema = z
     SMTP_FROM: z.string().min(1).optional(),
 
     EMAIL_VERIFICATION_REDIRECT_URL: z.url().optional(),
+
+    REQUEST_TIMEOUT_MS: z
+      .string()
+      .default('30000')
+      .transform((value) => Number.parseInt(value, 10))
+      .refine((value) => value > 0, {
+        message: 'REQUEST_TIMEOUT_MS must be greater than 0',
+      }),
   })
   .refine(
     (env) => {

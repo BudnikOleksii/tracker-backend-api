@@ -1,8 +1,7 @@
-import { index, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
+import { loginStatusEnum } from './enums.js';
 import { users } from './users.js';
-
-export const loginStatusEnum = pgEnum('LoginStatus', ['success', 'failed']);
 
 export const loginLogs = pgTable(
   'LoginLog',

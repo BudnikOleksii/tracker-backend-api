@@ -46,8 +46,8 @@ export class RecurringTransactionsController {
   ) {
     const result = await this.recurringTransactionsService.findAll({
       userId: req.user.id,
-      page: query.page ?? 1,
-      pageSize: query.pageSize ?? 20,
+      page: query.page,
+      pageSize: query.pageSize,
       status: query.status,
       type: query.type,
       categoryId: query.categoryId,

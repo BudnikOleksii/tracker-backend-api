@@ -42,7 +42,7 @@ async function bootstrap() {
 
   app.useGlobalFilters(app.get(ProblemDetailsFilter), app.get(AllExceptionsFilter));
 
-  app.useGlobalInterceptors(app.get(RequestContextInterceptor), new TimeoutInterceptor(30_000));
+  app.useGlobalInterceptors(app.get(RequestContextInterceptor), app.get(TimeoutInterceptor));
 
   app.useGlobalPipes(createValidationPipe());
 

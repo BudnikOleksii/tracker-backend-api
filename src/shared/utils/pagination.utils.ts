@@ -1,6 +1,6 @@
 interface PaginationQuery {
-  page?: number;
-  pageSize?: number;
+  page: number;
+  pageSize: number;
 }
 
 interface PaginatedResult<T> {
@@ -22,8 +22,7 @@ export function buildPaginatedResponse<T>(
   query: PaginationQuery,
   result: PaginatedResult<T>,
 ): PaginatedResponse<T> {
-  const page = query.page ?? 1;
-  const pageSize = query.pageSize ?? 20;
+  const { page, pageSize } = query;
   const totalPages = Math.ceil(result.total / pageSize);
 
   return {

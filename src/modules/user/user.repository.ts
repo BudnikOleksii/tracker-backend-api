@@ -132,11 +132,12 @@ export class UserRepository {
       .where(and(eq(users.id, id), isNull(users.deletedAt)))
       .limit(1);
 
-    if (result.length === 0) {
+    const [row] = result;
+    if (!row) {
       return null;
     }
 
-    return this.toUserInfo(result[0] as User);
+    return this.toUserInfo(row);
   }
 
   async findByEmail(email: string): Promise<User | null> {
@@ -159,7 +160,7 @@ export class UserRepository {
   }
 
   async create(data: CreateUserData): Promise<UserInfo> {
-    const [user] = await this.db
+    const result = await this.db
       .insert(users)
       .values({
         email: data.email.toLowerCase(),
@@ -173,7 +174,12 @@ export class UserRepository {
       })
       .returning();
 
-    return this.toUserInfo(user as User);
+    const [row] = result;
+    if (!row) {
+      throw new Error('Insert did not return a row');
+    }
+
+    return this.toUserInfo(row);
   }
 
   async update(id: string, data: UpdateUserData): Promise<UserInfo | null> {
@@ -184,11 +190,12 @@ export class UserRepository {
 
     const result = await this.db.update(users).set(updates).where(eq(users.id, id)).returning();
 
-    if (result.length === 0) {
+    const [row] = result;
+    if (!row) {
       return null;
     }
 
-    return this.toUserInfo(result[0] as User);
+    return this.toUserInfo(row);
   }
 
   async hardDelete(id: string): Promise<boolean> {
@@ -214,14 +221,14 @@ export class UserRepository {
     };
   }
 
-  async findFullById(id: string): Promise<{
-    id: string;
-    email: string;
-    emailVerified: boolean;
-    passwordHash: string | null;
-    baseCurrencyCode: string | null;
-    onboardingCompleted: boolean;
-  }> {
+  async findFullById(
+    id: string,
+  ): Promise<
+    Pick<
+      User,
+      'id' | 'email' | 'emailVerified' | 'passwordHash' | 'baseCurrencyCode' | 'onboardingCompleted'
+    >
+  > {
     const result = await this.db
       .select({
         id: users.id,
@@ -250,11 +257,12 @@ export class UserRepository {
       .where(and(eq(users.id, id), isNull(users.deletedAt)))
       .limit(1);
 
-    if (result.length === 0) {
+    const [row] = result;
+    if (!row) {
       return null;
     }
 
-    return this.toProfileInfo(result[0] as User);
+    return this.toProfileInfo(row);
   }
 
   async findWithPasswordHash(
@@ -296,11 +304,12 @@ export class UserRepository {
 
     const result = await this.db.update(users).set(updates).where(eq(users.id, id)).returning();
 
-    if (result.length === 0) {
+    const [row] = result;
+    if (!row) {
       return null;
     }
 
-    return this.toProfileInfo(result[0] as User);
+    return this.toProfileInfo(row);
   }
 
   async updatePasswordHash(id: string, passwordHash: string): Promise<void> {

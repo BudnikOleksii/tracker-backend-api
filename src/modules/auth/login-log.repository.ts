@@ -7,7 +7,7 @@ import type { DrizzleDb } from '@/database/types.js';
 export interface LoginLogEntry {
   userId?: string;
   email: string;
-  status: 'success' | 'failed';
+  status: 'SUCCESS' | 'FAILED';
   ipAddress?: string;
   userAgent?: string;
   failReason?: string;

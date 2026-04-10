@@ -5,18 +5,18 @@ import { IsOptional } from 'class-validator';
 import { IsIntField, MaxField, MinField } from '../decorators/validators.js';
 
 export class OffsetPaginationDto {
-  @ApiPropertyOptional({ example: 1 })
+  @ApiPropertyOptional({ example: 1, default: 1 })
   @IsOptional()
   @Type(() => Number)
   @IsIntField()
   @MinField(1)
-  page?: number = 1;
+  page = 1;
 
-  @ApiPropertyOptional({ example: 20 })
+  @ApiPropertyOptional({ example: 20, default: 20 })
   @IsOptional()
   @Type(() => Number)
   @IsIntField()
   @MinField(1)
   @MaxField(100)
-  pageSize?: number = 20;
+  pageSize = 20;
 }

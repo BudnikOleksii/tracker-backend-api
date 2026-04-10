@@ -231,6 +231,30 @@ export class TransactionCategoriesService {
     await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE, userId));
   }
 
+  async validateCategoryForTransaction(params: {
+    categoryId: string;
+    userId: string;
+    transactionType?: TransactionType;
+    tx?: DrizzleDb;
+  }): Promise<void> {
+    const { categoryId, userId, transactionType, tx } = params;
+    const category = await this.categoryRepository.findForValidation(categoryId, userId, tx);
+
+    if (!category) {
+      throw new NotFoundException({
+        code: ErrorCode.RESOURCE_NOT_FOUND,
+        message: `Category ${categoryId} not found`,
+      });
+    }
+
+    if (transactionType && category.type !== transactionType) {
+      throw new BadRequestException({
+        code: ErrorCode.BAD_REQUEST,
+        message: `Category type "${category.type}" does not match transaction type "${transactionType}"`,
+      });
+    }
+  }
+
   private async checkDuplicateCategory(
     params: {
       userId: string;

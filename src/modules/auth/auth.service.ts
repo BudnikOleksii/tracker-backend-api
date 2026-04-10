@@ -89,7 +89,7 @@ export class AuthService {
       await bcrypt.compare(password, AuthService.DUMMY_HASH);
       void this.loginLogRepo.create({
         email,
-        status: 'failed',
+        status: 'FAILED',
         ipAddress: deviceContext?.ipAddress,
         userAgent: deviceContext?.userAgent,
         failReason: 'user_not_found',
@@ -104,7 +104,7 @@ export class AuthService {
       void this.loginLogRepo.create({
         userId: user.id,
         email,
-        status: 'failed',
+        status: 'FAILED',
         ipAddress: deviceContext?.ipAddress,
         userAgent: deviceContext?.userAgent,
         failReason: 'social_account',
@@ -120,7 +120,7 @@ export class AuthService {
       void this.loginLogRepo.create({
         userId: user.id,
         email,
-        status: 'failed',
+        status: 'FAILED',
         ipAddress: deviceContext?.ipAddress,
         userAgent: deviceContext?.userAgent,
         failReason: 'invalid_password',
@@ -134,7 +134,7 @@ export class AuthService {
     void this.loginLogRepo.create({
       userId: user.id,
       email,
-      status: 'success',
+      status: 'SUCCESS',
       ipAddress: deviceContext?.ipAddress,
       userAgent: deviceContext?.userAgent,
     });
@@ -155,7 +155,7 @@ export class AuthService {
       void this.loginLogRepo.create({
         userId: existingByProvider.id,
         email: existingByProvider.email,
-        status: 'success',
+        status: 'SUCCESS',
         ipAddress: deviceContext?.ipAddress,
         userAgent: deviceContext?.userAgent,
       });
@@ -175,7 +175,7 @@ export class AuthService {
       void this.loginLogRepo.create({
         userId: existingByEmail.id,
         email,
-        status: 'failed',
+        status: 'FAILED',
         ipAddress: deviceContext?.ipAddress,
         userAgent: deviceContext?.userAgent,
         failReason: 'email_already_exists',
@@ -210,7 +210,7 @@ export class AuthService {
     void this.loginLogRepo.create({
       userId: newUser.id,
       email: newUser.email,
-      status: 'success',
+      status: 'SUCCESS',
       ipAddress: deviceContext?.ipAddress,
       userAgent: deviceContext?.userAgent,
     });

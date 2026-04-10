@@ -128,11 +128,12 @@ export class TransactionCategoryRepository {
       )
       .limit(1);
 
-    if (result.length === 0) {
+    const [row] = result;
+    if (!row) {
       return null;
     }
 
-    return this.toCategoryInfo(result[0] as typeof transactionCategories.$inferSelect);
+    return this.toCategoryInfo(row);
   }
 
   async existsByNameTypeAndParent(
@@ -174,7 +175,7 @@ export class TransactionCategoryRepository {
 
   async create(data: CreateCategoryData, tx?: DrizzleDb): Promise<CategoryInfo> {
     const db = tx ?? this.db;
-    const [category] = await db
+    const result = await db
       .insert(transactionCategories)
       .values({
         userId: data.userId,
@@ -184,7 +185,12 @@ export class TransactionCategoryRepository {
       })
       .returning();
 
-    return this.toCategoryInfo(category as typeof transactionCategories.$inferSelect);
+    const [row] = result;
+    if (!row) {
+      throw new Error('Insert did not return a row');
+    }
+
+    return this.toCategoryInfo(row);
   }
 
   async update(params: {
@@ -217,11 +223,12 @@ export class TransactionCategoryRepository {
       )
       .returning();
 
-    if (result.length === 0) {
+    const [row] = result;
+    if (!row) {
       return null;
     }
 
-    return this.toCategoryInfo(result[0] as typeof transactionCategories.$inferSelect);
+    return this.toCategoryInfo(row);
   }
 
   async softDelete(id: string, userId: string, tx?: DrizzleDb): Promise<boolean> {
@@ -319,7 +326,7 @@ export class TransactionCategoryRepository {
       )
       .limit(1);
 
-    return (result[0] as CategoryValidationInfo) ?? null;
+    return result[0] ?? null;
   }
 
   async findAllActiveByUserId(userId: string): Promise<CategoryInfo[]> {
