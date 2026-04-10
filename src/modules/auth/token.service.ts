@@ -10,6 +10,12 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
+import {
+  MS_PER_SECOND,
+  SECONDS_PER_DAY,
+  SECONDS_PER_HOUR,
+  SECONDS_PER_MINUTE,
+} from '@/shared/constants/time.constants.js';
 import type { Env } from '@/app/config/env.schema.js';
 
 import { RefreshTokenRepository } from './refresh-token.repository.js';
@@ -23,6 +29,15 @@ import type {
   RefreshTokenListResult,
   RevokeRefreshTokenParams,
 } from './auth.types.js';
+
+const DEFAULT_EXPIRATION_SECONDS = 7 * SECONDS_PER_DAY;
+
+const UNIT_MULTIPLIERS = {
+  s: 1,
+  m: SECONDS_PER_MINUTE,
+  h: SECONDS_PER_HOUR,
+  d: SECONDS_PER_DAY,
+} as const;
 
 @Injectable()
 export class TokenService {
@@ -175,26 +190,18 @@ export class TokenService {
   private parseExpiration(expiresIn: string): Date {
     const ttlSeconds = this.parseExpirationToSeconds(expiresIn);
 
-    return new Date(Date.now() + ttlSeconds * 1000);
+    return new Date(Date.now() + ttlSeconds * MS_PER_SECOND);
   }
 
   private parseExpirationToSeconds(expiresIn: string): number {
     const match = /^(\d+)([smhd])$/.exec(expiresIn);
+    const valueStr = match?.[1];
+    const unit = match?.[2] as keyof typeof UNIT_MULTIPLIERS | undefined;
 
-    if (!match) {
-      return 7 * 24 * 60 * 60;
+    if (!valueStr || !unit) {
+      return DEFAULT_EXPIRATION_SECONDS;
     }
 
-    const value = Number.parseInt(match[1] as string, 10);
-    const unit = match[2] as string;
-
-    const multipliers: Record<string, number> = {
-      s: 1,
-      m: 60,
-      h: 60 * 60,
-      d: 24 * 60 * 60,
-    };
-
-    return value * (multipliers[unit] as number);
+    return Number.parseInt(valueStr, 10) * UNIT_MULTIPLIERS[unit];
   }
 }

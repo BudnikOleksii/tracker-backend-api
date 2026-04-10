@@ -4,9 +4,10 @@ import { ConfigService } from '@nestjs/config';
 import type { Response, Request } from 'express';
 
 import type { Env } from '@/app/config/env.schema.js';
+import { MS_PER_SECOND } from '@/shared/constants/time.constants.js';
 
 const STATE_COOKIE_NAME = 'oauth_state';
-const STATE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const STATE_TTL_MS = 10 * 60 * MS_PER_SECOND;
 
 @Injectable()
 export class OAuthStateService {

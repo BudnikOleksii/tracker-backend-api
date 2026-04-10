@@ -3,6 +3,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import type { Cache } from 'cache-manager';
 import type { Redis } from 'ioredis';
 
+import { MS_PER_SECOND } from '@/shared/constants/time.constants.js';
+
 import type { CachePort } from './cache.port.js';
 import { REDIS_CLIENT } from './redis.provider.js';
 
@@ -24,7 +26,7 @@ export class CacheService implements CachePort {
   }
 
   async set<T>(key: string, value: T, ttl?: number): Promise<void> {
-    const ttlMs = ttl ? ttl * 1000 : undefined;
+    const ttlMs = ttl ? ttl * MS_PER_SECOND : undefined;
     await this.cacheManager.set(key, value, ttlMs);
   }
 

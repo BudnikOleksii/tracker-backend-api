@@ -3,6 +3,7 @@ import { ConflictException, Injectable, Logger, UnauthorizedException } from '@n
 import * as bcrypt from 'bcrypt';
 
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
+import { MS_PER_DAY } from '@/shared/constants/time.constants.js';
 import { isUniqueViolation } from '@/shared/utils/pg-errors.js';
 
 import { MailerService } from '../mailer/mailer.service.js';
@@ -43,7 +44,7 @@ export class AuthService {
     const created = await this.userService.create({ email, password });
 
     const verificationToken = randomUUID();
-    const tokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const tokenExpiresAt = new Date(Date.now() + MS_PER_DAY);
 
     try {
       await this.userService.setEmailVerificationToken(

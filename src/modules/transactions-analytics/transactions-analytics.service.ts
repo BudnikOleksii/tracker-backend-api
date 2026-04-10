@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Decimal } from 'decimal.js';
 
+import { MS_PER_DAY } from '@/shared/constants/time.constants.js';
 import { buildCacheKey } from '@/modules/cache/cache-key.utils.js';
 import { CacheService } from '@/modules/cache/cache.service.js';
 import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
@@ -237,7 +238,7 @@ export class TransactionsAnalyticsService {
 
       return this.formatDate(end.toISOString());
     }
-    const end = new Date(date.getTime() + 6 * 24 * 60 * 60 * 1000);
+    const end = new Date(date.getTime() + 6 * MS_PER_DAY);
 
     return this.formatDate(end.toISOString());
   }
