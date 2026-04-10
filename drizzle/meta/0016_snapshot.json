@@ -1,5 +1,5 @@
 {
-  "id": "2fd9d13a-87c5-4936-95f0-c7d9d8ddc9da",
+  "id": "b00bffd5-30a0-4f64-8692-794b9cca16b0",
   "prevId": "5b5bb302-39a6-43c0-9585-4fd9980c619c",
   "version": "7",
   "dialect": "postgresql",
@@ -1129,27 +1129,6 @@
           "method": "btree",
           "with": {}
         },
-        "TransactionCategory_userId_id_key": {
-          "name": "TransactionCategory_userId_id_key",
-          "columns": [
-            {
-              "expression": "userId",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
         "TransactionCategory_userId_not_deleted_idx": {
           "name": "TransactionCategory_userId_not_deleted_idx",
           "columns": [
@@ -1188,7 +1167,13 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "TransactionCategory_userId_id_key": {
+          "name": "TransactionCategory_userId_id_key",
+          "nullsNotDistinct": false,
+          "columns": ["userId", "id"]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
