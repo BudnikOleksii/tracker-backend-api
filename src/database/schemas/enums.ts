@@ -281,6 +281,8 @@ export const budgetPeriodEnum = pgEnum('BudgetPeriod', [
 
 export const budgetStatusEnum = pgEnum('BudgetStatus', ['ACTIVE', 'EXCEEDED']);
 
+export const loginStatusEnum = pgEnum('LoginStatus', ['SUCCESS', 'FAILED']);
+
 export const currencyCodeEnum = pgEnum('CurrencyCode', [
   'AED',
   'AFN',

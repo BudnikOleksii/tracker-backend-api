@@ -45,8 +45,8 @@ export class UserController {
   @ApiResponse({ status: 200, type: UserListResponseDto })
   async findAll(@Query() query: UserQueryDto) {
     const result = await this.userService.findAll({
-      page: query.page ?? 1,
-      pageSize: query.pageSize ?? 20,
+      page: query.page,
+      pageSize: query.pageSize,
       search: query.search,
       role: query.role,
       sortBy: query.sortBy,

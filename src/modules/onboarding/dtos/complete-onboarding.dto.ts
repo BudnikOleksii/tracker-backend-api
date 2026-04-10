@@ -9,14 +9,14 @@ import {
   MaxLengthField,
   MinLengthField,
 } from '@/shared/decorators/validators.js';
-import { CURRENCY_CODES } from '@/shared/enums/currency-code.enum.js';
+import { CURRENCY_CODES, type CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 
 export class CompleteOnboardingDto {
   @ApiProperty({ example: 'USD' })
   @IsStringField()
   @IsNotEmptyField({ message: 'baseCurrencyCode is required' })
   @IsInField([...CURRENCY_CODES], { message: 'Invalid currency code' })
-  baseCurrencyCode!: string;
+  baseCurrencyCode!: CurrencyCode;
 
   @ApiPropertyOptional({ example: 'Pass123456' })
   @IsOptional()

@@ -4,11 +4,10 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { stringify as stringifyCsvStream } from 'csv-stringify';
 import { Decimal } from 'decimal.js';
 
-import type { DrizzleDb } from '@/database/types.js';
 import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
 import { buildCacheKey, buildCachePrefix } from '@/modules/cache/cache-key.utils.js';
 import { CacheService } from '@/modules/cache/cache.service.js';
-import { TransactionCategoryRepository } from '@/modules/transaction-categories/transaction-categories.repository.js';
+import { TransactionCategoriesService } from '@/modules/transaction-categories/transaction-categories.service.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 
 import {
@@ -33,7 +32,7 @@ export class TransactionsService {
   // eslint-disable-next-line @typescript-eslint/max-params
   constructor(
     private readonly transactionRepository: TransactionRepository,
-    private readonly categoryRepository: TransactionCategoryRepository,
+    private readonly categoriesService: TransactionCategoriesService,
     private readonly cacheService: CacheService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
@@ -72,7 +71,7 @@ export class TransactionsService {
 
   async create(data: CreateTransactionData): Promise<TransactionInfo> {
     const result = await this.transactionRepository.transaction(async (tx) => {
-      await this.validateCategory({
+      await this.categoriesService.validateCategoryForTransaction({
         categoryId: data.categoryId,
         userId: data.userId,
         transactionType: data.type,
@@ -112,7 +111,12 @@ export class TransactionsService {
       if (data.categoryId !== undefined || data.type !== undefined) {
         const categoryId = data.categoryId ?? existing.categoryId;
         const type = data.type ?? existing.type;
-        await this.validateCategory({ categoryId, userId, transactionType: type, tx });
+        await this.categoriesService.validateCategoryForTransaction({
+          categoryId,
+          userId,
+          transactionType: type,
+          tx,
+        });
       }
 
       const updated = await this.transactionRepository.update({ id, userId, data, tx });
@@ -302,29 +306,5 @@ export class TransactionsService {
       Currency: row.currencyCode,
       ...(subcategoryName ? { Subcategory: subcategoryName } : {}),
     };
-  }
-
-  private async validateCategory(params: {
-    categoryId: string;
-    userId: string;
-    transactionType: TransactionType;
-    tx?: DrizzleDb;
-  }): Promise<void> {
-    const { categoryId, userId, transactionType, tx } = params;
-    const category = await this.categoryRepository.findForValidation(categoryId, userId, tx);
-
-    if (!category) {
-      throw new NotFoundException({
-        code: ErrorCode.RESOURCE_NOT_FOUND,
-        message: `Category ${categoryId} not found`,
-      });
-    }
-
-    if (category.type !== transactionType) {
-      throw new BadRequestException({
-        code: ErrorCode.BAD_REQUEST,
-        message: `Category type "${category.type}" does not match transaction type "${transactionType}"`,
-      });
-    }
   }
 }

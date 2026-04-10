@@ -7,6 +7,7 @@ import {
   HttpCode,
   InternalServerErrorException,
   Logger,
+  ParseUUIDPipe,
   Post,
   Query,
   Request,
@@ -226,22 +227,16 @@ export class AuthController {
   @Get('verify-email')
   @ApiOperation({ summary: 'Verify email address via token' })
   @ApiResponse({ status: 302, description: 'Redirects to frontend with result' })
-  async verifyEmail(@Query('token') token: string, @Res() res: Response): Promise<void> {
+  async verifyEmail(
+    @Query('token', ParseUUIDPipe) token: string,
+    @Res() res: Response,
+  ): Promise<void> {
     const redirectUrl =
       this.configService.get('EMAIL_VERIFICATION_REDIRECT_URL', { infer: true }) ??
       this.socialAuthRedirectUrl;
 
     if (!redirectUrl) {
       throw new InternalServerErrorException('Email verification redirect URL is not configured');
-    }
-
-    if (!token) {
-      const url = new URL(redirectUrl);
-      url.searchParams.set('status', 'error');
-      url.searchParams.set('error', 'invalid_token');
-      res.redirect(url.toString());
-
-      return;
     }
 
     const result = await this.authService.verifyEmail(token);

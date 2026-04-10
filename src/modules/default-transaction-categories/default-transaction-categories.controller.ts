@@ -41,8 +41,8 @@ export class DefaultTransactionCategoriesController {
   @ApiResponse({ status: 200, type: DefaultTransactionCategoryListResponseDto })
   async findAll(@Query() query: DefaultTransactionCategoryQueryDto) {
     const result = await this.service.findAll({
-      page: query.page ?? 1,
-      pageSize: query.pageSize ?? 20,
+      page: query.page,
+      pageSize: query.pageSize,
       type: query.type,
       root: query.root,
       sortBy: query.sortBy,

@@ -77,7 +77,15 @@ export class TransactionsAnalyticsRepository {
       .from(transactions)
       .where(and(...conditions));
 
-    const row = result[0] as NonNullable<(typeof result)[0]>;
+    const [row] = result;
+    if (!row) {
+      return {
+        totalIncome: '0.00',
+        totalExpenses: '0.00',
+        netBalance: '0.00',
+        transactionCount: 0,
+      };
+    }
 
     return {
       totalIncome: this.formatAmount(row.totalIncome),

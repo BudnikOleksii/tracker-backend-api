@@ -13,6 +13,7 @@ import { AllExceptionsFilter } from './app/filters/all-exceptions.filter.js';
 import { ProblemDetailsFilter } from './app/filters/problem-details.filter.js';
 import { HealthModule } from './app/health/health.module.js';
 import { RequestContextInterceptor } from './app/interceptors/request-context.interceptor.js';
+import { TimeoutInterceptor } from './app/interceptors/timeout.interceptor.js';
 import { AppThrottlerGuard } from './app/throttler/app-throttler.guard.js';
 import { RedisThrottlerStorage } from './app/throttler/redis-throttler.storage.js';
 import { ThrottlerStorageModule } from './app/throttler/throttler-storage.module.js';
@@ -88,6 +89,7 @@ import { UserModule } from './modules/user/user.module.js';
     AllExceptionsFilter,
     ProblemDetailsFilter,
     RequestContextInterceptor,
+    TimeoutInterceptor,
     {
       provide: APP_INTERCEPTOR,
       useClass: AuditLogInterceptor,

@@ -139,16 +139,17 @@ export class BudgetRepository {
       .where(and(eq(budgets.id, id), eq(budgets.userId, userId)))
       .limit(1);
 
-    if (result.length === 0) {
+    const [row] = result;
+    if (!row) {
       return null;
     }
 
-    return this.toBudgetInfo(result[0] as typeof budgets.$inferSelect);
+    return this.toBudgetInfo(row);
   }
 
   async create(data: CreateBudgetData, tx?: DrizzleDb): Promise<BudgetInfo> {
     const db = tx ?? this.db;
-    const [budget] = await db
+    const result = await db
       .insert(budgets)
       .values({
         userId: data.userId,
@@ -162,7 +163,12 @@ export class BudgetRepository {
       })
       .returning();
 
-    return this.toBudgetInfo(budget as typeof budgets.$inferSelect);
+    const [row] = result;
+    if (!row) {
+      throw new Error('Insert did not return a row');
+    }
+
+    return this.toBudgetInfo(row);
   }
 
   async update(params: {
@@ -197,11 +203,12 @@ export class BudgetRepository {
       .where(and(eq(budgets.id, id), eq(budgets.userId, userId)))
       .returning();
 
-    if (result.length === 0) {
+    const [row] = result;
+    if (!row) {
       return null;
     }
 
-    return this.toBudgetInfo(result[0] as typeof budgets.$inferSelect);
+    return this.toBudgetInfo(row);
   }
 
   async delete(id: string, userId: string): Promise<boolean> {
@@ -248,11 +255,12 @@ export class BudgetRepository {
       .where(and(...conditions))
       .limit(1);
 
-    if (result.length === 0) {
+    const [row] = result;
+    if (!row) {
       return null;
     }
 
-    return this.toBudgetInfo(result[0] as typeof budgets.$inferSelect);
+    return this.toBudgetInfo(row);
   }
 
   async getSpentAmount(params: {

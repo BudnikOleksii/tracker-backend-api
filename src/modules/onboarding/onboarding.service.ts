@@ -3,7 +3,6 @@ import * as bcrypt from 'bcrypt';
 
 import { BCRYPT_ROUNDS } from '@/shared/constants/auth.constants.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
-import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 
 import { UserService } from '../user/user.service.js';
 import { TransactionCategoryRepository } from '../transaction-categories/transaction-categories.repository.js';
@@ -65,7 +64,7 @@ export class OnboardingService {
     }
 
     await this.userService.updateProfile(userId, {
-      baseCurrencyCode: dto.baseCurrencyCode as CurrencyCode,
+      baseCurrencyCode: dto.baseCurrencyCode,
       onboardingCompleted: true,
     });
 

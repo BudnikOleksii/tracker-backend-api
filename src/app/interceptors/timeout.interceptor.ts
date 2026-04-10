@@ -1,15 +1,18 @@
 import { Injectable, RequestTimeoutException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { throwError, TimeoutError } from 'rxjs';
 import { catchError, timeout } from 'rxjs/operators';
 import type { NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
 import type { Observable } from 'rxjs';
 
+import type { Env } from '@/app/config/env.schema.js';
+
 @Injectable()
 export class TimeoutInterceptor implements NestInterceptor {
   private readonly timeoutMs: number;
 
-  constructor(timeoutMs = 30_000) {
-    this.timeoutMs = timeoutMs;
+  constructor(configService: ConfigService<Env, true>) {
+    this.timeoutMs = configService.get('REQUEST_TIMEOUT_MS', { infer: true });
   }
 
   intercept(_context: ExecutionContext, next: CallHandler): Observable<unknown> {

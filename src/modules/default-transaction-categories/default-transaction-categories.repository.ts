@@ -103,13 +103,12 @@ export class DefaultTransactionCategoryRepository {
       )
       .limit(1);
 
-    if (result.length === 0) {
+    const [row] = result;
+    if (!row) {
       return null;
     }
 
-    return this.toDefaultCategoryInfo(
-      result[0] as typeof defaultTransactionCategories.$inferSelect,
-    );
+    return this.toDefaultCategoryInfo(row);
   }
 
   async findAllActive(tx?: DrizzleDb): Promise<DefaultCategoryInfo[]> {
@@ -129,7 +128,7 @@ export class DefaultTransactionCategoryRepository {
 
   async create(data: CreateDefaultCategoryData, tx?: DrizzleDb): Promise<DefaultCategoryInfo> {
     const db = tx ?? this.db;
-    const [category] = await db
+    const result = await db
       .insert(defaultTransactionCategories)
       .values({
         name: data.name,
@@ -138,7 +137,12 @@ export class DefaultTransactionCategoryRepository {
       })
       .returning();
 
-    return this.toDefaultCategoryInfo(category as typeof defaultTransactionCategories.$inferSelect);
+    const [row] = result;
+    if (!row) {
+      throw new Error('Insert did not return a row');
+    }
+
+    return this.toDefaultCategoryInfo(row);
   }
 
   async update(params: {
@@ -169,13 +173,12 @@ export class DefaultTransactionCategoryRepository {
       )
       .returning();
 
-    if (result.length === 0) {
+    const [row] = result;
+    if (!row) {
       return null;
     }
 
-    return this.toDefaultCategoryInfo(
-      result[0] as typeof defaultTransactionCategories.$inferSelect,
-    );
+    return this.toDefaultCategoryInfo(row);
   }
 
   async softDelete(id: string, tx?: DrizzleDb): Promise<boolean> {

@@ -254,14 +254,7 @@ export class UserService {
     return this.userRepository.verifyEmail(token);
   }
 
-  async findFullById(userId: string): Promise<{
-    id: string;
-    email: string;
-    emailVerified: boolean;
-    passwordHash: string | null;
-    baseCurrencyCode: string | null;
-    onboardingCompleted: boolean;
-  }> {
+  async findFullById(userId: string) {
     return this.userRepository.findFullById(userId);
   }
 }

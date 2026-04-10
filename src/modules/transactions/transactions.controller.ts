@@ -64,8 +64,8 @@ export class TransactionsController {
   async findAll(@Query() query: TransactionQueryDto, @Request() req: AuthenticatedRequest) {
     const result = await this.transactionsService.findAll({
       userId: req.user.id,
-      page: query.page ?? 1,
-      pageSize: query.pageSize ?? 20,
+      page: query.page,
+      pageSize: query.pageSize,
       search: query.search,
       type: query.type,
       categoryId: query.categoryId,
