@@ -2,182 +2,60 @@
 
 ---
 
-## Completed Fixes (History)
-
-| #   | Finding                                  | Impact | Effort | Priority | Status |
-| --- | ---------------------------------------- | ------ | ------ | -------- | ------ |
-| 1   | Add Helmet security headers              | 5      | S      | P0       | Done   |
-| 2   | Remove default JWT_SECRET                | 5      | S      | P0       | Done   |
-| 3   | Fix CORS default to deny all             | 5      | S      | P0       | Done   |
-| 4   | Enable graceful shutdown hooks           | 5      | S      | P0       | Done   |
-| 5   | Filter soft-deleted users from login     | 5      | S      | P0       | Done   |
-| 6   | Fix login timing side-channel            | 4      | S      | P0       | Done   |
-| 7   | Fix N+1 budget overspend cron            | 5      | M      | P1       | Done   |
-| 8   | Add composite database indexes           | 5      | S      | P1       | Done   |
-| 9   | Push refresh token filters to SQL        | 4      | S      | P1       | Done   |
-| 10  | Cap export with LIMIT + streaming        | 5      | M      | P1       | Done   |
-| 11  | Replace isDescendantOf with CTE          | 4      | S      | P1       | Done   |
-| 12  | Rate limiting fail-closed on Redis down  | 5      | M      | P1       | Done   |
-| 13  | Per-endpoint throttling on expensive ops | 4      | S      | P1       | Done   |
-| 14  | Protect /process endpoint (admin-only)   | 4      | S      | P1       | Done   |
-| 15  | Align admin password policy              | 4      | S      | P1       | Done   |
-| 16  | Fix service-to-DB architecture violation | 4      | M      | P1       | Done   |
-| 17  | Add JWT session validation / blacklist   | 5      | L      | P1       | Done   |
-| 18  | Consolidate 3 Redis connections (3→2)    | 4      | M      | P1       | Done   |
-| 19  | Domain events for cache invalidation     | 4      | L      | P2       | Done   |
-| 20  | Extract pagination helper                | 3      | S      | P2       | Done   |
-| 21  | Remove/complete TransformInterceptor     | 3      | S      | P2       | Done   |
-| 23  | Async CSV parsing                        | 4      | M      | P2       | Done   |
-| 24  | Cache stampede protection                | 4      | M      | P2       | Done   |
-| 25  | Migrate date columns to timestamptz      | 4      | M      | P2       | Done   |
-| 26  | CSRF protection for cookie auth          | 4      | M      | P2       | Done   |
-| 27  | Disable Swagger in production            | 3      | S      | P2       | Done   |
-| 28  | Consistent validator decorators          | 3      | S      | P2       | Done   |
-| 29  | Add database CHECK constraints           | 3      | S      | P2       | Done   |
-| 30  | Fix NULLS NOT DISTINCT on unique index   | 3      | S      | P2       | Done   |
-| 31  | Decimal arithmetic for money             | 4      | M      | P2       | Done   |
-| 32  | HTTP response compression                | 2      | S      | P3       | Done   |
-| 33  | Add statement_timeout                    | 3      | S      | P3       | Done   |
-| 34  | Sort params on all collections           | 2      | M      | P3       | Done   |
-
----
-
 ## Active Findings
 
-| #   | Priority | Finding                                                               | Effort | Impact   | Agent(s)                                                | Status  |
-| --- | -------- | --------------------------------------------------------------------- | ------ | -------- | ------------------------------------------------------- | ------- |
-| 2   | P0       | No PostgreSQL config in Docker Compose                                | Low    | Critical | postgres-pro                                            | Done    |
-| 4   | P1       | CSRF token missing from CORS allowedHeaders                           | Low    | High     | security-auditor, api-designer                          | Done    |
-| 5   | P1       | Missing CsrfGuard on revoke-refresh-token endpoint                    | Low    | High     | security-auditor                                        | Done    |
-| 6   | P1       | CSRF token comparison not timing-safe                                 | Low    | High     | security-auditor, architect-reviewer                    | Done    |
-| 7   | P1       | AuthService directly accesses UserRepository (layer violation)        | Medium | High     | architect-reviewer, nestjs-expert                       | Todo    |
-| 8   | P1       | ProfileService directly accesses UserRepository (layer violation)     | Medium | High     | architect-reviewer                                      | Todo    |
-| 9   | P1       | Soft-delete unique constraint blocks category recreation              | Medium | High     | postgres-pro                                            | Todo    |
-| 11  | P1       | Timestamps missing `withTimezone` across most tables                  | Medium | High     | database-optimizer, postgres-pro                        | Todo    |
-| 12  | P1       | Missing index on `emailVerificationToken` (full table scan)           | Low    | High     | database-optimizer                                      | Done    |
-| 13  | P1       | Double-query pattern on create/update (transactions, recurring)       | Medium | High     | database-optimizer, performance-engineer                | Todo    |
-| 14  | P1       | Sequential processing in `processAllRecurringTransactions`            | Medium | High     | performance-engineer, architect-reviewer                | Todo    |
-| 15  | P1       | No API versioning strategy                                            | Medium | High     | api-designer                                            | Todo    |
-| 16  | P1       | Throttler auth bypass returns `true` instead of falling through       | Low    | High     | api-designer                                            | Done    |
-| 17  | P1       | `CountryCode`/`CurrencyCode` as PG enums (250+150 values)             | High   | High     | database-optimizer, postgres-pro                        | Todo    |
-| 18b | P1       | Remaining two Redis connections (ioredis vs node-redis mismatch)      | High   | High     | performance-engineer                                    | Todo    |
-| 19  | P1       | `findByParentCategory` has no LIMIT (unbounded result set)            | Low    | High     | performance-engineer, database-optimizer                | Done    |
-| 20  | P1       | Docker PG port exposed on all interfaces                              | Low    | High     | postgres-pro                                            | Done    |
-| 21  | P1       | Docker default password `tracker123` in plaintext                     | Low    | High     | postgres-pro, security-auditor                          | Done    |
-| 22  | P1       | Missing partial indexes for `deletedAt IS NULL` queries               | Medium | High     | postgres-pro, database-optimizer                        | Todo    |
-| 23  | P1       | `ilike` search on `description` with no trigram/FTS index             | Medium | High     | postgres-pro, performance-engineer                      | Todo    |
-| 25  | P1       | `AllExceptionsFilter` uses `@Optional()` for required deps            | Low    | High     | nestjs-expert                                           | Done    |
-| 27  | P1       | Widespread `result[0] as T` casts bypassing type safety               | Medium | High     | typescript-pro                                          | Todo    |
-| 28  | P2       | Duplicated category validation logic across 3 services                | Medium | Medium   | architect-reviewer                                      | Todo    |
-| 29  | P2       | `CachePort` abstraction exists but is dead code                       | Low    | Medium   | architect-reviewer                                      | Todo    |
-| 30  | P2       | ILIKE wildcard not escaped in `UserRepository.findAll`                | Low    | Medium   | architect-reviewer, security-auditor                    | Todo    |
-| 31  | P2       | `delByPrefix` uses SCAN + sequential DEL (O(N) Redis)                 | Medium | Medium   | architect-reviewer, performance-engineer                | Todo    |
-| 32  | P2       | Export loads 10K rows + JSON.stringify into memory                    | Medium | Medium   | architect-reviewer, performance-engineer                | Todo    |
-| 33  | P2       | Excessive constructor params (AuthService has 8)                      | High   | Medium   | architect-reviewer                                      | Todo    |
-| 34  | P2       | `loginStatusEnum` in wrong file + lowercase values                    | Low    | Medium   | database-optimizer, postgres-pro                        | Todo    |
-| 35  | P2       | Analytics `::date` cast ignores user timezone                         | Medium | Medium   | database-optimizer                                      | Todo    |
-| 36  | P2       | `sql.raw` used for granularity string in `getTrends`                  | Low    | Medium   | database-optimizer                                      | Todo    |
-| 37  | P2       | Redundant plain index on `RefreshToken.token`                         | Low    | Medium   | database-optimizer                                      | Todo    |
-| 38  | P2       | Missing composite index `(status, nextOccurrenceDate)` for scheduler  | Low    | Medium   | postgres-pro                                            | Todo    |
-| 39  | P2       | Missing `(actorId, createdAt)` composite on AuditLog/LoginLog         | Low    | Medium   | postgres-pro                                            | Todo    |
-| 40  | P2       | `updatedAt` only updated by ORM, not DB trigger                       | Medium | Medium   | postgres-pro                                            | Todo    |
-| 41  | P2       | `RecurringTransaction` missing `endDate > startDate` check            | Low    | Medium   | postgres-pro                                            | Todo    |
-| 42  | P2       | Duplicate FK on `Transaction.categoryId` (inline + composite)         | Low    | Medium   | postgres-pro                                            | Todo    |
-| 43  | P2       | `enableImplicitConversion: true` in ValidationPipe                    | Medium | Medium   | security-auditor, nestjs-expert                         | Todo    |
-| 44  | P2       | JWT algorithm not explicitly specified                                | Low    | Medium   | security-auditor                                        | Todo    |
-| 45  | P2       | Token blacklist fail-open design (no monitoring)                      | Medium | Medium   | security-auditor                                        | Todo    |
-| 46  | P2       | Social auth code exchange race condition (TOCTOU)                     | Medium | Medium   | security-auditor                                        | Todo    |
-| 47  | P2       | Unvalidated `token` query param on email verification                 | Low    | Medium   | security-auditor                                        | Todo    |
-| 49  | P2       | `UpdateProfileDto` exposes `onboardingCompleted` as user-settable     | Low    | Medium   | api-designer                                            | Todo    |
-| 50  | P2       | No `Link` header emitted for paginated responses                      | Medium | Medium   | api-designer                                            | Todo    |
-| 51  | P2       | Pagination defaults duplicated at controller and DTO layers           | Low    | Medium   | api-designer                                            | Todo    |
-| 52  | P2       | `TimeoutInterceptor` instantiated with `new` bypassing DI             | Low    | Medium   | nestjs-expert                                           | Todo    |
-| 53  | P2       | Social callback swallows all errors including programming errors      | Medium | Medium   | nestjs-expert                                           | Todo    |
-| 54  | P2       | Health indicators don't extend `HealthIndicator` from Terminus        | Medium | Medium   | nestjs-expert                                           | Todo    |
-| 55  | P2       | Redis roundtrip on every authenticated request (blacklist check)      | Medium | Medium   | performance-engineer                                    | Todo    |
-| 56  | P2       | Sequential cache invalidation loops in scheduled tasks                | Low    | Medium   | performance-engineer                                    | Todo    |
-| 57  | P2       | `select()` wildcard fetches sensitive/unused columns                  | Low    | Medium   | performance-engineer                                    | Todo    |
-| 58  | P2       | Missing controller return type annotations                            | Medium | Medium   | typescript-pro                                          | Todo    |
-| 59  | P2       | Header type casts (`x-forwarded-for`, `x-csrf-token`, `x-request-id`) | Low    | Medium   | typescript-pro                                          | Partial |
-| 60  | P2       | `sameSite` stored as `string` losing literal union type               | Low    | Medium   | typescript-pro                                          | Done    |
-| 61  | P2       | Guards barrel re-export violates project convention                   | Low    | Medium   | typescript-pro, architect-reviewer                      | Todo    |
-| 62  | P3       | `RequestContextInterceptor` noop `tap()` operator                     | Low    | Low      | architect-reviewer, nestjs-expert, performance-engineer | Todo    |
-| 63  | P3       | `console.error` in database provider instead of Logger                | Low    | Low      | nestjs-expert                                           | Todo    |
-| 64  | P3       | Login endpoint leaks social auth account type                         | Low    | Low      | security-auditor                                        | Todo    |
+| #   | Priority | Finding                                                               | Effort | Impact | Agent(s)                                                | Status  |
+| --- | -------- | --------------------------------------------------------------------- | ------ | ------ | ------------------------------------------------------- | ------- |
+| 9   | P1       | Soft-delete unique constraint blocks category recreation              | Medium | High   | postgres-pro                                            | Todo    |
+| 11  | P1       | Timestamps missing `withTimezone` across most tables                  | Medium | High   | database-optimizer, postgres-pro                        | Todo    |
+| 13  | P1       | Double-query pattern on create/update (transactions, recurring)       | Medium | High   | database-optimizer, performance-engineer                | Todo    |
+| 14  | P1       | Sequential processing in `processAllRecurringTransactions`            | Medium | High   | performance-engineer, architect-reviewer                | Todo    |
+| 15  | P1       | No API versioning strategy                                            | Medium | High   | api-designer                                            | Todo    |
+| 17  | P1       | `CountryCode`/`CurrencyCode` as PG enums (250+150 values)             | High   | High   | database-optimizer, postgres-pro                        | Todo    |
+| 18b | P1       | Remaining two Redis connections (ioredis vs node-redis mismatch)      | High   | High   | performance-engineer                                    | Todo    |
+| 22  | P1       | Missing partial indexes for `deletedAt IS NULL` queries               | Medium | High   | postgres-pro, database-optimizer                        | Todo    |
+| 23  | P1       | `ilike` search on `description` with no trigram/FTS index             | Medium | High   | postgres-pro, performance-engineer                      | Todo    |
+| 27  | P1       | Widespread `result[0] as T` casts bypassing type safety               | Medium | High   | typescript-pro                                          | Todo    |
+| 28  | P2       | Duplicated category validation logic across 3 services                | Medium | Medium | architect-reviewer                                      | Todo    |
+| 29  | P2       | `CachePort` abstraction exists but is dead code                       | Low    | Medium | architect-reviewer                                      | Todo    |
+| 30  | P2       | ILIKE wildcard not escaped in `UserRepository.findAll`                | Low    | Medium | architect-reviewer, security-auditor                    | Todo    |
+| 31  | P2       | `delByPrefix` uses SCAN + sequential DEL (O(N) Redis)                 | Medium | Medium | architect-reviewer, performance-engineer                | Todo    |
+| 32  | P2       | Export loads 10K rows + JSON.stringify into memory                    | Medium | Medium | architect-reviewer, performance-engineer                | Todo    |
+| 34  | P2       | `loginStatusEnum` in wrong file + lowercase values                    | Low    | Medium | database-optimizer, postgres-pro                        | Todo    |
+| 35  | P2       | Analytics `::date` cast ignores user timezone                         | Medium | Medium | database-optimizer                                      | Todo    |
+| 36  | P2       | `sql.raw` used for granularity string in `getTrends`                  | Low    | Medium | database-optimizer                                      | Todo    |
+| 37  | P2       | Redundant plain index on `RefreshToken.token`                         | Low    | Medium | database-optimizer                                      | Todo    |
+| 38  | P2       | Missing composite index `(status, nextOccurrenceDate)` for scheduler  | Low    | Medium | postgres-pro                                            | Todo    |
+| 39  | P2       | Missing `(actorId, createdAt)` composite on AuditLog/LoginLog         | Low    | Medium | postgres-pro                                            | Todo    |
+| 40  | P2       | `updatedAt` only updated by ORM, not DB trigger                       | Medium | Medium | postgres-pro                                            | Todo    |
+| 41  | P2       | `RecurringTransaction` missing `endDate > startDate` check            | Low    | Medium | postgres-pro                                            | Todo    |
+| 42  | P2       | Duplicate FK on `Transaction.categoryId` (inline + composite)         | Low    | Medium | postgres-pro                                            | Todo    |
+| 43  | P2       | `enableImplicitConversion: true` in ValidationPipe                    | Medium | Medium | security-auditor, nestjs-expert                         | Todo    |
+| 44  | P2       | JWT algorithm not explicitly specified                                | Low    | Medium | security-auditor                                        | Todo    |
+| 45  | P2       | Token blacklist fail-open design (no monitoring)                      | Medium | Medium | security-auditor                                        | Todo    |
+| 46  | P2       | Social auth code exchange race condition (TOCTOU)                     | Medium | Medium | security-auditor                                        | Todo    |
+| 47  | P2       | Unvalidated `token` query param on email verification                 | Low    | Medium | security-auditor                                        | Todo    |
+| 49  | P2       | `UpdateProfileDto` exposes `onboardingCompleted` as user-settable     | Low    | Medium | api-designer                                            | Todo    |
+| 50  | P2       | No `Link` header emitted for paginated responses                      | Medium | Medium | api-designer                                            | Todo    |
+| 51  | P2       | Pagination defaults duplicated at controller and DTO layers           | Low    | Medium | api-designer                                            | Todo    |
+| 52  | P2       | `TimeoutInterceptor` instantiated with `new` bypassing DI             | Low    | Medium | nestjs-expert                                           | Todo    |
+| 53  | P2       | Social callback swallows all errors including programming errors      | Medium | Medium | nestjs-expert                                           | Todo    |
+| 54  | P2       | Health indicators don't extend `HealthIndicator` from Terminus        | Medium | Medium | nestjs-expert                                           | Todo    |
+| 55  | P2       | Redis roundtrip on every authenticated request (blacklist check)      | Medium | Medium | performance-engineer                                    | Todo    |
+| 56  | P2       | Sequential cache invalidation loops in scheduled tasks                | Low    | Medium | performance-engineer                                    | Todo    |
+| 57  | P2       | `select()` wildcard fetches sensitive/unused columns                  | Low    | Medium | performance-engineer                                    | Todo    |
+| 58  | P2       | Missing controller return type annotations                            | Medium | Medium | typescript-pro                                          | Todo    |
+| 59  | P2       | Header type casts (`x-forwarded-for`, `x-csrf-token`, `x-request-id`) | Low    | Medium | typescript-pro                                          | Partial |
+| 61  | P2       | Guards barrel re-export violates project convention                   | Low    | Medium | typescript-pro, architect-reviewer                      | Todo    |
+| 62  | P3       | `RequestContextInterceptor` noop `tap()` operator                     | Low    | Low    | architect-reviewer, nestjs-expert, performance-engineer | Todo    |
+| 63  | P3       | `console.error` in database provider instead of Logger                | Low    | Low    | nestjs-expert                                           | Todo    |
+| 64  | P3       | Login endpoint leaks social auth account type                         | Low    | Low    | security-auditor                                        | Todo    |
 
 ---
 
 ## Active Findings (Detailed)
 
-### P0 -- Critical
-
-#### 2. No PostgreSQL Configuration in Docker Compose
-
-**Effort:** Low | **Impact:** Critical | **Reported by:** postgres-pro
-
-Docker Compose launches PostgreSQL with zero configuration. Default PG 15 settings (`shared_buffers=128MB`, `max_connections=100`, `work_mem=4MB`) are designed for a 256MB VM. No healthcheck is defined, so NestJS may attempt to connect before PG is ready.
-
-**Fix:** Add `command` section with tuned parameters and a `healthcheck` using `pg_isready`.
-
-**File:** `docker/docker-compose.yml`
-
----
-
 ### P1 -- High
-
-#### 4. CSRF Token Missing from CORS `allowedHeaders`
-
-**Effort:** Low | **Impact:** High | **Reported by:** security-auditor, api-designer
-
-The `CsrfGuard` reads `x-csrf-token` from request headers, but CORS `allowedHeaders` only lists `Content-Type`, `Authorization`, `Accept`, `X-Request-Id`. When `COOKIE_SAME_SITE=none`, the browser will block the custom header in preflight checks, making CSRF protection non-functional in the exact scenario where it's needed.
-
-**Fix:** Add `'X-CSRF-Token'` to `allowedHeaders` in `src/app/config/cors.config.ts:4`.
-
----
-
-#### 5. Missing CsrfGuard on `revoke-refresh-token` Endpoint
-
-**Effort:** Low | **Impact:** High | **Reported by:** security-auditor
-
-`POST /revoke-refresh-token` uses `JwtAuthGuard` but does not apply `CsrfGuard`, unlike all other state-changing auth endpoints (logout, revoke-all, refresh-token).
-
-**Fix:** Add `CsrfGuard` to `@UseGuards()` at `src/modules/auth/auth.controller.ts:182`.
-
----
-
-#### 6. CSRF Token Comparison Not Timing-Safe
-
-**Effort:** Low | **Impact:** High | **Reported by:** security-auditor, architect-reviewer
-
-The CSRF guard uses `headerToken !== cookieToken` (strict equality), susceptible to timing side-channel attacks. The OAuth state validation correctly uses `crypto.timingSafeEqual` -- apply the same pattern.
-
-**Fix:** Use `crypto.timingSafeEqual(Buffer.from(headerToken), Buffer.from(cookieToken))` in `src/shared/guards/csrf.guard.ts:27`.
-
----
-
-#### 7. AuthService Directly Accesses UserRepository (Layer Violation)
-
-**Effort:** Medium | **Impact:** High | **Reported by:** architect-reviewer, nestjs-expert
-
-`AuthService` depends on both `UserService` and `UserRepository`. It calls `userRepository.setEmailVerificationToken()` and `userRepository.verifyEmail()` directly, violating the layered architecture rule.
-
-**Fix:** Add these methods to `UserService` and remove `UserRepository` from `AuthService` constructor. Stop exporting `UserRepository` from `UserModule`.
-
-**Files:** `src/modules/auth/auth.service.ts:20`, `src/modules/user/user.module.ts:10`
-
----
-
-#### 8. ProfileService Directly Accesses UserRepository (Layer Violation)
-
-**Effort:** Medium | **Impact:** High | **Reported by:** architect-reviewer
-
-Same pattern as #7. `ProfileService` imports `UserRepository` directly for `findProfileById`, `updateProfile`, `findWithPasswordHash`, `updatePasswordHash`, `softDelete`.
-
-**Fix:** Move profile-related methods behind `UserService`, or merge profile module into user module.
-
-**File:** `src/modules/profile/profile.service.ts:10-11`
-
----
 
 #### 9. Soft-Delete Unique Constraint Blocks Category Recreation
 
@@ -200,18 +78,6 @@ Business-domain timestamps (`Transaction.date`, `Budget.startDate/endDate`) corr
 **Fix:** Add `withTimezone: true` to all timestamp columns and generate a migration. This is non-destructive if the server runs UTC.
 
 **Files:** All `src/database/schemas/*.ts` files
-
----
-
-#### 12. Missing Index on `emailVerificationToken`
-
-**Effort:** Low | **Impact:** High | **Reported by:** database-optimizer
-
-Every email verification request causes a full table scan. No index exists on this column.
-
-**Fix:** Add a sparse partial index: `CREATE INDEX ON "User" ("emailVerificationToken") WHERE "emailVerificationToken" IS NOT NULL`.
-
-**File:** `src/database/schemas/users.ts`
 
 ---
 
@@ -249,16 +115,6 @@ No URI versioning, no header versioning, no `enableVersioning()` call. Any break
 
 ---
 
-#### 16. Throttler Auth Bypass Returns `true` Instead of Falling Through
-
-**Effort:** Low | **Impact:** High | **Reported by:** api-designer
-
-When the `auth` throttler finds no route-level override, `handleRequest` returns `true` unconditionally, bypassing the `default` throttler too. New auth endpoints without `@Throttle({ auth: {} })` silently skip all rate limiting.
-
-**Fix:** Call `super.handleRequest(requestProps)` instead of `return true` in `src/app/throttler/app-throttler.guard.ts:18`.
-
----
-
 #### 17. `CountryCode`/`CurrencyCode` as PG Enums (250+150 values)
 
 **Effort:** High | **Impact:** High | **Reported by:** database-optimizer, postgres-pro
@@ -285,40 +141,6 @@ PostgreSQL `ALTER TYPE ... ADD VALUE` is non-transactional and cannot be rolled 
 
 ---
 
-#### 19. `findByParentCategory` Has No LIMIT
-
-**Effort:** Low | **Impact:** High | **Reported by:** performance-engineer, database-optimizer
-
-Returns all transactions for a category with `ORDER BY date DESC` but no `LIMIT`. Can produce multi-megabyte responses.
-
-**Fix:** Add pagination or an explicit row cap.
-
-**File:** `src/modules/transactions/transactions.repository.ts:376-392`
-
----
-
-#### 20. Docker PG Port Exposed on All Interfaces
-
-**Effort:** Low | **Impact:** High | **Reported by:** postgres-pro
-
-`ports: - '5432:5432'` binds to `0.0.0.0`, making PostgreSQL reachable from any network interface.
-
-**Fix:** Change to `'127.0.0.1:5432:5432'` in `docker/docker-compose.yml:10`.
-
----
-
-#### 21. Docker Default Password in Plaintext
-
-**Effort:** Low | **Impact:** High | **Reported by:** postgres-pro, security-auditor
-
-`POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tracker123}` -- weak fallback committed to source. Redis has no `--requirepass` at all.
-
-**Fix:** Remove fallback defaults, add `.env.example` with placeholder values, add `--requirepass` to Redis.
-
-**File:** `docker/docker-compose.yml:8`
-
----
-
 #### 22. Missing Partial Indexes for `deletedAt IS NULL` Queries
 
 **Effort:** Medium | **Impact:** High | **Reported by:** postgres-pro, database-optimizer
@@ -340,16 +162,6 @@ Returns all transactions for a category with `ORDER BY date DESC` but no `LIMIT`
 **Fix:** Add `pg_trgm` extension and a GIN trigram index on `Transaction.description`.
 
 **File:** `src/modules/transactions/transactions.repository.ts:139-142`
-
----
-
-#### 25. `AllExceptionsFilter` Uses `@Optional()` for Required Dependencies
-
-**Effort:** Low | **Impact:** High | **Reported by:** nestjs-expert
-
-All three constructor dependencies (`ClsService`, `ProblemDetailsFilter`, `ConfigService`) are always present, but `@Optional()` masks misconfiguration and forces `?.` null guards everywhere.
-
-**Fix:** Remove `@Optional()` decorators at `src/app/filters/all-exceptions.filter.ts:16-22`.
 
 ---
 
@@ -424,18 +236,6 @@ Called on every mutation. `SCAN` iterates all keys; `DEL` runs per batch. Gets s
 **Fix:** Use streaming JSON serializer; remove pretty-printing for file downloads.
 
 **Files:** `src/modules/transactions/transactions.repository.ts:96`, `src/modules/transactions/transactions.service.ts:267`
-
----
-
-#### 33. Excessive Constructor Parameters (AuthService: 8 deps)
-
-**Effort:** High | **Impact:** Medium | **Reported by:** architect-reviewer
-
-`AuthService` has 8 constructor parameters, suggesting too many responsibilities.
-
-**Fix:** Split into `AuthenticationService`, `TokenService`, and `SessionService`.
-
-**File:** `src/modules/auth/auth.service.ts:49`
 
 ---
 
@@ -731,18 +531,6 @@ No controller action methods have explicit return type annotations. TypeScript c
 
 ---
 
-#### 60. `sameSite` Stored as `string` Losing Literal Type
-
-**Effort:** Low | **Impact:** Medium | **Reported by:** typescript-pro
-
-`COOKIE_SAME_SITE` is validated by Zod as `'strict' | 'lax' | 'none'` but stored as `private sameSite: string`.
-
-**Fix:** Change type to `Env['COOKIE_SAME_SITE']`.
-
-**Files:** `src/shared/guards/csrf.guard.ts:10`, `src/modules/auth/auth.controller.ts:59`
-
----
-
 #### 61. Guards Barrel Re-export Violates Project Convention
 
 **Effort:** Low | **Impact:** Medium | **Reported by:** typescript-pro, architect-reviewer
@@ -873,3 +661,57 @@ Version `0.1.12` -- community fork with no significant updates. Supply chain ris
 No documentation for required environment variables beyond the Zod schema. Increases misconfiguration risk.
 
 **Fix:** Create `.env.example` with all variables from `env.schema.ts` using placeholder values.
+
+---
+
+## Completed Fixes (History)
+
+| #   | Finding                                         | Impact | Effort | Priority | Status |
+| --- | ----------------------------------------------- | ------ | ------ | -------- | ------ |
+| 1   | Add Helmet security headers                     | 5      | S      | P0       | Done   |
+| 2   | Remove default JWT_SECRET                       | 5      | S      | P0       | Done   |
+| 3   | Fix CORS default to deny all                    | 5      | S      | P0       | Done   |
+| 4   | Enable graceful shutdown hooks                  | 5      | S      | P0       | Done   |
+| 5   | Filter soft-deleted users from login            | 5      | S      | P0       | Done   |
+| 6   | Fix login timing side-channel                   | 4      | S      | P0       | Done   |
+| 7   | Fix N+1 budget overspend cron                   | 5      | M      | P1       | Done   |
+| 8   | Add composite database indexes                  | 5      | S      | P1       | Done   |
+| 9   | Push refresh token filters to SQL               | 4      | S      | P1       | Done   |
+| 10  | Cap export with LIMIT + streaming               | 5      | M      | P1       | Done   |
+| 11  | Replace isDescendantOf with CTE                 | 4      | S      | P1       | Done   |
+| 12  | Rate limiting fail-closed on Redis down         | 5      | M      | P1       | Done   |
+| 13  | Per-endpoint throttling on expensive ops        | 4      | S      | P1       | Done   |
+| 14  | Protect /process endpoint (admin-only)          | 4      | S      | P1       | Done   |
+| 15  | Align admin password policy                     | 4      | S      | P1       | Done   |
+| 16  | Fix service-to-DB architecture violation        | 4      | M      | P1       | Done   |
+| 17  | Add JWT session validation / blacklist          | 5      | L      | P1       | Done   |
+| 18  | Consolidate 3 Redis connections (3→2)           | 4      | M      | P1       | Done   |
+| 19  | Domain events for cache invalidation            | 4      | L      | P2       | Done   |
+| 20  | Extract pagination helper                       | 3      | S      | P2       | Done   |
+| 21  | Remove/complete TransformInterceptor            | 3      | S      | P2       | Done   |
+| 23  | Async CSV parsing                               | 4      | M      | P2       | Done   |
+| 24  | Cache stampede protection                       | 4      | M      | P2       | Done   |
+| 25  | Migrate date columns to timestamptz             | 4      | M      | P2       | Done   |
+| 26  | CSRF protection for cookie auth                 | 4      | M      | P2       | Done   |
+| 27  | Disable Swagger in production                   | 3      | S      | P2       | Done   |
+| 28  | Consistent validator decorators                 | 3      | S      | P2       | Done   |
+| 29  | Add database CHECK constraints                  | 3      | S      | P2       | Done   |
+| 30  | Fix NULLS NOT DISTINCT on unique index          | 3      | S      | P2       | Done   |
+| 31  | Decimal arithmetic for money                    | 4      | M      | P2       | Done   |
+| 32  | HTTP response compression                       | 2      | S      | P3       | Done   |
+| 33  | Add statement_timeout                           | 3      | S      | P3       | Done   |
+| 34  | Sort params on all collections                  | 2      | M      | P3       | Done   |
+| 35  | No PostgreSQL config in Docker Compose          | 5      | S      | P0       | Done   |
+| 36  | CSRF token missing from CORS allowedHeaders     | 4      | S      | P1       | Done   |
+| 37  | Missing CsrfGuard on revoke-refresh-token       | 4      | S      | P1       | Done   |
+| 38  | CSRF token comparison not timing-safe           | 4      | S      | P1       | Done   |
+| 39  | Missing index on emailVerificationToken         | 4      | S      | P1       | Done   |
+| 40  | Throttler auth bypass returns true              | 4      | S      | P1       | Done   |
+| 41  | findByParentCategory has no LIMIT               | 4      | S      | P1       | Done   |
+| 42  | Docker PG port exposed on all interfaces        | 4      | S      | P1       | Done   |
+| 43  | Docker default password in plaintext            | 4      | S      | P1       | Done   |
+| 44  | AllExceptionsFilter uses @Optional()            | 4      | S      | P1       | Done   |
+| 45  | sameSite stored as string losing type           | 3      | S      | P2       | Done   |
+| 46  | AuthService layer violation (UserRepository)    | 4      | M      | P1       | Done   |
+| 47  | ProfileService layer violation (UserRepository) | 4      | M      | P1       | Done   |
+| 48  | Excessive constructor params (AuthService)      | 3      | M      | P2       | Done   |

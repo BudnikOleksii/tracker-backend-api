@@ -16,7 +16,14 @@ import { hasRequiredRole } from '@/shared/enums/role.enum.js';
 import type { UserRole } from '@/shared/enums/role.enum.js';
 
 import { UserRepository } from './user.repository.js';
-import type { UserInfo, UserListQuery, UserListResult, UserSummary } from './user.repository.js';
+import type {
+  ProfileInfo,
+  UpdateProfileData,
+  UserInfo,
+  UserListQuery,
+  UserListResult,
+  UserSummary,
+} from './user.repository.js';
 const CACHE_MODULE = 'users';
 
 @Injectable()
@@ -200,5 +207,61 @@ export class UserService {
     await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE));
 
     return updated;
+  }
+
+  async findProfileById(userId: string): Promise<ProfileInfo | null> {
+    return this.userRepository.findProfileById(userId);
+  }
+
+  async updateProfile(userId: string, data: UpdateProfileData): Promise<ProfileInfo | null> {
+    const updated = await this.userRepository.updateProfile(userId, data);
+
+    if (updated) {
+      await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE));
+    }
+
+    return updated;
+  }
+
+  async findWithPasswordHash(
+    userId: string,
+  ): Promise<{ id: string; passwordHash: string | null } | null> {
+    return this.userRepository.findWithPasswordHash(userId);
+  }
+
+  async updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
+    await this.userRepository.updatePasswordHash(userId, passwordHash);
+    await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE));
+  }
+
+  async softDelete(userId: string): Promise<boolean> {
+    const deleted = await this.userRepository.softDelete(userId);
+
+    if (deleted) {
+      await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE));
+    }
+
+    return deleted;
+  }
+
+  async setEmailVerificationToken(userId: string, token: string, expiresAt: Date): Promise<void> {
+    await this.userRepository.setEmailVerificationToken(userId, token, expiresAt);
+  }
+
+  async verifyEmail(
+    token: string,
+  ): Promise<{ success: true; userId: string } | { success: false; reason: string }> {
+    return this.userRepository.verifyEmail(token);
+  }
+
+  async findFullById(userId: string): Promise<{
+    id: string;
+    email: string;
+    emailVerified: boolean;
+    passwordHash: string | null;
+    baseCurrencyCode: string | null;
+    onboardingCompleted: boolean;
+  }> {
+    return this.userRepository.findFullById(userId);
   }
 }

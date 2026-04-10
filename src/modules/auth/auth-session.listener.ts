@@ -6,13 +6,13 @@ import {
   type ProfileSessionInvalidationEvent,
 } from '@/modules/profile/events/profile.event.js';
 
-import { AuthService } from './auth.service.js';
+import { TokenService } from './token.service.js';
 
 @Injectable()
 export class AuthSessionListener {
   private readonly logger = new Logger(AuthSessionListener.name);
 
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly tokenService: TokenService) {}
 
   @OnEvent(PROFILE_EVENTS.PASSWORD_CHANGED, { async: true })
   async handlePasswordChanged(event: ProfileSessionInvalidationEvent): Promise<void> {
@@ -29,8 +29,8 @@ export class AuthSessionListener {
     reason: string,
   ): Promise<void> {
     const results = await Promise.allSettled([
-      this.authService.revokeAllRefreshTokens(event.userId),
-      this.authService.blacklistAccessToken(event.accessTokenJti),
+      this.tokenService.revokeAllRefreshTokens(event.userId),
+      this.tokenService.blacklistAccessToken(event.accessTokenJti),
     ]);
 
     for (const result of results) {
