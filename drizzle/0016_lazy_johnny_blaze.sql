@@ -48,6 +48,5 @@ ALTER TABLE "Verification" ALTER COLUMN "updatedAt" SET DEFAULT now();--> statem
 CREATE UNIQUE INDEX "DefaultTransactionCategory_name_type_parentDefaultTransactionCategoryId_key" ON "DefaultTransactionCategory" USING btree ("name","type","parentDefaultTransactionCategoryId") WHERE "deletedAt" IS NULL;--> statement-breakpoint
 CREATE UNIQUE INDEX "TransactionCategory_userId_name_type_parentCategoryId_key" ON "TransactionCategory" USING btree ("userId","name","type","parentCategoryId") WHERE "deletedAt" IS NULL;--> statement-breakpoint
 CREATE INDEX "TransactionCategory_userId_not_deleted_idx" ON "TransactionCategory" USING btree ("userId") WHERE "deletedAt" IS NULL;--> statement-breakpoint
-CREATE EXTENSION IF NOT EXISTS pg_trgm;--> statement-breakpoint
 CREATE INDEX "Transaction_description_trgm_idx" ON "Transaction" USING gin ("description" gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX "User_id_not_deleted_idx" ON "User" USING btree ("id") WHERE "deletedAt" IS NULL;

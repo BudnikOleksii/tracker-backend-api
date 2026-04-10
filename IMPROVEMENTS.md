@@ -540,10 +540,10 @@ No documentation for required environment variables beyond the Zod schema. Incre
 | 49   | Remove `onboardingCompleted` from UpdateProfileDto         | Medium | S      | P2       | Done   |
 | 51   | Remove redundant pagination defaults from controllers      | Medium | S      | P2       | Done   |
 | 52   | Register TimeoutInterceptor via DI                         | Medium | S      | P2       | Done   |
-| 9    | Soft-delete unique constraint blocks category recreation   | High   | M      | P1       | Done   |
-| 11   | Timestamps missing `withTimezone` across most tables       | High   | M      | P1       | Done   |
-| 13   | Double-query pattern on create/update                      | High   | M      | P1       | Done   |
-| 14   | Sequential processing in `processAllRecurringTransactions` | High   | M      | P1       | Done   |
-| 22   | Missing partial indexes for `deletedAt IS NULL`            | High   | M      | P1       | Done   |
-| 23   | `ilike` search on `description` with no trigram index      | High   | M      | P1       | Done   |
-| 30   | ILIKE wildcards not escaped in `UserRepository.findAll`    | Medium | S      | P2       | Done   |
+| 9    | Soft-delete unique constraint blocks category recreation   | 5      | M      | P1       | Done   |
+| 11   | Timestamps missing `withTimezone` across most tables       | 5      | M      | P1       | Done   |
+| 13   | Double-query pattern on create/update                      | 4      | M      | P1       | Done   |
+| 14   | Sequential processing in `processAllRecurringTransactions` | 4      | M      | P1       | Done   |
+| 22   | Missing partial indexes for `deletedAt IS NULL`            | 4      | M      | P1       | Done   |
+| 23   | `ilike` search on `description` with no trigram index      | 4      | M      | P1       | Done   |
+| 30   | ILIKE wildcards not escaped in `UserRepository.findAll`    | 3      | S      | P2       | Done   |

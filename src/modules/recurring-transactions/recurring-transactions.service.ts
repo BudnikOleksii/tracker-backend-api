@@ -22,6 +22,8 @@ import type {
   UpdateRecurringTransactionData,
 } from './recurring-transactions.repository.js';
 
+const INSERT_CHUNK_SIZE = 1000;
+
 @Injectable()
 export class RecurringTransactionsService {
   private readonly logger = new Logger(RecurringTransactionsService.name);
@@ -404,8 +406,8 @@ export class RecurringTransactionsService {
         nextDate = this.advanceDate(nextDate, frequency, interval);
       }
 
-      if (batch.length > 0) {
-        await this.repository.createTransactionsBatch(batch, tx);
+      for (let i = 0; i < batch.length; i += INSERT_CHUNK_SIZE) {
+        await this.repository.createTransactionsBatch(batch.slice(i, i + INSERT_CHUNK_SIZE), tx);
       }
 
       const shouldCancel = record.endDate && nextDate > record.endDate;
