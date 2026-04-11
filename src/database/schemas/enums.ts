@@ -6,7 +6,7 @@ export const authProviderEnum = pgEnum('AuthProvider', ['LOCAL', 'GOOGLE', 'GITH
 
 export const transactionTypeEnum = pgEnum('TransactionType', ['EXPENSE', 'INCOME']);
 
-export const countryCodeEnum = pgEnum('CountryCode', [
+export const COUNTRY_CODES = [
   'AD',
   'AE',
   'AF',
@@ -256,7 +256,9 @@ export const countryCodeEnum = pgEnum('CountryCode', [
   'ZA',
   'ZM',
   'ZW',
-]);
+] as const;
+
+export type CountryCode = (typeof COUNTRY_CODES)[number];
 
 export const recurringFrequencyEnum = pgEnum('RecurringFrequency', [
   'DAILY',
@@ -283,7 +285,7 @@ export const budgetStatusEnum = pgEnum('BudgetStatus', ['ACTIVE', 'EXCEEDED']);
 
 export const loginStatusEnum = pgEnum('LoginStatus', ['SUCCESS', 'FAILED']);
 
-export const currencyCodeEnum = pgEnum('CurrencyCode', [
+export const CURRENCY_CODES = [
   'AED',
   'AFN',
   'ALL',
@@ -441,4 +443,6 @@ export const currencyCodeEnum = pgEnum('CurrencyCode', [
   'ZAR',
   'ZMW',
   'ZWL',
-]);
+] as const;
+
+export type CurrencyCode = (typeof CURRENCY_CODES)[number];

@@ -120,6 +120,13 @@
       "when": 1775824001865,
       "tag": "0016_lazy_johnny_blaze",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1775836146292,
+      "tag": "0017_light_catseye",
+      "breakpoints": true
     }
   ]
 }

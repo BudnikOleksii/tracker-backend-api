@@ -7,7 +7,6 @@
 | #   | Priority | Finding                                                               | Effort | Impact | Agent(s)                                                | Status  |
 | --- | -------- | --------------------------------------------------------------------- | ------ | ------ | ------------------------------------------------------- | ------- |
 | 15  | P1       | No API versioning strategy                                            | Medium | High   | api-designer                                            | Todo    |
-| 17  | P1       | `CountryCode`/`CurrencyCode` as PG enums (250+150 values)             | High   | High   | database-optimizer, postgres-pro                        | Todo    |
 | 18b | P1       | Remaining two Redis connections (ioredis vs node-redis mismatch)      | High   | High   | performance-engineer                                    | Todo    |
 | 29  | P2       | `CachePort` abstraction exists but is dead code                       | Low    | Medium | architect-reviewer                                      | Todo    |
 | 31  | P2       | `delByPrefix` uses SCAN + sequential DEL (O(N) Redis)                 | Medium | Medium | architect-reviewer, performance-engineer                | Todo    |
@@ -50,18 +49,6 @@
 No URI versioning, no header versioning, no `enableVersioning()` call. Any breaking change will affect all clients with no migration path.
 
 **Fix:** Add `app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' })` in `src/main.ts`.
-
----
-
-#### 17. `CountryCode`/`CurrencyCode` as PG Enums (250+150 values)
-
-**Effort:** High | **Impact:** High | **Reported by:** database-optimizer, postgres-pro
-
-PostgreSQL `ALTER TYPE ... ADD VALUE` is non-transactional and cannot be rolled back. With 250 country codes and 150 currency codes, every ISO update requires a risky DDL migration.
-
-**Fix:** Convert to `varchar(3)` with application-layer validation. One-time significant migration.
-
-**File:** `src/database/schemas/enums.ts:9-442`
 
 ---
 
@@ -547,3 +534,4 @@ No documentation for required environment variables beyond the Zod schema. Incre
 | 22   | Missing partial indexes for `deletedAt IS NULL`            | 4      | M      | P1       | Done   |
 | 23   | `ilike` search on `description` with no trigram index      | 4      | M      | P1       | Done   |
 | 30   | ILIKE wildcards not escaped in `UserRepository.findAll`    | 3      | S      | P2       | Done   |
+| 17   | `CountryCode`/`CurrencyCode` PG enums to varchar(3)        | High   | H      | P1       | Done   |

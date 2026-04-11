@@ -1,7 +1,17 @@
-import { boolean, index, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  index,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+  varchar,
+} from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
 
-import { authProviderEnum, countryCodeEnum, currencyCodeEnum, userRoleEnum } from './enums.js';
+import type { CountryCode, CurrencyCode } from './enums.js';
+import { authProviderEnum, userRoleEnum } from './enums.js';
 import { refreshTokens } from './refresh-tokens.js';
 import { transactionCategories } from './transaction-categories.js';
 import { transactions } from './transactions.js';
@@ -23,8 +33,8 @@ export const users = pgTable(
       mode: 'date',
       withTimezone: true,
     }),
-    countryCode: countryCodeEnum('countryCode'),
-    baseCurrencyCode: currencyCodeEnum('baseCurrencyCode'),
+    countryCode: varchar('countryCode', { length: 3 }).$type<CountryCode>(),
+    baseCurrencyCode: varchar('baseCurrencyCode', { length: 3 }).$type<CurrencyCode>(),
     ipAddress: text('ipAddress'),
     userAgent: text('userAgent'),
     onboardingCompleted: boolean('onboardingCompleted').notNull().default(false),

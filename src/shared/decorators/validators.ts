@@ -72,7 +72,7 @@ export function MatchesField(pattern: RegExp, options?: ValidationOptions) {
   );
 }
 
-export function IsInField(values: unknown[], options?: ValidationOptions) {
+export function IsInField(values: readonly unknown[], options?: ValidationOptions) {
   return applyDecorators(IsIn(values, { ...options, context: { code: ErrorCode.INVALID_FORMAT } }));
 }
 

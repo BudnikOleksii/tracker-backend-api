@@ -8,11 +8,12 @@ import {
   text,
   timestamp,
   uuid,
+  varchar,
 } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
 
+import type { CurrencyCode } from './enums.js';
 import {
-  currencyCodeEnum,
   recurringFrequencyEnum,
   recurringTransactionStatusEnum,
   transactionTypeEnum,
@@ -31,7 +32,7 @@ export const recurringTransactions = pgTable(
     categoryId: uuid('categoryId').notNull(),
     type: transactionTypeEnum('type').notNull(),
     amount: numeric('amount', { precision: 19, scale: 2 }).notNull(),
-    currencyCode: currencyCodeEnum('currencyCode').notNull(),
+    currencyCode: varchar('currencyCode', { length: 3 }).$type<CurrencyCode>().notNull(),
     description: text('description'),
     frequency: recurringFrequencyEnum('frequency').notNull(),
     interval: integer('interval').notNull().default(1),
