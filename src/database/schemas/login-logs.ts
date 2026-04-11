@@ -17,8 +17,5 @@ export const loginLogs = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (table) => [
-    index('LoginLog_userId_idx').on(table.userId),
-    index('LoginLog_createdAt_idx').on(table.createdAt),
-  ],
+  (table) => [index('LoginLog_userId_createdAt_idx').on(table.userId, table.createdAt.desc())],
 );

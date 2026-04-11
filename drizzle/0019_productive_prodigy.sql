@@ -1,0 +1,1 @@
+CREATE INDEX "AuditLog_createdAt_idx" ON "AuditLog" USING btree ("createdAt" DESC NULLS LAST);

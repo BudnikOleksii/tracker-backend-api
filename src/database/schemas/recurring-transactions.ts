@@ -54,10 +54,15 @@ export const recurringTransactions = pgTable(
   },
   (table) => [
     check('RecurringTransaction_interval_gt_0_chk', sql`${table.interval} > 0`),
+    check(
+      'RecurringTransaction_endDate_after_startDate',
+      sql`"endDate" IS NULL OR "endDate" > "startDate"`,
+    ),
     index('RecurringTransaction_userId_idx').on(table.userId),
     index('RecurringTransaction_categoryId_idx').on(table.categoryId),
-    index('RecurringTransaction_status_idx').on(table.status),
-    index('RecurringTransaction_nextOccurrenceDate_idx').on(table.nextOccurrenceDate),
+    index('RecurringTransaction_status_nextOccurrenceDate_idx')
+      .on(table.status, table.nextOccurrenceDate)
+      .where(sql`status = 'ACTIVE'`),
     index('RecurringTransaction_type_idx').on(table.type),
     foreignKey({
       columns: [table.userId, table.categoryId],
