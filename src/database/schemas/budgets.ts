@@ -1,7 +1,17 @@
-import { check, index, numeric, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import {
+  check,
+  index,
+  numeric,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+  varchar,
+} from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
 
-import { budgetPeriodEnum, budgetStatusEnum, currencyCodeEnum } from './enums.js';
+import type { CurrencyCode } from './enums.js';
+import { budgetPeriodEnum, budgetStatusEnum } from './enums.js';
 import { users } from './users.js';
 import { transactionCategories } from './transaction-categories.js';
 
@@ -16,7 +26,7 @@ export const budgets = pgTable(
       onDelete: 'set null',
     }),
     amount: numeric('amount', { precision: 19, scale: 2 }).notNull(),
-    currencyCode: currencyCodeEnum('currencyCode').notNull(),
+    currencyCode: varchar('currencyCode', { length: 3 }).$type<CurrencyCode>().notNull(),
     period: budgetPeriodEnum('period').notNull(),
     startDate: timestamp('startDate', { precision: 3, mode: 'date', withTimezone: true }).notNull(),
     endDate: timestamp('endDate', { precision: 3, mode: 'date', withTimezone: true }).notNull(),

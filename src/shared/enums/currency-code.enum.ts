@@ -1,5 +1,1 @@
-import { currencyCodeEnum } from '@/database/schemas/enums.js';
-
-export const CURRENCY_CODES = currencyCodeEnum.enumValues;
-
-export type CurrencyCode = (typeof CURRENCY_CODES)[number];
+export { CURRENCY_CODES, type CurrencyCode } from '@/database/schemas/enums.js';

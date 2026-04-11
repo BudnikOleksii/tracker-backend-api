@@ -1,9 +1,9 @@
 /* eslint-disable no-console */
+import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
+
 import { transactions } from '../schemas/index.js';
 import type { SeedDb } from './client.js';
 import type { TransactionData } from './types.js';
-
-type CurrencyCode = (typeof transactions.currencyCode.enumValues)[number];
 
 const BATCH_SIZE = 100;
 
