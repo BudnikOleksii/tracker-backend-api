@@ -7,9 +7,6 @@
 | #   | Priority | Finding                                                               | Effort | Impact | Agent(s)                                                | Status  |
 | --- | -------- | --------------------------------------------------------------------- | ------ | ------ | ------------------------------------------------------- | ------- |
 | 15  | P1       | No API versioning strategy                                            | Medium | High   | api-designer                                            | Todo    |
-| 18b | P1       | Remaining two Redis connections (ioredis vs node-redis mismatch)      | High   | High   | performance-engineer                                    | Todo    |
-| 29  | P2       | `CachePort` abstraction exists but is dead code                       | Low    | Medium | architect-reviewer                                      | Todo    |
-| 31  | P2       | `delByPrefix` uses SCAN + sequential DEL (O(N) Redis)                 | Medium | Medium | architect-reviewer, performance-engineer                | Todo    |
 | 32  | P2       | Export loads 10K rows + JSON.stringify into memory                    | Medium | Medium | architect-reviewer, performance-engineer                | Todo    |
 | 43  | P2       | `enableImplicitConversion: true` in ValidationPipe                    | Medium | Medium | security-auditor, nestjs-expert                         | Todo    |
 | 44  | P2       | JWT algorithm not explicitly specified                                | Low    | Medium | security-auditor                                        | Todo    |
@@ -18,7 +15,6 @@
 | 50  | P2       | No `Link` header emitted for paginated responses                      | Medium | Medium | api-designer                                            | Todo    |
 | 53  | P2       | Social callback swallows all errors including programming errors      | Medium | Medium | nestjs-expert                                           | Todo    |
 | 54  | P2       | Health indicators don't extend `HealthIndicator` from Terminus        | Medium | Medium | nestjs-expert                                           | Todo    |
-| 55  | P2       | Redis roundtrip on every authenticated request (blacklist check)      | Medium | Medium | performance-engineer                                    | Todo    |
 | 56  | P2       | Sequential cache invalidation loops in scheduled tasks                | Low    | Medium | performance-engineer                                    | Todo    |
 | 57  | P2       | `select()` wildcard fetches sensitive/unused columns                  | Low    | Medium | performance-engineer                                    | Todo    |
 | 58  | P2       | Missing controller return type annotations                            | Medium | Medium | typescript-pro                                          | Todo    |
@@ -44,45 +40,7 @@ No URI versioning, no header versioning, no `enableVersioning()` call. Any break
 
 ---
 
-#### 18b. Remaining Two Redis Connections (ioredis vs node-redis Library Mismatch)
-
-**Effort:** High | **Impact:** High | **Reported by:** performance-engineer
-
-> **Note:** Prior fix #18 consolidated from 3 connections to 2 by removing the throttler's separate Redis instance. The remaining 2 connections cannot be shared because `@keyv/redis` v5 uses `node-redis` internally while `redisClientProvider` uses `ioredis` — they are incompatible client libraries.
-
-`NestCacheModule.registerAsync` creates a `KeyvRedis` (node-redis) connection, and `redisClientProvider` creates an `ioredis` connection to the same URL.
-
-**Fix:** Migrate one client library to match the other (replace `@keyv/redis` with an ioredis-compatible cache adapter, or replace direct `ioredis` usage with `node-redis`).
-
-**Files:** `src/modules/cache/cache.module.ts`, `src/modules/cache/redis.provider.ts`
-
----
-
 ### P2 -- Medium
-
-#### 29. `CachePort` Abstraction Is Dead Code
-
-**Effort:** Low | **Impact:** Medium | **Reported by:** architect-reviewer
-
-`CachePort` interface and `CACHE_PORT` injection token exist but no service uses them. Every service imports `CacheService` directly.
-
-**Fix:** Either adopt the port pattern consistently or remove the dead code.
-
-**File:** `src/modules/cache/cache.port.ts`
-
----
-
-#### 31. `delByPrefix` Uses SCAN + Sequential DEL
-
-**Effort:** Medium | **Impact:** Medium | **Reported by:** architect-reviewer, performance-engineer
-
-Called on every mutation. `SCAN` iterates all keys; `DEL` runs per batch. Gets slower as key count grows.
-
-**Fix:** Use `redis.unlink`, pipeline batches, and/or use Redis hash structures for grouping.
-
-**File:** `src/modules/cache/cache.service.ts:35-53`
-
----
 
 #### 32. Export Loads 10K Rows + `JSON.stringify` Into Memory
 
@@ -171,18 +129,6 @@ When Redis is down, revoked tokens are accepted. The fail-open design is documen
 Custom `DrizzleHealthIndicator` and `RedisHealthIndicator` build result shapes manually instead of using Terminus's `getStatus()`. Returns `status: 'down'` as resolved value instead of throwing `HealthCheckError`.
 
 **Files:** `src/app/health/drizzle.health.ts`, `src/app/health/redis.health.ts`
-
----
-
-#### 55. Redis Roundtrip on Every Authenticated Request
-
-**Effort:** Medium | **Impact:** Medium | **Reported by:** performance-engineer
-
-Every JWT-authenticated request triggers a Redis `GET` for blacklist check.
-
-**Fix:** Add a short-lived in-process LRU cache of recently verified non-blacklisted JTIs.
-
-**File:** `src/modules/auth/jwt.strategy.ts:37-55`
 
 ---
 
@@ -441,3 +387,7 @@ No documentation for required environment variables beyond the Zod schema. Incre
 | 40   | `updatedAt` only updated by ORM, not DB trigger               | Medium | M      | P2       | Done   |
 | 41   | `RecurringTransaction` missing `endDate > startDate` check    | Medium | S      | P2       | Done   |
 | 42   | Duplicate FK on `Transaction.categoryId`                      | Medium | S      | P2       | Done   |
+| 18b  | Remaining two Redis connections (ioredis vs node-redis)       | High   | H      | P1       | Done   |
+| 29   | `CachePort` abstraction is dead code                          | Medium | S      | P2       | Done   |
+| 31   | `delByPrefix` uses SCAN + sequential DEL                      | Medium | M      | P2       | Done   |
+| 55   | Redis roundtrip on every authenticated request                | Medium | M      | P2       | Done   |
