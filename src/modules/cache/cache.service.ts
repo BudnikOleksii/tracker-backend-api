@@ -1,37 +1,50 @@
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject, Injectable } from '@nestjs/common';
-import type { Cache } from 'cache-manager';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import type { Redis } from 'ioredis';
 
-import { MS_PER_SECOND } from '@/shared/constants/time.constants.js';
+import type { Env } from '@/app/config/env.schema.js';
 
-import type { CachePort } from './cache.port.js';
 import { REDIS_CLIENT } from './redis.provider.js';
 
 const SCAN_BATCH_SIZE = 100;
 
 @Injectable()
-export class CacheService implements CachePort {
+export class CacheService {
+  private readonly logger = new Logger(CacheService.name);
+  private readonly defaultTtl: number;
   private readonly inFlight = new Map<string, Promise<unknown>>();
 
   constructor(
-    @Inject(CACHE_MANAGER)
-    private readonly cacheManager: Cache,
     @Inject(REDIS_CLIENT)
     private readonly redis: Redis,
-  ) {}
+    configService: ConfigService<Env, true>,
+  ) {
+    this.defaultTtl = configService.get('REDIS_TTL', { infer: true });
+  }
 
   async get<T>(key: string): Promise<T | undefined> {
-    return this.cacheManager.get<T>(key);
+    const raw = await this.redis.get(key);
+    if (raw === null) {
+      return undefined;
+    }
+
+    try {
+      return JSON.parse(raw) as T;
+    } catch {
+      this.logger.warn(`Corrupt cache entry for key="${key}", deleting`);
+      await this.redis.del(key);
+
+      return undefined;
+    }
   }
 
   async set<T>(key: string, value: T, ttl?: number): Promise<void> {
-    const ttlMs = ttl ? ttl * MS_PER_SECOND : undefined;
-    await this.cacheManager.set(key, value, ttlMs);
+    const ttlSeconds = ttl ?? this.defaultTtl;
+    await this.redis.set(key, JSON.stringify(value), 'EX', ttlSeconds);
   }
 
   async del(key: string): Promise<void> {
-    await this.cacheManager.del(key);
+    await this.redis.del(key);
   }
 
   async delByPrefix(prefix: string): Promise<void> {
@@ -49,13 +62,17 @@ export class CacheService implements CachePort {
       cursor = nextCursor;
 
       if (keys.length > 0) {
-        await this.redis.del(...keys);
+        const pipeline = this.redis.pipeline();
+        for (const key of keys) {
+          pipeline.unlink(key);
+        }
+        await pipeline.exec();
       }
     } while (cursor !== '0');
   }
 
   async reset(): Promise<void> {
-    await this.cacheManager.clear();
+    await this.redis.flushdb();
   }
 
   async wrap<T>(key: string, fn: () => Promise<T>, ttl?: number): Promise<T> {

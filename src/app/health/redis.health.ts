@@ -1,14 +1,13 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import type { HealthIndicatorResult } from '@nestjs/terminus';
 
-import { CACHE_PORT } from '@/modules/cache/cache.port.js';
-import type { CachePort } from '@/modules/cache/cache.port.js';
+import { CacheService } from '@/modules/cache/cache.service.js';
 
 const PROBE_KEY = '__health_probe__';
 
 @Injectable()
 export class RedisHealthIndicator {
-  constructor(@Inject(CACHE_PORT) private readonly cache: CachePort) {}
+  constructor(private readonly cache: CacheService) {}
 
   async isHealthy(key: string): Promise<HealthIndicatorResult> {
     try {
