@@ -197,7 +197,7 @@ No documentation for required environment variables beyond the Zod schema. Incre
 | 62   | `RequestContextInterceptor` noop `tap()` operator             | Low      | Low    | P3       | Done   |
 | 63   | `console.error` in database provider instead of Logger        | Low      | Low    | P3       | Done   |
 | 64   | Login endpoint leaks social auth account type                 | Low      | Low    | P3       | Done   |
-| 32   | Export loads 10K rows + JSON.stringify into memory            | Medium   | Medium | P2       | Done   |
+| 32b  | Export loads 10K rows + JSON.stringify into memory            | Medium   | Medium | P2       | Done   |
 | 50   | No `Link` header emitted for paginated responses              | Medium   | Medium | P2       | Done   |
 | 56   | Sequential cache invalidation loops in scheduled tasks        | Medium   | Low    | P2       | Done   |
 | 57   | `select()` wildcard fetches sensitive/unused columns          | Medium   | Low    | P2       | Done   |

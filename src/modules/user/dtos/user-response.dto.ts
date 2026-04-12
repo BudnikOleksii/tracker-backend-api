@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 
 import type { AuthProvider } from '@/shared/enums/auth-provider.enum.js';
 import { AUTH_PROVIDERS } from '@/shared/enums/auth-provider.enum.js';
@@ -33,19 +33,27 @@ export class UserResponseDto {
   @ApiProperty({ description: 'Whether user email is verified', example: true })
   emailVerified: boolean;
 
-  @ApiPropertyOptional({ description: 'Country code (ISO 3166-1 alpha-3)', example: 'USA' })
+  @ApiProperty({
+    description: 'Country code (ISO 3166-1 alpha-3)',
+    example: 'USA',
+    nullable: true,
+  })
   countryCode: CountryCode | null;
 
-  @ApiPropertyOptional({ description: 'Base currency code (ISO 4217)', example: 'USD' })
+  @ApiProperty({ description: 'Base currency code (ISO 4217)', example: 'USD', nullable: true })
   baseCurrencyCode: CurrencyCode | null;
 
   @ApiProperty({ description: 'Whether onboarding is completed', example: false })
   onboardingCompleted: boolean;
 
-  @ApiPropertyOptional({ description: 'Last known IP address', example: '192.168.1.1' })
+  @ApiProperty({ description: 'Last known IP address', example: '192.168.1.1', nullable: true })
   ipAddress: string | null;
 
-  @ApiPropertyOptional({ description: 'Last known user agent', example: 'Mozilla/5.0...' })
+  @ApiProperty({
+    description: 'Last known user agent',
+    example: 'Mozilla/5.0...',
+    nullable: true,
+  })
   userAgent: string | null;
 
   @ApiProperty({ description: 'Creation timestamp', example: '2026-03-15T10:30:00.000Z' })

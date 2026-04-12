@@ -11,7 +11,9 @@ export function createClsConfig(): ClsModuleOptions {
       mount: true,
       generateId: true,
       idGenerator: (request: Request) => {
-        return convertHeaderToString(request.headers['x-request-id']) ?? randomUUID();
+        const requestId = convertHeaderToString(request.headers['x-request-id'])?.trim();
+
+        return requestId || randomUUID();
       },
       setup: setupClsContext,
     },

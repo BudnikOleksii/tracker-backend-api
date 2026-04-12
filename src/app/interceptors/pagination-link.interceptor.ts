@@ -20,7 +20,12 @@ function isPaginated(body: unknown): body is PaginatedShape {
   }
   const b = body as Record<string, unknown>;
 
-  return b.object === 'list' && typeof b.page === 'number' && typeof b.totalPages === 'number';
+  return (
+    b.object === 'list' &&
+    typeof b.page === 'number' &&
+    typeof b.pageSize === 'number' &&
+    typeof b.totalPages === 'number'
+  );
 }
 
 function buildLinkHeader(params: {
@@ -66,8 +71,12 @@ export class PaginationLinkInterceptor implements NestInterceptor {
         const request = httpCtx.getRequest<Request>();
         const response = httpCtx.getResponse<Response>();
 
+        const forwardedProto = convertHeaderToString(request.headers['x-forwarded-proto']);
+        const normalizedProto = forwardedProto?.split(',')[0]?.trim().toLowerCase();
         const protocol =
-          convertHeaderToString(request.headers['x-forwarded-proto']) ?? request.protocol;
+          normalizedProto === 'http' || normalizedProto === 'https'
+            ? normalizedProto
+            : request.protocol;
         const host = request.get('host') ?? 'localhost';
         const baseUrl = `${protocol}://${host}${request.originalUrl}`;
 
