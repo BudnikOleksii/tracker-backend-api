@@ -35,6 +35,10 @@ function buildLinkHeader(params: {
   totalPages: number;
 }): string {
   const { baseUrl, page, pageSize, totalPages } = params;
+  if (totalPages <= 0) {
+    return '';
+  }
+
   const url = new URL(baseUrl);
   const makeLink = (p: number, rel: string): string => {
     url.searchParams.set('page', String(p));
