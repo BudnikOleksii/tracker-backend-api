@@ -130,11 +130,11 @@ The `GET /api/transaction-categories` endpoint SHALL accept optional `sortBy` an
 
 ### Requirement: Bulk delete transaction categories
 
-The system SHALL allow an authenticated user to soft-delete multiple transaction categories in a single request by sending `DELETE /transaction-categories/batch` with a body containing an array of category IDs. The system SHALL validate all IDs, check each category for active (non-deleted) transactions and active children, soft-delete those that pass validation, and report failures with specific reasons. The system SHALL NOT auto-cascade to child categories -- matching existing single-delete behavior.
+The system SHALL allow an authenticated user to soft-delete multiple transaction categories in a single request by sending `DELETE /api/transaction-categories/batch` with a body containing an array of category IDs. The system SHALL validate all IDs, check each category for active (non-deleted) transactions and active children, soft-delete those that pass validation, and report failures with specific reasons. The system SHALL NOT auto-cascade to child categories -- matching existing single-delete behavior.
 
 #### Scenario: Successful bulk soft-delete
 
-- **WHEN** an authenticated user sends `DELETE /transaction-categories/batch` with `{ "ids": ["cat-1", "cat-2"] }` and both categories belong to the user with no active transactions or children
+- **WHEN** an authenticated user sends `DELETE /api/transaction-categories/batch` with `{ "ids": ["cat-1", "cat-2"] }` and both categories belong to the user with no active transactions or children
 - **THEN** the system sets `deletedAt` on both categories and returns `{ "deleted": 2, "failed": [], "message": "2 categories deleted successfully" }`
 
 #### Scenario: Some categories have active transactions

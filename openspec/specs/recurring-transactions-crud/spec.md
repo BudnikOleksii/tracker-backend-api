@@ -168,7 +168,7 @@ The `GET /api/recurring-transactions` endpoint SHALL accept optional `sortBy` an
 
 ### Requirement: Bulk delete recurring transactions
 
-The system SHALL allow an authenticated user to cancel multiple recurring transactions in a single request by sending `DELETE /recurring-transactions/batch` with a body containing an array of recurring transaction IDs. The system SHALL set the status to CANCELLED on all matching recurring transactions owned by the user, regardless of current status (matching existing single-delete behavior). IDs that are not found, not owned, or already CANCELLED SHALL be reported as failures. Previously materialized transactions SHALL NOT be affected.
+The system SHALL allow an authenticated user to cancel multiple recurring transactions in a single request by sending `DELETE /recurring-transactions/batch` with a body containing an array of recurring transaction IDs. The system SHALL set the status to CANCELLED on matching ACTIVE or PAUSED recurring transactions owned by the user. IDs that are not found, not owned, or already CANCELLED SHALL be reported as failures. Previously materialized transactions SHALL NOT be affected.
 
 #### Scenario: Successful bulk cancellation
 

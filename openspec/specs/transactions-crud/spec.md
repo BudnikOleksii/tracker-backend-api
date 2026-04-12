@@ -100,12 +100,12 @@ The system SHALL allow an authenticated user to update their transaction's categ
 
 ### Requirement: Delete a transaction
 
-The system SHALL allow an authenticated user to soft-delete their transaction by setting the `deletedAt` timestamp.
+The system SHALL allow an authenticated user to delete their transaction. The deletion is a hard delete (row removal).
 
 #### Scenario: Successful deletion
 
 - **WHEN** the user sends a DELETE request to `/transactions/:id` for their own transaction
-- **THEN** the system soft-deletes the transaction and returns HTTP 200 with a success message
+- **THEN** the system deletes the transaction and returns HTTP 200 with a success message
 
 #### Scenario: Transaction not found on delete
 
