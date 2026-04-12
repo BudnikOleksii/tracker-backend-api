@@ -47,7 +47,9 @@ For each finding (or group of independent findings in parallel):
    - `documentation-engineer` -> subagent_type: "documentation-engineer"
    - `refactoring-specialist` -> subagent_type: "refactoring-specialist"
    - `dependency-manager` -> subagent_type: "dependency-manager"
-     When a finding lists multiple agents, use the first one as primary. For simple or cross-cutting changes, implement directly without delegation.
+
+   When a finding lists multiple agents, use the first one as primary. For simple or cross-cutting changes, implement directly without delegation.
+
 3. When delegating to an agent, provide a detailed prompt that includes:
    - The full finding description and fix instructions from IMPROVEMENTS.md
    - The exact file paths and line numbers

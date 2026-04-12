@@ -139,24 +139,27 @@ Suggested sprint grouping:
 
 ## Phase 5: Update IMPROVEMENTS.md
 
-1. For each accepted finding, add a row to the **## Active Findings** table with Status = "Todo".
-2. For each accepted finding, add a detailed entry under **## Active Findings (Detailed)** following the existing format:
+1. For each accepted finding, add a row to the **## Active Findings** table with Status = "Todo". The table columns are: `| # | Priority | Finding | Effort | Impact | Agent(s) | Status |`. Use priority labels (P1-P4) and textual impact (Critical/High/Medium/Low).
+2. For each accepted finding, add a detailed entry under **## Active Findings (Detailed)**, grouped under the appropriate priority heading. Follow the existing format exactly:
 
    ```md
-   ### {number}. {title}
+   ### P{n} -- {Impact}
 
-   **Impact:** {1-5} | **Effort:** {S/M/L} | **Agent:** {agent_name}
+   #### {number}. {title}
+
+   **Effort:** {effort} | **Impact:** {impact} | **Reported by:** {agent_name}
 
    {problem description}
 
-   **Files:**
+   **Fix:** {concrete fix instruction}
 
-   - `{file_path}:{line_number}` ({brief context})
-
-   **Action:** {concrete fix instruction}
+   **File:** `{file_path}:{line_number}`
 
    ---
    ```
+
+   Priority mapping: Impact Critical = P0, High = P1, Medium = P2, Low = P3.
+   If a priority group heading (e.g. `### P1 -- High`) already exists, append the entry under it rather than creating a duplicate heading.
 
 3. Update the **Recommended Execution Order** section with new sprint groupings appended.
 4. Update the `> Updated:` date at the top to today's date, and append any new agent names to the `Analyzed by:` list.
