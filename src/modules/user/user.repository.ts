@@ -18,6 +18,13 @@ export interface UserInfo {
   id: string;
   email: string;
   role: UserRole;
+  authProvider: AuthProvider;
+  emailVerified: boolean;
+  countryCode: CountryCode | null;
+  baseCurrencyCode: CurrencyCode | null;
+  onboardingCompleted: boolean;
+  ipAddress: string | null;
+  userAgent: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -78,6 +85,21 @@ export interface UserSummary {
   newToday: number;
 }
 
+const USER_INFO_COLUMNS = {
+  id: users.id,
+  email: users.email,
+  role: users.role,
+  authProvider: users.authProvider,
+  emailVerified: users.emailVerified,
+  countryCode: users.countryCode,
+  baseCurrencyCode: users.baseCurrencyCode,
+  onboardingCompleted: users.onboardingCompleted,
+  ipAddress: users.ipAddress,
+  userAgent: users.userAgent,
+  createdAt: users.createdAt,
+  updatedAt: users.updatedAt,
+} as const;
+
 const SORT_COLUMN_MAP = {
   email: users.email,
   createdAt: users.createdAt,
@@ -110,7 +132,7 @@ export class UserRepository {
 
     const [usersData, totalResult] = await Promise.all([
       this.db
-        .select()
+        .select(USER_INFO_COLUMNS)
         .from(users)
         .where(whereClause)
         .limit(pageSize)
@@ -129,7 +151,7 @@ export class UserRepository {
 
   async findById(id: string): Promise<UserInfo | null> {
     const result = await this.db
-      .select()
+      .select(USER_INFO_COLUMNS)
       .from(users)
       .where(and(eq(users.id, id), isNull(users.deletedAt)))
       .limit(1);
@@ -254,7 +276,18 @@ export class UserRepository {
 
   async findProfileById(id: string): Promise<ProfileInfo | null> {
     const result = await this.db
-      .select()
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        countryCode: users.countryCode,
+        baseCurrencyCode: users.baseCurrencyCode,
+        onboardingCompleted: users.onboardingCompleted,
+        role: users.role,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      })
       .from(users)
       .where(and(eq(users.id, id), isNull(users.deletedAt)))
       .limit(1);
@@ -411,7 +444,21 @@ export class UserRepository {
     return result.length > 0;
   }
 
-  private toProfileInfo(user: User): ProfileInfo {
+  private toProfileInfo(
+    user: Pick<
+      User,
+      | 'id'
+      | 'email'
+      | 'firstName'
+      | 'lastName'
+      | 'countryCode'
+      | 'baseCurrencyCode'
+      | 'onboardingCompleted'
+      | 'role'
+      | 'createdAt'
+      | 'updatedAt'
+    >,
+  ): ProfileInfo {
     return {
       id: user.id,
       email: user.email,
@@ -426,11 +473,34 @@ export class UserRepository {
     };
   }
 
-  private toUserInfo(user: User): UserInfo {
+  private toUserInfo(
+    user: Pick<
+      User,
+      | 'id'
+      | 'email'
+      | 'role'
+      | 'authProvider'
+      | 'emailVerified'
+      | 'countryCode'
+      | 'baseCurrencyCode'
+      | 'onboardingCompleted'
+      | 'ipAddress'
+      | 'userAgent'
+      | 'createdAt'
+      | 'updatedAt'
+    >,
+  ): UserInfo {
     return {
       id: user.id,
       email: user.email,
       role: user.role,
+      authProvider: user.authProvider,
+      emailVerified: user.emailVerified,
+      countryCode: user.countryCode,
+      baseCurrencyCode: user.baseCurrencyCode,
+      onboardingCompleted: user.onboardingCompleted,
+      ipAddress: user.ipAddress,
+      userAgent: user.userAgent,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };

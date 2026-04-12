@@ -1,4 +1,4 @@
-import type { Readable } from 'node:stream';
+import { Readable } from 'node:stream';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { stringify as stringifyCsvStream } from 'csv-stringify';
@@ -262,10 +262,7 @@ export class TransactionsService {
     dateFrom?: string;
     dateTo?: string;
     categoryId?: string;
-  }): Promise<
-    | { stream: Readable; contentType: string; filename: string; isTruncated: boolean }
-    | { content: string; contentType: string; filename: string; isTruncated: boolean }
-  > {
+  }): Promise<{ stream: Readable; contentType: string; filename: string; isTruncated: boolean }> {
     const { userId, format, dateFrom, dateTo, categoryId } = params;
 
     const query: ExportTransactionQuery = { userId, dateFrom, dateTo, categoryId };
@@ -290,9 +287,20 @@ export class TransactionsService {
       return { stream, contentType: 'text/csv', filename, isTruncated };
     }
 
-    const content = JSON.stringify(exportRows, null, 2);
+    const stream = Readable.from(
+      (function* () {
+        yield '[';
+        for (let i = 0; i < exportRows.length; i++) {
+          if (i > 0) {
+            yield ',';
+          }
+          yield JSON.stringify(exportRows[i]);
+        }
+        yield ']';
+      })(),
+    );
 
-    return { content, contentType: 'application/json', filename, isTruncated };
+    return { stream, contentType: 'application/json', filename, isTruncated };
   }
 
   private toExportRow(

@@ -7,16 +7,9 @@
 
 ## Active Findings
 
-| #   | Priority | Finding                                                               | Effort | Impact | Agent(s)                                 | Status  |
-| --- | -------- | --------------------------------------------------------------------- | ------ | ------ | ---------------------------------------- | ------- |
-| 15  | P1       | No API versioning strategy                                            | Medium | High   | api-designer                             | Todo    |
-| 32  | P2       | Export loads 10K rows + JSON.stringify into memory                    | Medium | Medium | architect-reviewer, performance-engineer | Todo    |
-| 50  | P2       | No `Link` header emitted for paginated responses                      | Medium | Medium | api-designer                             | Todo    |
-| 56  | P2       | Sequential cache invalidation loops in scheduled tasks                | Low    | Medium | performance-engineer                     | Todo    |
-| 57  | P2       | `select()` wildcard fetches sensitive/unused columns                  | Low    | Medium | performance-engineer                     | Todo    |
-| 58  | P2       | Missing controller return type annotations                            | Medium | Medium | typescript-pro                           | Todo    |
-| 59  | P2       | Header type casts (`x-forwarded-for`, `x-csrf-token`, `x-request-id`) | Low    | Medium | typescript-pro                           | Partial |
-| 61  | P2       | Guards barrel re-export violates project convention                   | Low    | Medium | typescript-pro, architect-reviewer       | Todo    |
+| #   | Priority | Finding                    | Effort | Impact | Agent(s)     | Status |
+| --- | -------- | -------------------------- | ------ | ------ | ------------ | ------ |
+| 15  | P1       | No API versioning strategy | Medium | High   | api-designer | Todo   |
 
 ---
 
@@ -31,98 +24,6 @@
 No URI versioning, no header versioning, no `enableVersioning()` call. Any breaking change will affect all clients with no migration path.
 
 **Fix:** Add `app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' })` in `src/main.ts`.
-
----
-
-### P2 -- Medium
-
-#### 32. Export Loads 10K Rows + `JSON.stringify` Into Memory
-
-**Effort:** Medium | **Impact:** Medium | **Reported by:** architect-reviewer, performance-engineer
-
-`findAllForExport` loads up to 10,000 rows. JSON export uses `JSON.stringify(exportRows, null, 2)` (pretty-printed, adding 20-30% overhead).
-
-**Fix:** Use streaming JSON serializer; remove pretty-printing for file downloads.
-
-**Files:** `src/modules/transactions/transactions.repository.ts:96`, `src/modules/transactions/transactions.service.ts:267`
-
----
-
----
-
-#### 50. No `Link` Header for Paginated Responses
-
-**Effort:** Medium | **Impact:** Medium | **Reported by:** api-designer
-
-`Link` is listed in CORS `exposedHeaders` but never emitted. Clients must construct pagination URLs manually.
-
-**File:** `src/app/config/cors.config.ts:6`
-
----
-
----
-
-#### 56. Sequential Cache Invalidation Loops
-
-**Effort:** Low | **Impact:** Medium | **Reported by:** performance-engineer
-
-`checkOverspendForAllBudgets` and `processAllRecurringTransactions` invalidate caches in sequential `for` loops.
-
-**Fix:** Use `Promise.all()`.
-
-**Files:** `src/modules/budgets/budgets.service.ts:252-258`, `src/modules/recurring-transactions/recurring-transactions.service.ts:352-354`
-
----
-
-#### 57. `select()` Wildcard Fetches Sensitive Columns
-
-**Effort:** Low | **Impact:** Medium | **Reported by:** performance-engineer
-
-`findById` and `findAll` on `UserRepository` fetch all columns including `passwordHash`, `emailVerificationToken`.
-
-**Fix:** Use explicit column selection.
-
-**File:** `src/modules/user/user.repository.ts:109,130,247`
-
----
-
-#### 58. Missing Controller Return Type Annotations
-
-**Effort:** Medium | **Impact:** Medium | **Reported by:** typescript-pro
-
-No controller action methods have explicit return type annotations. TypeScript cannot catch shape mismatches between service returns and Swagger DTOs.
-
-**Fix:** Add return types and enable `@typescript-eslint/explicit-function-return-type`.
-
-**Files:** All controller files
-
----
-
-#### 59. Header Type Casts Drop Array Case
-
-**Effort:** Low | **Impact:** Medium | **Reported by:** typescript-pro
-
-`x-forwarded-for`, `x-csrf-token`, `x-request-id` are cast to `string | undefined` but the real type is `string | string[] | undefined`.
-
-**Fix:** Handle both cases: `const raw = req.headers[...]; const val = Array.isArray(raw) ? raw[0] : raw;`
-
-**Files:** `auth.controller.ts:113,355`, `cls.config.ts:12`, `csrf.guard.ts:24`
-
----
-
-#### 61. Guards Barrel Re-export Violates Project Convention
-
-**Effort:** Low | **Impact:** Medium | **Reported by:** typescript-pro, architect-reviewer
-
-`src/shared/guards/index.ts` re-exports guards, violating the "no re-exports" convention. Multiple controllers import from this barrel.
-
-**Fix:** Remove barrel, update imports to reference source files directly.
-
-**File:** `src/shared/guards/index.ts`
-
----
-
-### P3 -- Low
 
 ---
 
@@ -296,3 +197,10 @@ No documentation for required environment variables beyond the Zod schema. Incre
 | 62   | `RequestContextInterceptor` noop `tap()` operator             | Low      | Low    | P3       | Done   |
 | 63   | `console.error` in database provider instead of Logger        | Low      | Low    | P3       | Done   |
 | 64   | Login endpoint leaks social auth account type                 | Low      | Low    | P3       | Done   |
+| 32   | Export loads 10K rows + JSON.stringify into memory            | Medium   | Medium | P2       | Done   |
+| 50   | No `Link` header emitted for paginated responses              | Medium   | Medium | P2       | Done   |
+| 56   | Sequential cache invalidation loops in scheduled tasks        | Medium   | Low    | P2       | Done   |
+| 57   | `select()` wildcard fetches sensitive/unused columns          | Medium   | Low    | P2       | Done   |
+| 58   | Missing controller return type annotations                    | Medium   | Medium | P2       | Done   |
+| 59   | Header type casts drop array case                             | Medium   | Low    | P2       | Done   |
+| 61   | Guards barrel re-export violates project convention           | Medium   | Low    | P2       | Done   |

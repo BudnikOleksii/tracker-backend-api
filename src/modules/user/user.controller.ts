@@ -17,9 +17,11 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 
 import { Roles } from '@/shared/decorators/roles.decorator.js';
 import { MessageResponseDto } from '@/shared/dtos/message-response.dto.js';
-import { JwtAuthGuard, RolesGuard } from '@/shared/guards/index.js';
+import { JwtAuthGuard } from '@/shared/guards/jwt-auth.guard.js';
+import { RolesGuard } from '@/shared/guards/roles.guard.js';
 import type { AuthenticatedRequest } from '@/modules/auth/auth.types.js';
 import { buildPaginatedResponse } from '@/shared/utils/pagination.utils.js';
+import type { PaginatedResponse } from '@/shared/utils/pagination.utils.js';
 
 import { AssignRoleDto } from './dtos/assign-role.dto.js';
 import { CreateUserDto } from './dtos/create-user.dto.js';
@@ -43,7 +45,7 @@ export class UserController {
   @Get()
   @ApiOperation({ summary: 'Get user list' })
   @ApiResponse({ status: 200, type: UserListResponseDto })
-  async findAll(@Query() query: UserQueryDto) {
+  async findAll(@Query() query: UserQueryDto): Promise<PaginatedResponse<UserResponseDto>> {
     const result = await this.userService.findAll({
       page: query.page,
       pageSize: query.pageSize,
@@ -59,7 +61,7 @@ export class UserController {
   @Get('summary')
   @ApiOperation({ summary: 'Get user summary statistics' })
   @ApiResponse({ status: 200, type: UserSummaryResponseDto })
-  async getSummary() {
+  async getSummary(): Promise<UserSummaryResponseDto> {
     return this.userService.getSummary();
   }
 
@@ -67,7 +69,7 @@ export class UserController {
   @ApiOperation({ summary: 'Get user details' })
   @ApiResponse({ status: 200, type: UserResponseDto })
   @ApiResponse({ status: 404, description: 'User not found' })
-  async findById(@Param('id', ParseUUIDPipe) id: string) {
+  async findById(@Param('id', ParseUUIDPipe) id: string): Promise<UserResponseDto> {
     return this.userService.findById(id);
   }
 
@@ -76,7 +78,7 @@ export class UserController {
   @ApiOperation({ summary: 'Create user' })
   @ApiResponse({ status: 201, type: UserResponseDto })
   @ApiResponse({ status: 409, description: 'Email already in use' })
-  async create(@Body() dto: CreateUserDto) {
+  async create(@Body() dto: CreateUserDto): Promise<UserResponseDto> {
     return this.userService.create({
       email: dto.email,
       password: dto.password,
@@ -90,7 +92,10 @@ export class UserController {
   @ApiOperation({ summary: 'Update user' })
   @ApiResponse({ status: 200, type: UserResponseDto })
   @ApiResponse({ status: 404, description: 'User not found' })
-  async update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateUserDto) {
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateUserDto,
+  ): Promise<UserResponseDto> {
     return this.userService.update(id, {
       role: dto.role,
     });
@@ -107,7 +112,7 @@ export class UserController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: AssignRoleDto,
     @Request() req: AuthenticatedRequest,
-  ) {
+  ): Promise<UserResponseDto> {
     return this.userService.assignRole(id, dto.role, req.user.id, req.user.role);
   }
 
@@ -116,7 +121,7 @@ export class UserController {
   @ApiOperation({ summary: 'Delete user' })
   @ApiResponse({ status: 200, type: MessageResponseDto })
   @ApiResponse({ status: 404, description: 'User not found' })
-  async delete(@Param('id', ParseUUIDPipe) id: string) {
+  async delete(@Param('id', ParseUUIDPipe) id: string): Promise<MessageResponseDto> {
     await this.userService.delete(id);
 
     return { message: 'User deleted successfully' };

@@ -283,9 +283,11 @@ export class BudgetsService {
         activeBudgets.filter((b) => updatedIds.has(b.id)).map((b) => b.userId),
       );
 
-      for (const uid of affectedUserIds) {
-        await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE, uid));
-      }
+      await Promise.all(
+        [...affectedUserIds].map((uid) =>
+          this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE, uid)),
+        ),
+      );
     }
 
     return { checked: activeBudgets.length, updated: statusUpdates.length };

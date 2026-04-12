@@ -12,6 +12,7 @@ import { setupSwagger } from './app/config/swagger.config.js';
 import { createValidationPipe } from './app/config/validation.config.js';
 import { AllExceptionsFilter } from './app/filters/all-exceptions.filter.js';
 import { ProblemDetailsFilter } from './app/filters/problem-details.filter.js';
+import { PaginationLinkInterceptor } from './app/interceptors/pagination-link.interceptor.js';
 import { RequestContextInterceptor } from './app/interceptors/request-context.interceptor.js';
 import { TimeoutInterceptor } from './app/interceptors/timeout.interceptor.js';
 import { AppModule } from './app.module.js';
@@ -42,7 +43,11 @@ async function bootstrap() {
 
   app.useGlobalFilters(app.get(ProblemDetailsFilter), app.get(AllExceptionsFilter));
 
-  app.useGlobalInterceptors(app.get(RequestContextInterceptor), app.get(TimeoutInterceptor));
+  app.useGlobalInterceptors(
+    app.get(RequestContextInterceptor),
+    app.get(TimeoutInterceptor),
+    app.get(PaginationLinkInterceptor),
+  );
 
   app.useGlobalPipes(createValidationPipe());
 

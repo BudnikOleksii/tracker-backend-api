@@ -28,7 +28,9 @@ import type { CookieOptions, Response } from 'express';
 
 import type { Env } from '@/app/config/env.schema.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
-import { CsrfGuard, JwtAuthGuard } from '@/shared/guards/index.js';
+import { CsrfGuard } from '@/shared/guards/csrf.guard.js';
+import { JwtAuthGuard } from '@/shared/guards/jwt-auth.guard.js';
+import { convertHeaderToString } from '@/shared/utils/header.utils.js';
 
 import { AuthService } from './auth.service.js';
 import { TokenService } from './token.service.js';
@@ -48,6 +50,8 @@ import { SocialExchangeResponseDto } from './dtos/social-exchange-response.dto.j
 import type {
   AuthenticatedRequest,
   GenerateTokensResult,
+  RefreshTokenInfo,
+  RefreshTokenListResult,
   SocialLoginParams,
 } from './auth.types.js';
 
@@ -90,7 +94,10 @@ export class AuthController {
   @HttpCode(201)
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({ status: 201, type: AuthResponseDto })
-  async register(@Body() dto: RegisterDto, @Res({ passthrough: true }) res: Response) {
+  async register(
+    @Body() dto: RegisterDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<AuthResponseDto> {
     const result = await this.authService.register(dto.email, dto.password);
 
     this.setRefreshTokenCookie(res, result);
@@ -111,12 +118,12 @@ export class AuthController {
       socket?: { remoteAddress?: string };
     },
     @Res({ passthrough: true }) res: Response,
-  ) {
+  ): Promise<AuthResponseDto> {
     const deviceContext = {
       ipAddress:
-        (req.headers['x-forwarded-for'] as string | undefined)?.split(',')[0]?.trim() ??
+        convertHeaderToString(req.headers['x-forwarded-for'])?.split(',')[0]?.trim() ??
         req.socket?.remoteAddress,
-      userAgent: req.headers['user-agent'] as string | undefined,
+      userAgent: convertHeaderToString(req.headers['user-agent']),
     };
 
     const result = await this.authService.login(dto.email, dto.password, deviceContext);
@@ -135,7 +142,7 @@ export class AuthController {
   async refreshToken(
     @Request() req: { cookies?: Record<string, string> },
     @Res({ passthrough: true }) res: Response,
-  ) {
+  ): Promise<AuthResponseDto> {
     const refreshToken = this.getRefreshTokenFromCookie(req);
     const result = await this.authService.refreshToken(refreshToken);
 
@@ -150,7 +157,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Get current refresh token info' })
   @ApiResponse({ status: 200, type: RefreshTokenInfoDto })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getRefreshToken(@Request() req: AuthenticatedRequest) {
+  async getRefreshToken(@Request() req: AuthenticatedRequest): Promise<RefreshTokenInfo> {
     return this.tokenService.getRefreshToken(req.user);
   }
 
@@ -160,7 +167,7 @@ export class AuthController {
   @ApiOperation({ summary: 'List active refresh tokens' })
   @ApiResponse({ status: 200, type: RefreshTokenListDto })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async listRefreshTokens(@Request() req: AuthenticatedRequest) {
+  async listRefreshTokens(@Request() req: AuthenticatedRequest): Promise<RefreshTokenListResult> {
     return this.tokenService.listRefreshTokens(req.user.id, req.user.sessionId);
   }
 
@@ -174,7 +181,7 @@ export class AuthController {
   async logout(
     @Request() req: AuthenticatedRequest & { cookies?: Record<string, string> },
     @Res({ passthrough: true }) res: Response,
-  ) {
+  ): Promise<LogoutResponseDto> {
     const refreshToken = this.getRefreshTokenFromCookie(req);
     await this.tokenService.logout(refreshToken, req.user.jti);
 
@@ -194,7 +201,7 @@ export class AuthController {
   async revokeRefreshToken(
     @Body() dto: RevokeRefreshTokenDto,
     @Request() req: AuthenticatedRequest,
-  ) {
+  ): Promise<RevokeTokenResponseDto> {
     return this.tokenService.revokeRefreshToken({
       sessionId: dto.sessionId,
       userId: req.user.id,
@@ -213,7 +220,7 @@ export class AuthController {
   async revokeRefreshTokens(
     @Request() req: AuthenticatedRequest,
     @Res({ passthrough: true }) res: Response,
-  ) {
+  ): Promise<RevokeAllTokensResponseDto> {
     const revokedCount = await this.tokenService.revokeAllRefreshTokens(req.user.id);
 
     this.clearRefreshTokenCookie(res);
@@ -254,7 +261,7 @@ export class AuthController {
   @Get('providers')
   @ApiOperation({ summary: 'List enabled authentication providers' })
   @ApiResponse({ status: 200 })
-  getProviders() {
+  getProviders(): { providers: { id: string; enabled: boolean }[] } {
     return {
       providers: [
         { id: 'google', enabled: !!this.configService.get('GOOGLE_CLIENT_ID', { infer: true }) },
@@ -321,7 +328,7 @@ export class AuthController {
   async exchangeSocialCode(
     @Body() dto: ExchangeSocialCodeDto,
     @Res({ passthrough: true }) res: Response,
-  ) {
+  ): Promise<SocialExchangeResponseDto> {
     const stored = await this.socialAuthCodeService.exchangeCode(dto.code);
 
     if (!stored) {
@@ -350,9 +357,9 @@ export class AuthController {
     try {
       const deviceContext = {
         ipAddress:
-          (req.headers['x-forwarded-for'] as string | undefined)?.split(',')[0]?.trim() ??
+          convertHeaderToString(req.headers['x-forwarded-for'])?.split(',')[0]?.trim() ??
           req.socket?.remoteAddress,
-        userAgent: req.headers['user-agent'] as string | undefined,
+        userAgent: convertHeaderToString(req.headers['user-agent']),
       };
 
       const result = await this.authService.socialLogin({
