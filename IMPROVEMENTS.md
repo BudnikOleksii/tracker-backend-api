@@ -7,25 +7,16 @@
 
 ## Active Findings
 
-| #   | Priority | Finding                                                               | Effort | Impact | Agent(s)                                                | Status  |
-| --- | -------- | --------------------------------------------------------------------- | ------ | ------ | ------------------------------------------------------- | ------- |
-| 15  | P1       | No API versioning strategy                                            | Medium | High   | api-designer                                            | Todo    |
-| 32  | P2       | Export loads 10K rows + JSON.stringify into memory                    | Medium | Medium | architect-reviewer, performance-engineer                | Todo    |
-| 43  | P2       | `enableImplicitConversion: true` in ValidationPipe                    | Medium | Medium | security-auditor, nestjs-expert                         | Done    |
-| 44  | P2       | JWT algorithm not explicitly specified                                | Low    | Medium | security-auditor                                        | Done    |
-| 45  | P2       | Token blacklist fail-open design (no monitoring)                      | Medium | Medium | security-auditor                                        | Done    |
-| 46  | P2       | Social auth code exchange race condition (TOCTOU)                     | Medium | Medium | security-auditor                                        | Done    |
-| 50  | P2       | No `Link` header emitted for paginated responses                      | Medium | Medium | api-designer                                            | Todo    |
-| 53  | P2       | Social callback swallows all errors including programming errors      | Medium | Medium | nestjs-expert                                           | Done    |
-| 54  | P2       | Health indicators don't extend `HealthIndicator` from Terminus        | Medium | Medium | nestjs-expert                                           | Done    |
-| 56  | P2       | Sequential cache invalidation loops in scheduled tasks                | Low    | Medium | performance-engineer                                    | Todo    |
-| 57  | P2       | `select()` wildcard fetches sensitive/unused columns                  | Low    | Medium | performance-engineer                                    | Todo    |
-| 58  | P2       | Missing controller return type annotations                            | Medium | Medium | typescript-pro                                          | Todo    |
-| 59  | P2       | Header type casts (`x-forwarded-for`, `x-csrf-token`, `x-request-id`) | Low    | Medium | typescript-pro                                          | Partial |
-| 61  | P2       | Guards barrel re-export violates project convention                   | Low    | Medium | typescript-pro, architect-reviewer                      | Todo    |
-| 62  | P3       | `RequestContextInterceptor` noop `tap()` operator                     | Low    | Low    | architect-reviewer, nestjs-expert, performance-engineer | Done    |
-| 63  | P3       | `console.error` in database provider instead of Logger                | Low    | Low    | nestjs-expert                                           | Done    |
-| 64  | P3       | Login endpoint leaks social auth account type                         | Low    | Low    | security-auditor                                        | Done    |
+| #   | Priority | Finding                                                               | Effort | Impact | Agent(s)                                 | Status  |
+| --- | -------- | --------------------------------------------------------------------- | ------ | ------ | ---------------------------------------- | ------- |
+| 15  | P1       | No API versioning strategy                                            | Medium | High   | api-designer                             | Todo    |
+| 32  | P2       | Export loads 10K rows + JSON.stringify into memory                    | Medium | Medium | architect-reviewer, performance-engineer | Todo    |
+| 50  | P2       | No `Link` header emitted for paginated responses                      | Medium | Medium | api-designer                             | Todo    |
+| 56  | P2       | Sequential cache invalidation loops in scheduled tasks                | Low    | Medium | performance-engineer                     | Todo    |
+| 57  | P2       | `select()` wildcard fetches sensitive/unused columns                  | Low    | Medium | performance-engineer                     | Todo    |
+| 58  | P2       | Missing controller return type annotations                            | Medium | Medium | typescript-pro                           | Todo    |
+| 59  | P2       | Header type casts (`x-forwarded-for`, `x-csrf-token`, `x-request-id`) | Low    | Medium | typescript-pro                           | Partial |
+| 61  | P2       | Guards barrel re-export violates project convention                   | Low    | Medium | typescript-pro, architect-reviewer       | Todo    |
 
 ---
 

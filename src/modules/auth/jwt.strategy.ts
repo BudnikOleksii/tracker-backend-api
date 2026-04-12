@@ -8,6 +8,7 @@ import type { Env } from '@/app/config/env.schema.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 import type { UserRole } from '@/shared/enums/role.enum.js';
 
+import { JWT_ALGORITHM } from './auth.constants.js';
 import { TokenBlacklistService } from './token-blacklist.service.js';
 
 export interface JwtPayload {
@@ -31,6 +32,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
       secretOrKey: configService.get('JWT_SECRET', { infer: true }),
+      algorithms: [JWT_ALGORITHM],
     });
   }
 
