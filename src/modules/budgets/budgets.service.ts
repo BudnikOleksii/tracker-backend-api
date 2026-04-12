@@ -7,6 +7,7 @@ import {
 import { Decimal } from 'decimal.js';
 
 import type { DrizzleDb } from '@/database/types.js';
+import type { BulkDeleteResult } from '@/shared/dtos/bulk-delete-response.dto.js';
 import { buildCacheKey, buildCachePrefix } from '@/modules/cache/cache-key.utils.js';
 import { CacheService } from '@/modules/cache/cache.service.js';
 import { TransactionCategoriesService } from '@/modules/transaction-categories/transaction-categories.service.js';
@@ -189,6 +190,26 @@ export class BudgetsService {
     }
 
     await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE, userId));
+  }
+
+  async bulkDelete(ids: string[], userId: string): Promise<BulkDeleteResult> {
+    const deletedIds = await this.budgetRepository.bulkDelete(ids, userId);
+    const deletedSet = new Set(deletedIds);
+    const failed = ids
+      .filter((id) => !deletedSet.has(id))
+      .map((id) => ({ id, reason: 'Not found' }));
+
+    if (deletedIds.length > 0) {
+      await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE, userId));
+    }
+
+    const total = ids.length;
+    const message =
+      failed.length === 0
+        ? `${deletedIds.length} budgets deleted successfully`
+        : `${deletedIds.length} of ${total} budgets deleted`;
+
+    return { deleted: deletedIds.length, failed, message };
   }
 
   async getProgress(id: string, userId: string): Promise<BudgetProgress> {

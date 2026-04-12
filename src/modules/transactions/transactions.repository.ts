@@ -338,6 +338,15 @@ export class TransactionRepository {
     return result.length > 0;
   }
 
+  async bulkDelete(ids: string[], userId: string): Promise<string[]> {
+    const result = await this.db
+      .delete(transactions)
+      .where(and(inArray(transactions.id, ids), eq(transactions.userId, userId)))
+      .returning({ id: transactions.id });
+
+    return result.map((row) => row.id);
+  }
+
   async findCategoryWithSubcategories(
     categoryId: string,
     userId: string,

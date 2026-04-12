@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
+import type { BulkDeleteResult } from '@/shared/dtos/bulk-delete-response.dto.js';
 import { buildCacheKey, buildCachePrefix } from '@/modules/cache/cache-key.utils.js';
 import { CacheService } from '@/modules/cache/cache.service.js';
 import { TransactionCategoriesService } from '@/modules/transaction-categories/transaction-categories.service.js';
@@ -206,6 +207,22 @@ export class RecurringTransactionsService {
     }
 
     await this.invalidateCache(userId);
+  }
+
+  async bulkDelete(ids: string[], userId: string): Promise<BulkDeleteResult> {
+    const { cancelledIds, failed } = await this.repository.bulkCancel(ids, userId);
+
+    if (cancelledIds.length > 0) {
+      await this.invalidateCache(userId);
+    }
+
+    const total = ids.length;
+    const message =
+      failed.length === 0
+        ? `${cancelledIds.length} recurring transactions deleted successfully`
+        : `${cancelledIds.length} of ${total} recurring transactions deleted`;
+
+    return { deleted: cancelledIds.length, failed, message };
   }
 
   async pause(id: string, userId: string): Promise<RecurringTransactionInfo> {

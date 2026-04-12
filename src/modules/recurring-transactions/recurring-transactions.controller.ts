@@ -16,6 +16,8 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { Roles } from '@/shared/decorators/roles.decorator.js';
+import { BulkDeleteDto } from '@/shared/dtos/bulk-delete.dto.js';
+import { BulkDeleteResponseDto } from '@/shared/dtos/bulk-delete-response.dto.js';
 import { MessageResponseDto } from '@/shared/dtos/message-response.dto.js';
 import { buildPaginatedResponse } from '@/shared/utils/pagination.utils.js';
 import { JwtAuthGuard, RolesGuard } from '@/shared/guards/index.js';
@@ -110,6 +112,15 @@ export class RecurringTransactionsController {
       startDate: dto.startDate ? new Date(dto.startDate) : undefined,
       endDate: dto.endDate ? new Date(dto.endDate) : undefined,
     });
+  }
+
+  @Delete('batch')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Bulk delete (cancel) recurring transactions' })
+  @ApiResponse({ status: 200, type: BulkDeleteResponseDto })
+  @ApiResponse({ status: 400, description: 'Validation error' })
+  async bulkDelete(@Body() dto: BulkDeleteDto, @Request() req: AuthenticatedRequest) {
+    return this.recurringTransactionsService.bulkDelete(dto.ids, req.user.id);
   }
 
   @Delete(':id')

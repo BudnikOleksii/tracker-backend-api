@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, count, desc, eq, gte, lte, or, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte, inArray, lte, or, sql } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 
 import { budgets, transactions } from '@/database/schemas/index.js';
@@ -218,6 +218,15 @@ export class BudgetRepository {
       .returning();
 
     return result.length > 0;
+  }
+
+  async bulkDelete(ids: string[], userId: string): Promise<string[]> {
+    const result = await this.db
+      .delete(budgets)
+      .where(and(inArray(budgets.id, ids), eq(budgets.userId, userId)))
+      .returning({ id: budgets.id });
+
+    return result.map((row) => row.id);
   }
 
   async findOverlapping(params: {

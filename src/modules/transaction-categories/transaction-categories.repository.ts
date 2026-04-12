@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, count, desc, eq, isNull, ne, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, inArray, isNull, ne, sql } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 
 import { transactionCategories, transactions } from '@/database/schemas/index.js';
@@ -246,6 +246,82 @@ export class TransactionCategoryRepository {
       .returning();
 
     return result.length > 0;
+  }
+
+  async bulkSoftDelete(
+    ids: string[],
+    userId: string,
+  ): Promise<{ deletedIds: string[]; failed: { id: string; reason: string }[] }> {
+    return this.db.transaction(async (tx) => {
+      const found = await tx
+        .select({ id: transactionCategories.id })
+        .from(transactionCategories)
+        .where(
+          and(
+            inArray(transactionCategories.id, ids),
+            eq(transactionCategories.userId, userId),
+            isNull(transactionCategories.deletedAt),
+          ),
+        );
+      const foundSet = new Set(found.map((r) => r.id));
+      const failed: { id: string; reason: string }[] = ids
+        .filter((id) => !foundSet.has(id))
+        .map((id) => ({ id, reason: 'Not found' }));
+
+      if (foundSet.size === 0) {
+        return { deletedIds: [], failed };
+      }
+
+      const foundIds = [...foundSet];
+
+      const withTransactions = await tx
+        .select({ categoryId: transactions.categoryId })
+        .from(transactions)
+        .where(inArray(transactions.categoryId, foundIds))
+        .groupBy(transactions.categoryId);
+      const hasTransactionsSet = new Set(withTransactions.map((r) => r.categoryId));
+
+      const withChildren = await tx
+        .select({ parentCategoryId: transactionCategories.parentCategoryId })
+        .from(transactionCategories)
+        .where(
+          and(
+            inArray(transactionCategories.parentCategoryId, foundIds),
+            isNull(transactionCategories.deletedAt),
+          ),
+        )
+        .groupBy(transactionCategories.parentCategoryId);
+      const hasChildrenSet = new Set(withChildren.map((r) => r.parentCategoryId).filter(Boolean));
+
+      const deletableIds: string[] = [];
+      for (const id of foundIds) {
+        if (hasTransactionsSet.has(id)) {
+          failed.push({ id, reason: 'Category has active transactions' });
+        } else if (hasChildrenSet.has(id)) {
+          failed.push({ id, reason: 'Category has active children' });
+        } else {
+          deletableIds.push(id);
+        }
+      }
+
+      if (deletableIds.length === 0) {
+        return { deletedIds: [], failed };
+      }
+
+      const result = await tx
+        .update(transactionCategories)
+        .set({ deletedAt: new Date() })
+        .where(
+          and(
+            inArray(transactionCategories.id, deletableIds),
+            eq(transactionCategories.userId, userId),
+            isNull(transactionCategories.deletedAt),
+          ),
+        )
+        .returning({ id: transactionCategories.id });
+
+      return { deletedIds: result.map((r) => r.id), failed };
+    });
   }
 
   async hasTransactions(categoryId: string, tx?: DrizzleDb): Promise<boolean> {
