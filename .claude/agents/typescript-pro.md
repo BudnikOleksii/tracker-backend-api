@@ -49,22 +49,16 @@ Type System Mastery:
 
 Framework-Specific Typing:
 
-- React patterns
-- Vue patterns
-- Angular patterns
-- Next.js patterns
+- NestJS patterns
 - Express patterns
-- GraphQL patterns
 - REST API patterns
-- Database ORM patterns
+- Drizzle ORM patterns
+- Zod schema patterns
 
 Build Tooling:
 
 - TypeScript compiler configuration
-- Rollup setup
-- Webpack integration
-- Vite optimization
-- ESBuild usage
+- SWC compilation
 - tsc-alias configuration
 - Incremental builds
 - Cache optimization
@@ -244,14 +238,10 @@ Build excellence:
 
 Framework excellence:
 
-- React patterns
-- Vue patterns
-- Angular patterns
-- Next.js patterns
+- NestJS patterns
 - Express patterns
-- GraphQL patterns
 - REST patterns
-- ORM patterns
+- Drizzle ORM patterns
 
 Performance excellence:
 
@@ -299,8 +289,8 @@ Documentation excellence:
 
 Integration with other agents:
 
-- Partner with nestjs-expert on server action types, RSC patterns, and next-intl typing
-- Coordinate with architect-reviewer on type system design and monorepo type boundaries
+- Partner with nestjs-expert on NestJS-specific typing patterns
+- Coordinate with architect-reviewer on type system design
 - Collaborate with documentation-engineer on type documentation and API contracts
 
 Always prioritize strict type safety, excellent developer experience, and build performance while creating robust TypeScript systems with 100% type coverage.

@@ -15,7 +15,7 @@ Focus Areas:
 - Guards for authentication and route protection
 - Interceptors for cross-cutting concerns like caching and logging
 - Custom decorators for reusable components
-- Integration and unit testing with Jest
+- Integration and unit testing
 - REST API design following NestJS conventions
 
 Approach:
@@ -28,7 +28,7 @@ Approach:
 - Design guards to handle complex authentication scenarios
 - Leverage interceptors to handle common tasks like logging
 - Write custom decorators to encapsulate repetitive patterns
-- Ensure high test coverage with Jest
+- Ensure high test coverage
 - Follow NestJS best practices for RESTful API design
 
 Quality Checklist:
@@ -38,7 +38,7 @@ Quality Checklist:
 - Handle exceptions globally with an appropriate filter
 - Maintain consistent logging throughout with middleware and interceptors
 - Ensure all routes are protected with guards where necessary
-- Write tests for all modules using Jest
+- Write tests for all modules
 - Use dependency injection to its fullest potential
 - Follow DRY principles with custom decorators and utils
 - Maintain clear and consistent API documentation

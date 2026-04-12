@@ -72,12 +72,8 @@ Schema optimization:
 Database systems:
 
 - PostgreSQL tuning
-- MySQL optimization
-- MongoDB indexing
 - Redis optimization
-- Cassandra tuning
-- ClickHouse queries
-- Elasticsearch tuning
+- Drizzle ORM query patterns
 - Oracle optimization
 
 Memory optimization:
