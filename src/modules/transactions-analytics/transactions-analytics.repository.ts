@@ -124,7 +124,7 @@ export class TransactionsAnalyticsRepository {
   async getTrends(query: AnalyticsBaseQuery, granularity: Granularity): Promise<TrendRow[]> {
     const conditions = this.buildBaseConditions(query);
     const truncUnit = granularity === 'weekly' ? 'week' : 'month';
-    const periodExpr = sql`date_trunc(${truncUnit}, ${transactions.date})`;
+    const periodExpr = sql`date_trunc('${sql.raw(truncUnit)}', ${transactions.date})`;
 
     const rows = await this.db
       .select({
