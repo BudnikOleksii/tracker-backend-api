@@ -84,6 +84,9 @@ You are investigating the tracker-backend-api NestJS project for improvement opp
 - Do NOT report issues that are already tracked (see list below).
 - Each finding must reference specific files and line numbers.
 - Rate each finding: Impact (1-5, where 5 = critical), Effort (S/M/L).
+- Normalization (applied in Phase 5, not by you):
+  - Impact 5 = Critical (P0), 4 = High (P1), 3 = Medium (P2), 1-2 = Low (P3)
+  - Effort S/M/L maps to Low/Medium/High
 - Be concrete — "improve performance" is not a finding. "Add composite index on (userId, createdAt) to transactions table in src/database/schemas/transactions.ts:15 to optimize dashboard query" is.
 
 **Already tracked or completed — do NOT re-report these:**
@@ -139,7 +142,7 @@ Suggested sprint grouping:
 
 ## Phase 5: Update IMPROVEMENTS.md
 
-1. For each accepted finding, add a row to the **## Active Findings** table with Status = "Todo". The table columns are: `| # | Priority | Finding | Effort | Impact | Agent(s) | Status |`. Use priority labels (P1-P4) and textual impact (Critical/High/Medium/Low).
+1. For each accepted finding, add a row to the **## Active Findings** table with Status = "Todo". The table columns are: `| # | Priority | Finding | Effort | Impact | Agent(s) | Status |`. Use priority labels (P0-P3) and textual impact (Critical/High/Medium/Low).
 2. For each accepted finding, add a detailed entry under **## Active Findings (Detailed)**, grouped under the appropriate priority heading. Follow the existing format exactly:
 
    ```md
@@ -153,7 +156,9 @@ Suggested sprint grouping:
 
    **Fix:** {concrete fix instruction}
 
-   **File:** `{file_path}:{line_number}`
+   **Files:**
+
+   - `{file_path}:{line_number}`
 
    ---
    ```
