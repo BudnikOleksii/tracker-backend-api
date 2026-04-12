@@ -111,7 +111,7 @@ export class AuthService {
       });
       throw new UnauthorizedException({
         code: ErrorCode.INVALID_CREDENTIALS,
-        message: 'This account uses social login. Please sign in with your social provider.',
+        message: 'Invalid email or password',
       });
     }
 

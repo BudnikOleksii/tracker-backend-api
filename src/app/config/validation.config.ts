@@ -6,7 +6,7 @@ export function createValidationPipe(): ValidationPipe {
     forbidNonWhitelisted: true,
     transform: true,
     transformOptions: {
-      enableImplicitConversion: true,
+      enableImplicitConversion: false,
     },
     stopAtFirstError: false,
     errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,

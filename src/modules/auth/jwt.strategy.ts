@@ -8,6 +8,7 @@ import type { Env } from '@/app/config/env.schema.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 import type { UserRole } from '@/shared/enums/role.enum.js';
 
+import { JWT_ALGORITHM } from './auth.constants.js';
 import { TokenBlacklistService } from './token-blacklist.service.js';
 
 export interface JwtPayload {
@@ -31,6 +32,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
       secretOrKey: configService.get('JWT_SECRET', { infer: true }),
+      algorithms: [JWT_ALGORITHM],
     });
   }
 
@@ -50,7 +52,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       // Fail-open: Redis unavailability should not block all authenticated requests.
       // The blacklist is defense-in-depth; primary auth is the JWT signature.
       this.logger.warn(
-        `Token blacklist check failed for jti=${payload.jti}, allowing request: ${error instanceof Error ? error.message : String(error)}`,
+        {
+          alert: 'token_blacklist_unavailable',
+          jti: payload.jti,
+          err: error instanceof Error ? error.message : String(error),
+        },
+        'Token blacklist check failed, allowing request (fail-open)',
       );
     }
 

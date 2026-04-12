@@ -366,14 +366,20 @@ export class AuthController {
       url.searchParams.set('code', code);
       res.redirect(url.toString());
     } catch (error) {
-      this.logger.error(
-        'Social auth callback failed',
-        error instanceof Error ? error.stack : undefined,
-      );
+      const reason = this.getSocialAuthErrorReason(error);
+
+      if (error instanceof ConflictException || error instanceof UnauthorizedException) {
+        this.logger.warn({ reason }, 'Social auth callback rejected');
+      } else {
+        this.logger.error(
+          'Social auth callback failed',
+          error instanceof Error ? error.stack : undefined,
+        );
+      }
 
       const url = new URL(redirectUrl);
       url.searchParams.set('error', 'auth_failed');
-      url.searchParams.set('reason', this.getSocialAuthErrorReason(error));
+      url.searchParams.set('reason', reason);
       res.redirect(url.toString());
     }
   }

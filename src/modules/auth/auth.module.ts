@@ -21,6 +21,7 @@ import { RefreshTokenRepository } from './refresh-token.repository.js';
 import { SocialAuthCodeService } from './social-auth-code.service.js';
 import { TokenBlacklistService } from './token-blacklist.service.js';
 import { TokenService } from './token.service.js';
+import { JWT_ALGORITHM } from './auth.constants.js';
 
 function buildSocialStrategyProviders(): Provider[] {
   return [
@@ -58,7 +59,11 @@ function buildSocialStrategyProviders(): Provider[] {
       useFactory: (configService: ConfigService<Env, true>) => ({
         secret: configService.get('JWT_SECRET', { infer: true }),
         signOptions: {
+          algorithm: JWT_ALGORITHM,
           expiresIn: configService.get('JWT_EXPIRES_IN', { infer: true }),
+        },
+        verifyOptions: {
+          algorithms: [JWT_ALGORITHM],
         },
       }),
       inject: [ConfigService],

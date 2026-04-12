@@ -37,12 +37,7 @@ export class SocialAuthCodeService {
 
   async exchangeCode(code: string): Promise<StoredSocialAuthResult | undefined> {
     const key = `${CODE_PREFIX}${code}`;
-    const stored = await this.cacheService.get<StoredSocialAuthResult>(key);
 
-    if (stored) {
-      await this.cacheService.del(key);
-    }
-
-    return stored;
+    return this.cacheService.getdel<StoredSocialAuthResult>(key);
   }
 }
