@@ -19,7 +19,8 @@ import { BulkDeleteDto } from '@/shared/dtos/bulk-delete.dto.js';
 import { BulkDeleteResponseDto } from '@/shared/dtos/bulk-delete-response.dto.js';
 import { MessageResponseDto } from '@/shared/dtos/message-response.dto.js';
 import { buildPaginatedResponse } from '@/shared/utils/pagination.utils.js';
-import { JwtAuthGuard } from '@/shared/guards/index.js';
+import type { PaginatedResponse } from '@/shared/utils/pagination.utils.js';
+import { JwtAuthGuard } from '@/shared/guards/jwt-auth.guard.js';
 import type { AuthenticatedRequest } from '@/modules/auth/auth.types.js';
 
 import { BudgetsService } from './budgets.service.js';
@@ -41,7 +42,10 @@ export class BudgetsController {
   @Get()
   @ApiOperation({ summary: 'List budgets' })
   @ApiResponse({ status: 200, type: BudgetListResponseDto })
-  async findAll(@Query() query: BudgetQueryDto, @Request() req: AuthenticatedRequest) {
+  async findAll(
+    @Query() query: BudgetQueryDto,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<PaginatedResponse<BudgetResponseDto>> {
     const result = await this.budgetsService.findAll({
       userId: req.user.id,
       page: query.page,
@@ -61,7 +65,10 @@ export class BudgetsController {
   @ApiOperation({ summary: 'Get a budget' })
   @ApiResponse({ status: 200, type: BudgetResponseDto })
   @ApiResponse({ status: 404, description: 'Budget not found' })
-  async findById(@Param('id', ParseUUIDPipe) id: string, @Request() req: AuthenticatedRequest) {
+  async findById(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<BudgetResponseDto> {
     return this.budgetsService.findById(id, req.user.id);
   }
 
@@ -69,7 +76,10 @@ export class BudgetsController {
   @ApiOperation({ summary: 'Get budget progress' })
   @ApiResponse({ status: 200, type: BudgetProgressResponseDto })
   @ApiResponse({ status: 404, description: 'Budget not found' })
-  async getProgress(@Param('id', ParseUUIDPipe) id: string, @Request() req: AuthenticatedRequest) {
+  async getProgress(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<BudgetProgressResponseDto> {
     return this.budgetsService.getProgress(id, req.user.id);
   }
 
@@ -80,7 +90,10 @@ export class BudgetsController {
   @ApiResponse({ status: 400, description: 'Validation error' })
   @ApiResponse({ status: 404, description: 'Category not found' })
   @ApiResponse({ status: 409, description: 'Overlapping budget exists' })
-  async create(@Body() dto: CreateBudgetDto, @Request() req: AuthenticatedRequest) {
+  async create(
+    @Body() dto: CreateBudgetDto,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<BudgetResponseDto> {
     return this.budgetsService.create({
       userId: req.user.id,
       categoryId: dto.categoryId,
@@ -103,7 +116,7 @@ export class BudgetsController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateBudgetDto,
     @Request() req: AuthenticatedRequest,
-  ) {
+  ): Promise<BudgetResponseDto> {
     return this.budgetsService.update(id, req.user.id, {
       amount: dto.amount,
       categoryId: dto.categoryId,
@@ -117,7 +130,10 @@ export class BudgetsController {
   @ApiOperation({ summary: 'Bulk delete budgets' })
   @ApiResponse({ status: 200, type: BulkDeleteResponseDto })
   @ApiResponse({ status: 400, description: 'Validation error' })
-  async bulkDelete(@Body() dto: BulkDeleteDto, @Request() req: AuthenticatedRequest) {
+  async bulkDelete(
+    @Body() dto: BulkDeleteDto,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<BulkDeleteResponseDto> {
     return this.budgetsService.bulkDelete(dto.ids, req.user.id);
   }
 
@@ -126,7 +142,10 @@ export class BudgetsController {
   @ApiOperation({ summary: 'Delete a budget' })
   @ApiResponse({ status: 200, type: MessageResponseDto })
   @ApiResponse({ status: 404, description: 'Budget not found' })
-  async delete(@Param('id', ParseUUIDPipe) id: string, @Request() req: AuthenticatedRequest) {
+  async delete(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<MessageResponseDto> {
     await this.budgetsService.delete(id, req.user.id);
 
     return { message: 'Budget deleted successfully' };

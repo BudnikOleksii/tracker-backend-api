@@ -34,8 +34,9 @@ import { BulkDeleteDto } from '@/shared/dtos/bulk-delete.dto.js';
 import { BulkDeleteResponseDto } from '@/shared/dtos/bulk-delete-response.dto.js';
 import { MessageResponseDto } from '@/shared/dtos/message-response.dto.js';
 import { buildPaginatedResponse } from '@/shared/utils/pagination.utils.js';
+import type { PaginatedResponse } from '@/shared/utils/pagination.utils.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
-import { JwtAuthGuard } from '@/shared/guards/index.js';
+import { JwtAuthGuard } from '@/shared/guards/jwt-auth.guard.js';
 import type { AuthenticatedRequest } from '@/modules/auth/auth.types.js';
 
 import { CreateTransactionDto } from './dtos/create-transaction.dto.js';
@@ -63,7 +64,10 @@ export class TransactionsController {
   @Get()
   @ApiOperation({ summary: 'List transactions' })
   @ApiResponse({ status: 200, type: TransactionListResponseDto })
-  async findAll(@Query() query: TransactionQueryDto, @Request() req: AuthenticatedRequest) {
+  async findAll(
+    @Query() query: TransactionQueryDto,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<PaginatedResponse<TransactionResponseDto>> {
     const result = await this.transactionsService.findAll({
       userId: req.user.id,
       page: query.page,
@@ -89,7 +93,7 @@ export class TransactionsController {
   async findByCategory(
     @Param('categoryId', ParseUUIDPipe) categoryId: string,
     @Request() req: AuthenticatedRequest,
-  ) {
+  ): Promise<TransactionsByCategoryResponseDto> {
     return this.transactionsService.getTransactionsByCategory(categoryId, req.user.id);
   }
 
@@ -102,7 +106,7 @@ export class TransactionsController {
     @Query() query: ExportTransactionQueryDto,
     @Request() req: AuthenticatedRequest,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<StreamableFile | string> {
+  ): Promise<StreamableFile> {
     const result = await this.transactionsService.exportTransactions({
       userId: req.user.id,
       format: query.format,
@@ -118,11 +122,7 @@ export class TransactionsController {
       res.setHeader('X-Result-Truncated', 'true');
     }
 
-    if ('stream' in result) {
-      return new StreamableFile(result.stream);
-    }
-
-    return result.content;
+    return new StreamableFile(result.stream);
   }
 
   @Post('import')
@@ -145,7 +145,7 @@ export class TransactionsController {
   async importTransactions(
     @UploadedFile() file: Express.Multer.File | undefined,
     @Request() req: AuthenticatedRequest,
-  ) {
+  ): Promise<ImportTransactionResponseDto> {
     if (!file) {
       throw new BadRequestException({
         code: ErrorCode.BAD_REQUEST,
@@ -160,7 +160,10 @@ export class TransactionsController {
   @ApiOperation({ summary: 'Get a transaction' })
   @ApiResponse({ status: 200, type: TransactionResponseDto })
   @ApiResponse({ status: 404, description: 'Transaction not found' })
-  async findById(@Param('id', ParseUUIDPipe) id: string, @Request() req: AuthenticatedRequest) {
+  async findById(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<TransactionResponseDto> {
     return this.transactionsService.findById(id, req.user.id);
   }
 
@@ -170,7 +173,10 @@ export class TransactionsController {
   @ApiResponse({ status: 201, type: TransactionResponseDto })
   @ApiResponse({ status: 400, description: 'Category type mismatch' })
   @ApiResponse({ status: 404, description: 'Category not found' })
-  async create(@Body() dto: CreateTransactionDto, @Request() req: AuthenticatedRequest) {
+  async create(
+    @Body() dto: CreateTransactionDto,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<TransactionResponseDto> {
     return this.transactionsService.create({
       userId: req.user.id,
       categoryId: dto.categoryId,
@@ -191,7 +197,7 @@ export class TransactionsController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateTransactionDto,
     @Request() req: AuthenticatedRequest,
-  ) {
+  ): Promise<TransactionResponseDto> {
     return this.transactionsService.update(id, req.user.id, {
       categoryId: dto.categoryId,
       type: dto.type,
@@ -207,7 +213,10 @@ export class TransactionsController {
   @ApiOperation({ summary: 'Bulk delete transactions' })
   @ApiResponse({ status: 200, type: BulkDeleteResponseDto })
   @ApiResponse({ status: 400, description: 'Validation error' })
-  async bulkDelete(@Body() dto: BulkDeleteDto, @Request() req: AuthenticatedRequest) {
+  async bulkDelete(
+    @Body() dto: BulkDeleteDto,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<BulkDeleteResponseDto> {
     return this.transactionsService.bulkDelete(dto.ids, req.user.id);
   }
 
@@ -216,7 +225,10 @@ export class TransactionsController {
   @ApiOperation({ summary: 'Delete a transaction' })
   @ApiResponse({ status: 200, type: MessageResponseDto })
   @ApiResponse({ status: 404, description: 'Transaction not found' })
-  async delete(@Param('id', ParseUUIDPipe) id: string, @Request() req: AuthenticatedRequest) {
+  async delete(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<MessageResponseDto> {
     await this.transactionsService.delete(id, req.user.id);
 
     return { message: 'Transaction deleted successfully' };

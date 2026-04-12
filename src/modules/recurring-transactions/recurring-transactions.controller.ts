@@ -20,7 +20,9 @@ import { BulkDeleteDto } from '@/shared/dtos/bulk-delete.dto.js';
 import { BulkDeleteResponseDto } from '@/shared/dtos/bulk-delete-response.dto.js';
 import { MessageResponseDto } from '@/shared/dtos/message-response.dto.js';
 import { buildPaginatedResponse } from '@/shared/utils/pagination.utils.js';
-import { JwtAuthGuard, RolesGuard } from '@/shared/guards/index.js';
+import type { PaginatedResponse } from '@/shared/utils/pagination.utils.js';
+import { JwtAuthGuard } from '@/shared/guards/jwt-auth.guard.js';
+import { RolesGuard } from '@/shared/guards/roles.guard.js';
 import type { AuthenticatedRequest } from '@/modules/auth/auth.types.js';
 
 import { CreateRecurringTransactionDto } from './dtos/create-recurring-transaction.dto.js';
@@ -45,7 +47,7 @@ export class RecurringTransactionsController {
   async findAll(
     @Query() query: RecurringTransactionQueryDto,
     @Request() req: AuthenticatedRequest,
-  ) {
+  ): Promise<PaginatedResponse<RecurringTransactionResponseDto>> {
     const result = await this.recurringTransactionsService.findAll({
       userId: req.user.id,
       page: query.page,
@@ -66,7 +68,10 @@ export class RecurringTransactionsController {
   @ApiOperation({ summary: 'Get a recurring transaction' })
   @ApiResponse({ status: 200, type: RecurringTransactionResponseDto })
   @ApiResponse({ status: 404, description: 'Recurring transaction not found' })
-  async findById(@Param('id', ParseUUIDPipe) id: string, @Request() req: AuthenticatedRequest) {
+  async findById(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<RecurringTransactionResponseDto> {
     return this.recurringTransactionsService.findById(id, req.user.id);
   }
 
@@ -76,7 +81,10 @@ export class RecurringTransactionsController {
   @ApiResponse({ status: 201, type: RecurringTransactionResponseDto })
   @ApiResponse({ status: 400, description: 'Validation error' })
   @ApiResponse({ status: 404, description: 'Category not found' })
-  async create(@Body() dto: CreateRecurringTransactionDto, @Request() req: AuthenticatedRequest) {
+  async create(
+    @Body() dto: CreateRecurringTransactionDto,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<RecurringTransactionResponseDto> {
     return this.recurringTransactionsService.create({
       userId: req.user.id,
       categoryId: dto.categoryId,
@@ -100,7 +108,7 @@ export class RecurringTransactionsController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateRecurringTransactionDto,
     @Request() req: AuthenticatedRequest,
-  ) {
+  ): Promise<RecurringTransactionResponseDto> {
     return this.recurringTransactionsService.update(id, req.user.id, {
       categoryId: dto.categoryId,
       type: dto.type,
@@ -119,7 +127,10 @@ export class RecurringTransactionsController {
   @ApiOperation({ summary: 'Bulk delete (cancel) recurring transactions' })
   @ApiResponse({ status: 200, type: BulkDeleteResponseDto })
   @ApiResponse({ status: 400, description: 'Validation error' })
-  async bulkDelete(@Body() dto: BulkDeleteDto, @Request() req: AuthenticatedRequest) {
+  async bulkDelete(
+    @Body() dto: BulkDeleteDto,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<BulkDeleteResponseDto> {
     return this.recurringTransactionsService.bulkDelete(dto.ids, req.user.id);
   }
 
@@ -128,7 +139,10 @@ export class RecurringTransactionsController {
   @ApiOperation({ summary: 'Delete (cancel) a recurring transaction' })
   @ApiResponse({ status: 200, type: MessageResponseDto })
   @ApiResponse({ status: 404, description: 'Recurring transaction not found' })
-  async delete(@Param('id', ParseUUIDPipe) id: string, @Request() req: AuthenticatedRequest) {
+  async delete(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<MessageResponseDto> {
     await this.recurringTransactionsService.delete(id, req.user.id);
 
     return { message: 'Recurring transaction cancelled successfully' };
@@ -139,7 +153,10 @@ export class RecurringTransactionsController {
   @ApiResponse({ status: 200, type: RecurringTransactionResponseDto })
   @ApiResponse({ status: 400, description: 'Not active' })
   @ApiResponse({ status: 404, description: 'Recurring transaction not found' })
-  async pause(@Param('id', ParseUUIDPipe) id: string, @Request() req: AuthenticatedRequest) {
+  async pause(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<RecurringTransactionResponseDto> {
     return this.recurringTransactionsService.pause(id, req.user.id);
   }
 
@@ -148,7 +165,10 @@ export class RecurringTransactionsController {
   @ApiResponse({ status: 200, type: RecurringTransactionResponseDto })
   @ApiResponse({ status: 400, description: 'Not paused' })
   @ApiResponse({ status: 404, description: 'Recurring transaction not found' })
-  async resume(@Param('id', ParseUUIDPipe) id: string, @Request() req: AuthenticatedRequest) {
+  async resume(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<RecurringTransactionResponseDto> {
     return this.recurringTransactionsService.resume(id, req.user.id);
   }
 
@@ -159,7 +179,7 @@ export class RecurringTransactionsController {
   @ApiOperation({ summary: 'Process due recurring transactions' })
   @ApiResponse({ status: 200, type: ProcessResultResponseDto })
   @ApiResponse({ status: 403, description: 'Insufficient permissions' })
-  async process() {
+  async process(): Promise<ProcessResultResponseDto> {
     return this.recurringTransactionsService.processAllRecurringTransactions();
   }
 }

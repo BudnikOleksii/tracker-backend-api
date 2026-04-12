@@ -19,7 +19,8 @@ import { BulkDeleteDto } from '@/shared/dtos/bulk-delete.dto.js';
 import { BulkDeleteResponseDto } from '@/shared/dtos/bulk-delete-response.dto.js';
 import { MessageResponseDto } from '@/shared/dtos/message-response.dto.js';
 import { buildPaginatedResponse } from '@/shared/utils/pagination.utils.js';
-import { JwtAuthGuard } from '@/shared/guards/index.js';
+import type { PaginatedResponse } from '@/shared/utils/pagination.utils.js';
+import { JwtAuthGuard } from '@/shared/guards/jwt-auth.guard.js';
 import type { AuthenticatedRequest } from '@/modules/auth/auth.types.js';
 
 import { CategoryListResponseDto } from './dtos/category-list-response.dto.js';
@@ -40,7 +41,10 @@ export class TransactionCategoriesController {
   @Get()
   @ApiOperation({ summary: 'List transaction categories' })
   @ApiResponse({ status: 200, type: CategoryListResponseDto })
-  async findAll(@Query() query: CategoryQueryDto, @Request() req: AuthenticatedRequest) {
+  async findAll(
+    @Query() query: CategoryQueryDto,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<PaginatedResponse<CategoryResponseDto>> {
     const result = await this.categoriesService.findAll({
       userId: req.user.id,
       page: query.page,
@@ -59,7 +63,10 @@ export class TransactionCategoriesController {
   @ApiOperation({ summary: 'Get a transaction category' })
   @ApiResponse({ status: 200, type: CategoryResponseDto })
   @ApiResponse({ status: 404, description: 'Category not found' })
-  async findById(@Param('id', ParseUUIDPipe) id: string, @Request() req: AuthenticatedRequest) {
+  async findById(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<CategoryResponseDto> {
     return this.categoriesService.findById(id, req.user.id);
   }
 
@@ -68,7 +75,10 @@ export class TransactionCategoriesController {
   @ApiOperation({ summary: 'Create a transaction category' })
   @ApiResponse({ status: 201, type: CategoryResponseDto })
   @ApiResponse({ status: 409, description: 'Duplicate category' })
-  async create(@Body() dto: CreateCategoryDto, @Request() req: AuthenticatedRequest) {
+  async create(
+    @Body() dto: CreateCategoryDto,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<CategoryResponseDto> {
     return this.categoriesService.create({
       userId: req.user.id,
       name: dto.name,
@@ -86,7 +96,7 @@ export class TransactionCategoriesController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateCategoryDto,
     @Request() req: AuthenticatedRequest,
-  ) {
+  ): Promise<CategoryResponseDto> {
     return this.categoriesService.update(id, req.user.id, {
       name: dto.name,
       parentCategoryId: dto.parentCategoryId,
@@ -98,7 +108,10 @@ export class TransactionCategoriesController {
   @ApiOperation({ summary: 'Bulk delete transaction categories' })
   @ApiResponse({ status: 200, type: BulkDeleteResponseDto })
   @ApiResponse({ status: 400, description: 'Validation error' })
-  async bulkDelete(@Body() dto: BulkDeleteDto, @Request() req: AuthenticatedRequest) {
+  async bulkDelete(
+    @Body() dto: BulkDeleteDto,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<BulkDeleteResponseDto> {
     return this.categoriesService.bulkDelete(dto.ids, req.user.id);
   }
 
@@ -108,7 +121,10 @@ export class TransactionCategoriesController {
   @ApiResponse({ status: 200, type: MessageResponseDto })
   @ApiResponse({ status: 404, description: 'Category not found' })
   @ApiResponse({ status: 409, description: 'Category has transactions' })
-  async delete(@Param('id', ParseUUIDPipe) id: string, @Request() req: AuthenticatedRequest) {
+  async delete(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<MessageResponseDto> {
     await this.categoriesService.delete(id, req.user.id);
 
     return { message: 'Category deleted successfully' };

@@ -2,6 +2,8 @@ import { randomUUID } from 'node:crypto';
 import type { Request } from 'express';
 import type { ClsModuleOptions, ClsService } from 'nestjs-cls';
 
+import { convertHeaderToString } from '@/shared/utils/header.utils.js';
+
 export function createClsConfig(): ClsModuleOptions {
   return {
     global: true,
@@ -9,7 +11,9 @@ export function createClsConfig(): ClsModuleOptions {
       mount: true,
       generateId: true,
       idGenerator: (request: Request) => {
-        return (request.headers['x-request-id'] as string) || randomUUID();
+        const requestId = convertHeaderToString(request.headers['x-request-id'])?.trim();
+
+        return requestId || randomUUID();
       },
       setup: setupClsContext,
     },

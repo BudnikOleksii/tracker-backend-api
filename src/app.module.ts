@@ -12,6 +12,7 @@ import { validateEnv } from './app/config/env.schema.js';
 import { AllExceptionsFilter } from './app/filters/all-exceptions.filter.js';
 import { ProblemDetailsFilter } from './app/filters/problem-details.filter.js';
 import { HealthModule } from './app/health/health.module.js';
+import { PaginationLinkInterceptor } from './app/interceptors/pagination-link.interceptor.js';
 import { RequestContextInterceptor } from './app/interceptors/request-context.interceptor.js';
 import { TimeoutInterceptor } from './app/interceptors/timeout.interceptor.js';
 import { AppThrottlerGuard } from './app/throttler/app-throttler.guard.js';
@@ -88,6 +89,7 @@ import { UserModule } from './modules/user/user.module.js';
   providers: [
     AllExceptionsFilter,
     ProblemDetailsFilter,
+    PaginationLinkInterceptor,
     RequestContextInterceptor,
     TimeoutInterceptor,
     {

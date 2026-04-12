@@ -2,7 +2,7 @@ import { Controller, Get, Query, Request, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 
-import { JwtAuthGuard } from '@/shared/guards/index.js';
+import { JwtAuthGuard } from '@/shared/guards/jwt-auth.guard.js';
 import type { AuthenticatedRequest } from '@/modules/auth/auth.types.js';
 
 import { AnalyticsQueryDto } from './dtos/analytics-query.dto.js';
@@ -15,6 +15,13 @@ import { TopCategoriesResponseDto } from './dtos/top-categories-response.dto.js'
 import { TrendsQueryDto } from './dtos/trends-query.dto.js';
 import { TrendsResponseDto } from './dtos/trends-response.dto.js';
 import { TransactionsAnalyticsService } from './transactions-analytics.service.js';
+import type {
+  CategoryBreakdownResponse,
+  DailySpendingResponse,
+  SummaryResponse,
+  TopCategoriesResponse,
+  TrendsResponse,
+} from './transactions-analytics.types.js';
 
 @ApiTags('Transactions Analytics')
 @Controller('transactions-analytics')
@@ -28,7 +35,10 @@ export class TransactionsAnalyticsController {
   @Get('summary')
   @ApiOperation({ summary: 'Get financial summary' })
   @ApiResponse({ status: 200, type: SummaryResponseDto })
-  async getSummary(@Query() query: AnalyticsQueryDto, @Request() req: AuthenticatedRequest) {
+  async getSummary(
+    @Query() query: AnalyticsQueryDto,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<SummaryResponse> {
     return this.transactionsAnalyticsService.getSummary({
       userId: req.user.id,
       currencyCode: query.currencyCode,
@@ -45,7 +55,7 @@ export class TransactionsAnalyticsController {
   async getCategoryBreakdown(
     @Query() query: AnalyticsQueryDto,
     @Request() req: AuthenticatedRequest,
-  ) {
+  ): Promise<CategoryBreakdownResponse> {
     return this.transactionsAnalyticsService.getCategoryBreakdown({
       userId: req.user.id,
       currencyCode: query.currencyCode,
@@ -59,7 +69,10 @@ export class TransactionsAnalyticsController {
   @Get('trends')
   @ApiOperation({ summary: 'Get income/expense trends over time' })
   @ApiResponse({ status: 200, type: TrendsResponseDto })
-  async getTrends(@Query() query: TrendsQueryDto, @Request() req: AuthenticatedRequest) {
+  async getTrends(
+    @Query() query: TrendsQueryDto,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<TrendsResponse> {
     return this.transactionsAnalyticsService.getTrends({
       userId: req.user.id,
       currencyCode: query.currencyCode,
@@ -77,7 +90,7 @@ export class TransactionsAnalyticsController {
   async getTopCategories(
     @Query() query: TopCategoriesQueryDto,
     @Request() req: AuthenticatedRequest,
-  ) {
+  ): Promise<TopCategoriesResponse> {
     return this.transactionsAnalyticsService.getTopCategories({
       userId: req.user.id,
       currencyCode: query.currencyCode,
@@ -95,7 +108,7 @@ export class TransactionsAnalyticsController {
   async getDailySpending(
     @Query() query: DailySpendingQueryDto,
     @Request() req: AuthenticatedRequest,
-  ) {
+  ): Promise<DailySpendingResponse> {
     return this.transactionsAnalyticsService.getDailySpending({
       userId: req.user.id,
       currencyCode: query.currencyCode,
