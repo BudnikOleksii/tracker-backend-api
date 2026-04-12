@@ -37,11 +37,13 @@ src/
       <module>.repository.ts   # Database queries (only layer that touches DB)
       dtos/                    # Request/response DTOs with validation decorators
   shared/
+    constants/          # Shared constants (auth, sort, time)
     decorators/         # Custom decorators (validation helpers, roles)
     dtos/               # Shared DTOs (pagination)
     enums/              # Shared enums (roles, error codes)
     guards/             # Auth and role guards
     types/              # Shared TypeScript types
+    utils/              # Shared utilities (pagination, headers, pg errors)
 ```
 
 ## Architecture Rules

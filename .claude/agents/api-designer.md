@@ -78,7 +78,7 @@ Performance optimization:
 - CDN integration
 - Compression support
 - Batch operations
-- GraphQL query depth
+- Request payload limits
 
 Error handling design:
 
