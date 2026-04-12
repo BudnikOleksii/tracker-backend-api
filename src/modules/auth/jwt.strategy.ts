@@ -50,7 +50,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       // Fail-open: Redis unavailability should not block all authenticated requests.
       // The blacklist is defense-in-depth; primary auth is the JWT signature.
       this.logger.warn(
-        `Token blacklist check failed for jti=${payload.jti}, allowing request: ${error instanceof Error ? error.message : String(error)}`,
+        {
+          alert: 'token_blacklist_unavailable',
+          jti: payload.jti,
+          err: error instanceof Error ? error.message : String(error),
+        },
+        'Token blacklist check failed, allowing request (fail-open)',
       );
     }
 

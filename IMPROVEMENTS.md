@@ -11,21 +11,21 @@
 | --- | -------- | --------------------------------------------------------------------- | ------ | ------ | ------------------------------------------------------- | ------- |
 | 15  | P1       | No API versioning strategy                                            | Medium | High   | api-designer                                            | Todo    |
 | 32  | P2       | Export loads 10K rows + JSON.stringify into memory                    | Medium | Medium | architect-reviewer, performance-engineer                | Todo    |
-| 43  | P2       | `enableImplicitConversion: true` in ValidationPipe                    | Medium | Medium | security-auditor, nestjs-expert                         | Todo    |
-| 44  | P2       | JWT algorithm not explicitly specified                                | Low    | Medium | security-auditor                                        | Todo    |
-| 45  | P2       | Token blacklist fail-open design (no monitoring)                      | Medium | Medium | security-auditor                                        | Todo    |
-| 46  | P2       | Social auth code exchange race condition (TOCTOU)                     | Medium | Medium | security-auditor                                        | Todo    |
+| 43  | P2       | `enableImplicitConversion: true` in ValidationPipe                    | Medium | Medium | security-auditor, nestjs-expert                         | Done    |
+| 44  | P2       | JWT algorithm not explicitly specified                                | Low    | Medium | security-auditor                                        | Done    |
+| 45  | P2       | Token blacklist fail-open design (no monitoring)                      | Medium | Medium | security-auditor                                        | Done    |
+| 46  | P2       | Social auth code exchange race condition (TOCTOU)                     | Medium | Medium | security-auditor                                        | Done    |
 | 50  | P2       | No `Link` header emitted for paginated responses                      | Medium | Medium | api-designer                                            | Todo    |
-| 53  | P2       | Social callback swallows all errors including programming errors      | Medium | Medium | nestjs-expert                                           | Todo    |
-| 54  | P2       | Health indicators don't extend `HealthIndicator` from Terminus        | Medium | Medium | nestjs-expert                                           | Todo    |
+| 53  | P2       | Social callback swallows all errors including programming errors      | Medium | Medium | nestjs-expert                                           | Done    |
+| 54  | P2       | Health indicators don't extend `HealthIndicator` from Terminus        | Medium | Medium | nestjs-expert                                           | Done    |
 | 56  | P2       | Sequential cache invalidation loops in scheduled tasks                | Low    | Medium | performance-engineer                                    | Todo    |
 | 57  | P2       | `select()` wildcard fetches sensitive/unused columns                  | Low    | Medium | performance-engineer                                    | Todo    |
 | 58  | P2       | Missing controller return type annotations                            | Medium | Medium | typescript-pro                                          | Todo    |
 | 59  | P2       | Header type casts (`x-forwarded-for`, `x-csrf-token`, `x-request-id`) | Low    | Medium | typescript-pro                                          | Partial |
 | 61  | P2       | Guards barrel re-export violates project convention                   | Low    | Medium | typescript-pro, architect-reviewer                      | Todo    |
-| 62  | P3       | `RequestContextInterceptor` noop `tap()` operator                     | Low    | Low    | architect-reviewer, nestjs-expert, performance-engineer | Todo    |
-| 63  | P3       | `console.error` in database provider instead of Logger                | Low    | Low    | nestjs-expert                                           | Todo    |
-| 64  | P3       | Login endpoint leaks social auth account type                         | Low    | Low    | security-auditor                                        | Todo    |
+| 62  | P3       | `RequestContextInterceptor` noop `tap()` operator                     | Low    | Low    | architect-reviewer, nestjs-expert, performance-engineer | Done    |
+| 63  | P3       | `console.error` in database provider instead of Logger                | Low    | Low    | nestjs-expert                                           | Done    |
+| 64  | P3       | Login endpoint leaks social auth account type                         | Low    | Low    | security-auditor                                        | Done    |
 
 ---
 
@@ -57,50 +57,6 @@ No URI versioning, no header versioning, no `enableVersioning()` call. Any break
 
 ---
 
-#### 43. `enableImplicitConversion: true` in ValidationPipe
-
-**Effort:** Medium | **Impact:** Medium | **Reported by:** security-auditor, nestjs-expert
-
-Can silently coerce types (`"true"` -> `true`, `"1"` -> `1`), potentially bypassing validation.
-
-**Fix:** Set to `false`, use explicit `@Type()` decorators where needed.
-
-**File:** `src/app/config/validation.config.ts:9`
-
----
-
-#### 44. JWT Algorithm Not Explicitly Specified
-
-**Effort:** Low | **Impact:** Medium | **Reported by:** security-auditor
-
-JWT config relies on library default HS256. Explicitly set `algorithm: 'HS256'` to prevent algorithm confusion.
-
-**File:** `src/modules/auth/auth.module.ts:56-63`
-
----
-
-#### 45. Token Blacklist Fail-Open (No Monitoring)
-
-**Effort:** Medium | **Impact:** Medium | **Reported by:** security-auditor
-
-When Redis is down, revoked tokens are accepted. The fail-open design is documented but has no alerting.
-
-**Fix:** Add monitoring/alerting for Redis failures; document as accepted risk.
-
-**File:** `src/modules/auth/jwt.strategy.ts:46-55`
-
----
-
-#### 46. Social Auth Code Exchange Race Condition (TOCTOU)
-
-**Effort:** Medium | **Impact:** Medium | **Reported by:** security-auditor
-
-`get()` then `del()` on social auth code is not atomic. Concurrent requests can exchange the same code twice.
-
-**Fix:** Use Redis `GETDEL` or a Lua script for atomic get-and-delete.
-
-**File:** `src/modules/auth/social-auth-code.service.ts:38-47`
-
 ---
 
 #### 50. No `Link` Header for Paginated Responses
@@ -112,26 +68,6 @@ When Redis is down, revoked tokens are accepted. The fail-open design is documen
 **File:** `src/app/config/cors.config.ts:6`
 
 ---
-
-#### 53. Social Callback Swallows All Exceptions
-
-**Effort:** Medium | **Impact:** Medium | **Reported by:** nestjs-expert
-
-`handleSocialCallback` catch block converts all errors (including `TypeError`, DB failures) to a redirect with `reason=unknown`.
-
-**Fix:** Only catch known OAuth-domain exceptions; re-throw the rest.
-
-**File:** `src/modules/auth/auth.controller.ts:352-381`
-
----
-
-#### 54. Health Indicators Don't Extend `HealthIndicator`
-
-**Effort:** Medium | **Impact:** Medium | **Reported by:** nestjs-expert
-
-Custom `DrizzleHealthIndicator` and `RedisHealthIndicator` build result shapes manually instead of using Terminus's `getStatus()`. Returns `status: 'down'` as resolved value instead of throwing `HealthCheckError`.
-
-**Files:** `src/app/health/drizzle.health.ts`, `src/app/health/redis.health.ts`
 
 ---
 
@@ -196,40 +132,6 @@ No controller action methods have explicit return type annotations. TypeScript c
 ---
 
 ### P3 -- Low
-
-#### 62. `RequestContextInterceptor` Noop `tap()` Operator
-
-**Effort:** Low | **Impact:** Low | **Reported by:** architect-reviewer, nestjs-expert, performance-engineer
-
-`tap(() => { /* noop */ })` is unnecessary. The interceptor only sets a header before the handler runs.
-
-**Fix:** Replace with `return next.handle();`
-
-**File:** `src/app/interceptors/request-context.interceptor.ts:21-25`
-
----
-
-#### 63. `console.error` in Database Provider Instead of Logger
-
-**Effort:** Low | **Impact:** Low | **Reported by:** nestjs-expert
-
-Bypasses Pino log formatting and redaction.
-
-**Fix:** Use `new Logger('DatabaseProvider')`.
-
-**File:** `src/database/database.provider.ts:20`
-
----
-
-#### 64. Login Endpoint Leaks Social Auth Account Type
-
-**Effort:** Low | **Impact:** Low | **Reported by:** security-auditor
-
-Error message reveals "This account uses social login" for social-only accounts. Enables auth method enumeration.
-
-**Fix:** Return generic "Invalid email or password" for all failure cases.
-
-**File:** `src/modules/auth/auth.service.ts:124-137`
 
 ---
 
@@ -394,3 +296,12 @@ No documentation for required environment variables beyond the Zod schema. Incre
 | 29   | `CachePort` abstraction is dead code                          | Medium   | Low    | P2       | Done   |
 | 31   | `delByPrefix` uses SCAN + sequential DEL                      | Medium   | Medium | P2       | Done   |
 | 55   | Redis roundtrip on every authenticated request                | Medium   | Medium | P2       | Done   |
+| 43   | `enableImplicitConversion: true` in ValidationPipe            | Medium   | Medium | P2       | Done   |
+| 44   | JWT algorithm not explicitly specified                        | Medium   | Low    | P2       | Done   |
+| 45   | Token blacklist fail-open design (no monitoring)              | Medium   | Medium | P2       | Done   |
+| 46   | Social auth code exchange race condition (TOCTOU)             | Medium   | Medium | P2       | Done   |
+| 53   | Social callback swallows all errors                           | Medium   | Medium | P2       | Done   |
+| 54   | Health indicators don't extend `HealthIndicator`              | Medium   | Medium | P2       | Done   |
+| 62   | `RequestContextInterceptor` noop `tap()` operator             | Low      | Low    | P3       | Done   |
+| 63   | `console.error` in database provider instead of Logger        | Low      | Low    | P3       | Done   |
+| 64   | Login endpoint leaks social auth account type                 | Low      | Low    | P3       | Done   |

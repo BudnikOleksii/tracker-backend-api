@@ -58,7 +58,11 @@ function buildSocialStrategyProviders(): Provider[] {
       useFactory: (configService: ConfigService<Env, true>) => ({
         secret: configService.get('JWT_SECRET', { infer: true }),
         signOptions: {
+          algorithm: 'HS256' as const,
           expiresIn: configService.get('JWT_EXPIRES_IN', { infer: true }),
+        },
+        verifyOptions: {
+          algorithms: ['HS256' as const],
         },
       }),
       inject: [ConfigService],

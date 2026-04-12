@@ -38,6 +38,21 @@ export class CacheService {
     }
   }
 
+  async getdel<T>(key: string): Promise<T | undefined> {
+    const raw = await this.redis.getdel(key);
+    if (raw === null) {
+      return undefined;
+    }
+
+    try {
+      return JSON.parse(raw) as T;
+    } catch {
+      this.logger.warn(`Corrupt cache entry for key="${key}" (deleted via getdel)`);
+
+      return undefined;
+    }
+  }
+
   async set<T>(key: string, value: T, ttl?: number): Promise<void> {
     const ttlSeconds = ttl ?? this.defaultTtl;
     await this.redis.set(key, JSON.stringify(value), 'EX', ttlSeconds);

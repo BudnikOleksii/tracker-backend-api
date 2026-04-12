@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 
@@ -6,6 +7,7 @@ import * as relations from './relations.js';
 import type { DrizzleModuleOptions } from './types.js';
 
 const STATEMENT_TIMEOUT = '30s';
+const logger = new Logger('DatabaseProvider');
 
 export function createPool(options: DrizzleModuleOptions): Pool {
   const pool = new Pool({
@@ -18,7 +20,10 @@ export function createPool(options: DrizzleModuleOptions): Pool {
 
   pool.on('connect', (client) => {
     client.query(`SET statement_timeout = '${STATEMENT_TIMEOUT}'`).catch((err: unknown) => {
-      console.error('Failed to set statement_timeout on connection:', err);
+      logger.error(
+        'Failed to set statement_timeout on connection',
+        err instanceof Error ? err.stack : String(err),
+      );
     });
   });
 
