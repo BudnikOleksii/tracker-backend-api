@@ -1,5 +1,16 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { aliasedTable, and, asc, count, desc, eq, getTableColumns, lte } from 'drizzle-orm';
+import {
+  aliasedTable,
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  getTableColumns,
+  inArray,
+  lte,
+  ne,
+} from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 
 import {
@@ -179,6 +190,49 @@ export class RecurringTransactionsRepository {
 
   async transaction<T>(callback: (tx: DrizzleDb) => Promise<T>): Promise<T> {
     return this.db.transaction(callback);
+  }
+
+  async bulkCancel(
+    ids: string[],
+    userId: string,
+  ): Promise<{ cancelledIds: string[]; failed: { id: string; reason: string }[] }> {
+    const found = await this.db
+      .select({ id: recurringTransactions.id, status: recurringTransactions.status })
+      .from(recurringTransactions)
+      .where(and(inArray(recurringTransactions.id, ids), eq(recurringTransactions.userId, userId)));
+
+    const foundMap = new Map(found.map((r) => [r.id, r.status]));
+    const failed: { id: string; reason: string }[] = [];
+    const cancellableIds: string[] = [];
+
+    for (const id of ids) {
+      const status = foundMap.get(id);
+      if (!status) {
+        failed.push({ id, reason: 'Not found' });
+      } else if (status === 'CANCELLED') {
+        failed.push({ id, reason: 'Already cancelled' });
+      } else {
+        cancellableIds.push(id);
+      }
+    }
+
+    if (cancellableIds.length === 0) {
+      return { cancelledIds: [], failed };
+    }
+
+    const result = await this.db
+      .update(recurringTransactions)
+      .set({ status: 'CANCELLED' })
+      .where(
+        and(
+          inArray(recurringTransactions.id, cancellableIds),
+          eq(recurringTransactions.userId, userId),
+          ne(recurringTransactions.status, 'CANCELLED'),
+        ),
+      )
+      .returning({ id: recurringTransactions.id });
+
+    return { cancelledIds: result.map((r) => r.id), failed };
   }
 
   async findById(

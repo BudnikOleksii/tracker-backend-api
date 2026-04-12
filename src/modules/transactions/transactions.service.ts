@@ -4,6 +4,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { stringify as stringifyCsvStream } from 'csv-stringify';
 import { Decimal } from 'decimal.js';
 
+import type { BulkDeleteResult } from '@/shared/dtos/bulk-delete-response.dto.js';
 import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
 import { buildCacheKey, buildCachePrefix } from '@/modules/cache/cache-key.utils.js';
 import { CacheService } from '@/modules/cache/cache.service.js';
@@ -153,6 +154,30 @@ export class TransactionsService {
       TRANSACTION_EVENTS.DELETED,
       new TransactionMutationEvent(userId, 'deleted'),
     );
+  }
+
+  async bulkDelete(ids: string[], userId: string): Promise<BulkDeleteResult> {
+    const deletedIds = await this.transactionRepository.bulkDelete(ids, userId);
+    const deletedSet = new Set(deletedIds);
+    const failed = ids
+      .filter((id) => !deletedSet.has(id))
+      .map((id) => ({ id, reason: 'Not found' }));
+
+    if (deletedIds.length > 0) {
+      await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE, userId));
+      this.eventEmitter.emit(
+        TRANSACTION_EVENTS.DELETED,
+        new TransactionMutationEvent(userId, 'deleted'),
+      );
+    }
+
+    const total = ids.length;
+    const message =
+      failed.length === 0
+        ? `${deletedIds.length} transactions deleted successfully`
+        : `${deletedIds.length} of ${total} transactions deleted`;
+
+    return { deleted: deletedIds.length, failed, message };
   }
 
   async getTransactionsByCategory(

@@ -15,6 +15,8 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
+import { BulkDeleteDto } from '@/shared/dtos/bulk-delete.dto.js';
+import { BulkDeleteResponseDto } from '@/shared/dtos/bulk-delete-response.dto.js';
 import { MessageResponseDto } from '@/shared/dtos/message-response.dto.js';
 import { buildPaginatedResponse } from '@/shared/utils/pagination.utils.js';
 import { JwtAuthGuard } from '@/shared/guards/index.js';
@@ -89,6 +91,15 @@ export class TransactionCategoriesController {
       name: dto.name,
       parentCategoryId: dto.parentCategoryId,
     });
+  }
+
+  @Delete('batch')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Bulk delete transaction categories' })
+  @ApiResponse({ status: 200, type: BulkDeleteResponseDto })
+  @ApiResponse({ status: 400, description: 'Validation error' })
+  async bulkDelete(@Body() dto: BulkDeleteDto, @Request() req: AuthenticatedRequest) {
+    return this.categoriesService.bulkDelete(dto.ids, req.user.id);
   }
 
   @Delete(':id')

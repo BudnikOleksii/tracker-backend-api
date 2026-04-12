@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 
 import type { DrizzleDb } from '@/database/types.js';
+import type { BulkDeleteResult } from '@/shared/dtos/bulk-delete-response.dto.js';
 import { buildCacheKey, buildCachePrefix } from '@/modules/cache/cache-key.utils.js';
 import { CacheService } from '@/modules/cache/cache.service.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
@@ -229,6 +230,22 @@ export class TransactionCategoriesService {
     });
 
     await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE, userId));
+  }
+
+  async bulkDelete(ids: string[], userId: string): Promise<BulkDeleteResult> {
+    const { deletedIds, failed } = await this.categoryRepository.bulkSoftDelete(ids, userId);
+
+    if (deletedIds.length > 0) {
+      await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE, userId));
+    }
+
+    const total = ids.length;
+    const message =
+      failed.length === 0
+        ? `${deletedIds.length} categories deleted successfully`
+        : `${deletedIds.length} of ${total} categories deleted`;
+
+    return { deleted: deletedIds.length, failed, message };
   }
 
   async validateCategoryForTransaction(params: {
