@@ -1,4 +1,4 @@
-import { Catch, HttpException, HttpStatus, Inject, Logger } from '@nestjs/common';
+import { Catch, HttpStatus, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClsService } from 'nestjs-cls';
 import type { ExceptionFilter, ArgumentsHost } from '@nestjs/common';
@@ -6,7 +6,6 @@ import type { Request, Response } from 'express';
 
 import type { ProblemDetailsDto } from '@/shared/dtos/problem-details.dto.js';
 
-import { ProblemDetailsFilter } from './problem-details.filter.js';
 import type { Env } from '../config/env.schema.js';
 
 @Catch()
@@ -15,8 +14,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
   constructor(
     private readonly cls: ClsService,
-    @Inject(ProblemDetailsFilter)
-    private readonly problemDetailsFilter: ProblemDetailsFilter,
     private readonly configService: ConfigService<Env, true>,
   ) {}
 
@@ -24,10 +21,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const context = host.switchToHttp();
     const response = context.getResponse<Response>();
     const request = context.getRequest<Request>();
-
-    if (exception instanceof HttpException) {
-      return this.problemDetailsFilter.catch(exception, host);
-    }
 
     const status = HttpStatus.INTERNAL_SERVER_ERROR;
 

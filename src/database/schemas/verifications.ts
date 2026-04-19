@@ -1,4 +1,4 @@
-import { index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 
 export const verifications = pgTable(
   'Verification',
@@ -15,5 +15,5 @@ export const verifications = pgTable(
       .defaultNow()
       .$onUpdate(() => new Date()),
   },
-  (table) => [index('Verification_identifier_idx').on(table.identifier)],
+  (table) => [uniqueIndex('Verification_identifier_key').on(table.identifier)],
 );

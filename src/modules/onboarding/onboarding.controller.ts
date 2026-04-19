@@ -28,7 +28,8 @@ export class OnboardingController {
   @HttpCode(200)
   @ApiOperation({ summary: 'Complete onboarding' })
   @ApiResponse({ status: 200, type: OnboardingStatusResponseDto })
-  @ApiResponse({ status: 400, description: 'Validation error or missing requirements' })
+  @ApiResponse({ status: 400, description: 'Missing requirements' })
+  @ApiResponse({ status: 422, description: 'Validation error' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async complete(
     @Request() req: AuthenticatedRequest,

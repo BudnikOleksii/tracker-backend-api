@@ -54,6 +54,7 @@ export const recurringTransactions = pgTable(
   },
   (table) => [
     check('RecurringTransaction_interval_gt_0_chk', sql`${table.interval} > 0`),
+    check('RecurringTransaction_amount_positive', sql`${table.amount} > 0`),
     check(
       'RecurringTransaction_endDate_after_startDate',
       sql`"endDate" IS NULL OR "endDate" > "startDate"`,

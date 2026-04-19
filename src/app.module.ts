@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
@@ -87,11 +87,26 @@ import { UserModule } from './modules/user/user.module.js';
     ScheduledTasksModule,
   ],
   providers: [
-    AllExceptionsFilter,
-    ProblemDetailsFilter,
-    PaginationLinkInterceptor,
-    RequestContextInterceptor,
-    TimeoutInterceptor,
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: ProblemDetailsFilter,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: RequestContextInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TimeoutInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: PaginationLinkInterceptor,
+    },
     {
       provide: APP_INTERCEPTOR,
       useClass: AuditLogInterceptor,

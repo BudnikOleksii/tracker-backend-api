@@ -23,6 +23,7 @@ import type { SortOrder } from '@/shared/constants/sort.constants.js';
 import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
 import type { CategoryDetail, CategoryJoinColumns } from '@/shared/types/category-detail.js';
+import { fetchCategoryJoinColumns } from '@/shared/utils/fetch-category-columns.js';
 
 import type { SortByField } from './transactions.constants.js';
 
@@ -274,7 +275,7 @@ export class TransactionRepository {
       throw new Error('Failed to create transaction');
     }
 
-    const categoryInfo = await this.getCategoryInfo(inserted.categoryId, db);
+    const categoryInfo = await fetchCategoryJoinColumns(inserted.categoryId, db);
 
     return this.toTransactionInfo({ ...inserted, ...categoryInfo });
   }
@@ -313,18 +314,18 @@ export class TransactionRepository {
       updates.description = data.description;
     }
 
-    const updated = (await db
+    const updated = await db
       .update(transactions)
       .set(updates)
       .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
-      .returning()) as (typeof transactions.$inferSelect)[];
+      .returning();
 
     const [row] = updated;
     if (!row) {
       return null;
     }
 
-    const categoryInfo = await this.getCategoryInfo(row.categoryId, db);
+    const categoryInfo = await fetchCategoryJoinColumns(row.categoryId, db);
 
     return this.toTransactionInfo({ ...row, ...categoryInfo });
   }
@@ -482,27 +483,6 @@ export class TransactionRepository {
       .returning({ id: transactions.id });
 
     return result.length;
-  }
-
-  private async getCategoryInfo(categoryId: string, db: DrizzleDb): Promise<CategoryJoinColumns> {
-    const result = (await db
-      .select({
-        categoryName: transactionCategories.name,
-        parentCatId: parentCategory.id,
-        parentCatName: parentCategory.name,
-      })
-      .from(transactionCategories)
-      .leftJoin(parentCategory, eq(transactionCategories.parentCategoryId, parentCategory.id))
-      .where(eq(transactionCategories.id, categoryId))
-      .limit(1)) as CategoryJoinColumns[];
-
-    const [row] = result;
-
-    return {
-      categoryName: row?.categoryName ?? null,
-      parentCatId: row?.parentCatId ?? null,
-      parentCatName: row?.parentCatName ?? null,
-    };
   }
 
   private toTransactionInfo(

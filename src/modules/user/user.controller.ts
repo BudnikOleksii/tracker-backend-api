@@ -120,9 +120,13 @@ export class UserController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Delete user' })
   @ApiResponse({ status: 200, type: MessageResponseDto })
+  @ApiResponse({ status: 403, description: 'Cannot delete own account' })
   @ApiResponse({ status: 404, description: 'User not found' })
-  async delete(@Param('id', ParseUUIDPipe) id: string): Promise<MessageResponseDto> {
-    await this.userService.delete(id);
+  async delete(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<MessageResponseDto> {
+    await this.userService.delete(id, req.user.id);
 
     return { message: 'User deleted successfully' };
   }

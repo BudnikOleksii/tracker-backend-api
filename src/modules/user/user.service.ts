@@ -182,7 +182,14 @@ export class UserService {
     return updated;
   }
 
-  async delete(id: string): Promise<void> {
+  async delete(id: string, actorId: string): Promise<void> {
+    if (id === actorId) {
+      throw new ForbiddenException({
+        code: ErrorCode.FORBIDDEN,
+        message: 'Deleting your own account is not allowed',
+      });
+    }
+
     const deleted = await this.userRepository.hardDelete(id);
     if (!deleted) {
       throw new NotFoundException({
