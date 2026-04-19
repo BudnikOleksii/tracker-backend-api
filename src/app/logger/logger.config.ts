@@ -40,11 +40,17 @@ export function createLoggerConfig(config: ConfigService<Env, true>): Params {
         res: (res: ServerResponse) => ({
           statusCode: res.statusCode,
         }),
-        err: (error: Error) => ({
-          type: error.constructor.name,
-          message: error.message,
-          stack: error.stack,
-        }),
+        err: (error: unknown) => {
+          if (error instanceof Error) {
+            return {
+              type: error.constructor.name,
+              message: error.message,
+              stack: error.stack,
+            };
+          }
+
+          return { type: typeof error, value: error };
+        },
       },
 
       customSuccessMessage: (req: IncomingMessage, res: ServerResponse) => {

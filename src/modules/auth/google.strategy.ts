@@ -2,11 +2,16 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-google-oauth20';
-import type { VerifyCallback } from 'passport-google-oauth20';
 
 import type { Env } from '@/app/config/env.schema.js';
 
 import type { SocialLoginParams } from './auth.types.js';
+
+interface GoogleProfile {
+  id: string;
+  emails?: { value: string; verified?: boolean }[];
+  name?: { givenName?: string; familyName?: string };
+}
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
@@ -19,26 +24,14 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     });
   }
 
-  // eslint-disable-next-line @typescript-eslint/max-params
-  validate(
-    _accessToken: string,
-    _refreshToken: string,
-    profile: {
-      id: string;
-      emails?: { value: string; verified?: boolean }[];
-      name?: { givenName?: string; familyName?: string };
-    },
-    done: VerifyCallback,
-  ): void {
+  validate(_accessToken: string, _refreshToken: string, profile: GoogleProfile): SocialLoginParams {
     const primaryEmail = profile.emails?.[0];
 
     if (!primaryEmail) {
-      done(new UnauthorizedException('Google account has no email'), false);
-
-      return;
+      throw new UnauthorizedException('Google account has no email');
     }
 
-    const result: SocialLoginParams = {
+    return {
       provider: 'GOOGLE',
       providerId: profile.id,
       email: primaryEmail.value,
@@ -46,7 +39,5 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       firstName: profile.name?.givenName,
       lastName: profile.name?.familyName,
     };
-
-    done(null, result);
   }
 }
