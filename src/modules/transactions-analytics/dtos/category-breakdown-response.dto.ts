@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+import { ENUM_NAMES } from '@/shared/constants/enum-name.constants.js';
 import { CURRENCY_CODES } from '@/shared/enums/currency-code.enum.js';
 import { TRANSACTION_TYPES } from '@/shared/enums/transaction-type.enum.js';
 import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
@@ -17,7 +18,7 @@ export class CategoryBreakdownItemDto {
     example: 'EXPENSE',
     type: String,
     enum: TRANSACTION_TYPES,
-    enumName: 'TransactionType',
+    enumName: ENUM_NAMES.TRANSACTION_TYPE,
   })
   type: TransactionType;
 
@@ -37,7 +38,7 @@ export class CategoryBreakdownResponseDto {
     example: 'USD',
     type: String,
     enum: CURRENCY_CODES,
-    enumName: 'CurrencyCode',
+    enumName: ENUM_NAMES.CURRENCY_CODE,
   })
   currencyCode: CurrencyCode;
 

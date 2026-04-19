@@ -13,6 +13,7 @@ import { CURRENCY_CODES } from '@/shared/enums/currency-code.enum.js';
 import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 import { TRANSACTION_TYPES } from '@/shared/enums/transaction-type.enum.js';
 import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
+import { ENUM_NAMES } from '@/shared/constants/enum-name.constants.js';
 import { SORT_ORDERS } from '@/shared/constants/sort.constants.js';
 import type { SortOrder } from '@/shared/constants/sort.constants.js';
 import { SORT_BY_FIELDS } from '@/modules/transactions/transactions.constants.js';
@@ -32,7 +33,7 @@ export class TransactionQueryDto extends OffsetPaginationDto {
     example: 'EXPENSE',
     type: String,
     enum: TRANSACTION_TYPES,
-    enumName: 'TransactionType',
+    enumName: ENUM_NAMES.TRANSACTION_TYPE,
   })
   @IsOptional()
   @IsIn(TRANSACTION_TYPES)
@@ -47,7 +48,7 @@ export class TransactionQueryDto extends OffsetPaginationDto {
     example: 'USD',
     type: String,
     enum: CURRENCY_CODES,
-    enumName: 'CurrencyCode',
+    enumName: ENUM_NAMES.CURRENCY_CODE,
   })
   @IsOptional()
   @IsIn(CURRENCY_CODES)
@@ -68,7 +69,7 @@ export class TransactionQueryDto extends OffsetPaginationDto {
     example: 'date',
     type: String,
     enum: SORT_BY_FIELDS,
-    enumName: 'TransactionSortBy',
+    enumName: ENUM_NAMES.TRANSACTION_SORT_BY,
     description: 'Field to sort by (default: date)',
   })
   @IsOptional()
@@ -79,7 +80,7 @@ export class TransactionQueryDto extends OffsetPaginationDto {
     example: 'desc',
     type: String,
     enum: SORT_ORDERS,
-    enumName: 'SortOrder',
+    enumName: ENUM_NAMES.SORT_ORDER,
     description: 'Sort direction (default: desc)',
   })
   @IsOptional()

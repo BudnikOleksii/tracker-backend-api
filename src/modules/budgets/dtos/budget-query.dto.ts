@@ -1,6 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsIn, IsOptional } from 'class-validator';
 
+import { ENUM_NAMES } from '@/shared/constants/enum-name.constants.js';
 import { SORT_ORDERS } from '@/shared/constants/sort.constants.js';
 import type { SortOrder } from '@/shared/constants/sort.constants.js';
 import { IsUUIDField } from '@/shared/decorators/validators.js';
@@ -18,7 +19,7 @@ export class BudgetQueryDto extends OffsetPaginationDto {
     example: 'ACTIVE',
     type: String,
     enum: BUDGET_STATUSES,
-    enumName: 'BudgetStatus',
+    enumName: ENUM_NAMES.BUDGET_STATUS,
   })
   @IsOptional()
   @IsIn(BUDGET_STATUSES)
@@ -28,7 +29,7 @@ export class BudgetQueryDto extends OffsetPaginationDto {
     example: 'MONTHLY',
     type: String,
     enum: BUDGET_PERIODS,
-    enumName: 'BudgetPeriod',
+    enumName: ENUM_NAMES.BUDGET_PERIOD,
   })
   @IsOptional()
   @IsIn(BUDGET_PERIODS)
@@ -43,7 +44,7 @@ export class BudgetQueryDto extends OffsetPaginationDto {
     example: 'USD',
     type: String,
     enum: CURRENCY_CODES,
-    enumName: 'CurrencyCode',
+    enumName: ENUM_NAMES.CURRENCY_CODE,
   })
   @IsOptional()
   @IsIn(CURRENCY_CODES)
@@ -53,7 +54,7 @@ export class BudgetQueryDto extends OffsetPaginationDto {
     example: 'createdAt',
     type: String,
     enum: SORT_BY_FIELDS,
-    enumName: 'BudgetSortBy',
+    enumName: ENUM_NAMES.BUDGET_SORT_BY,
     description: 'Field to sort by (default: createdAt)',
   })
   @IsOptional()
@@ -64,7 +65,7 @@ export class BudgetQueryDto extends OffsetPaginationDto {
     example: 'desc',
     type: String,
     enum: SORT_ORDERS,
-    enumName: 'SortOrder',
+    enumName: ENUM_NAMES.SORT_ORDER,
     description: 'Sort direction (default: desc)',
   })
   @IsOptional()

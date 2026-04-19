@@ -1,15 +1,8 @@
 import type { AuthProvider } from '@/shared/enums/auth-provider.enum.js';
-import type { UserRole } from '@/shared/enums/role.enum.js';
+import type { DeviceContext } from '@/shared/types/device-context.js';
+import type { UserIdentity } from '@/shared/types/user-identity.js';
 
-export interface DeviceContext {
-  ipAddress?: string;
-  userAgent?: string;
-}
-
-export interface AuthUser {
-  id: string;
-  email: string;
-  role: UserRole;
+export interface AuthUser extends UserIdentity {
   sessionId: string;
   jti: string;
 }
@@ -27,7 +20,7 @@ export interface RevokeRefreshTokenParams {
 export interface GenerateTokensParams {
   userId: string;
   email: string;
-  role: UserRole;
+  role: UserIdentity['role'];
   deviceContext?: DeviceContext;
 }
 
@@ -35,11 +28,11 @@ export interface GenerateTokensResult {
   accessToken: string;
   refreshToken: string;
   refreshExpiresAt: Date;
-  user: { id: string; email: string; role: UserRole };
+  user: UserIdentity;
 }
 
 export interface RefreshTokenInfo {
-  user: { id: string; email: string; role: UserRole };
+  user: UserIdentity;
   refreshToken: {
     id: string;
     expiresAt: Date;

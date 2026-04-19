@@ -1,6 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsIn, IsOptional, IsString } from 'class-validator';
 
+import { ENUM_NAMES } from '@/shared/constants/enum-name.constants.js';
 import { SORT_ORDERS } from '@/shared/constants/sort.constants.js';
 import type { SortOrder } from '@/shared/constants/sort.constants.js';
 import { OffsetPaginationDto } from '@/shared/dtos/pagination.dto.js';
@@ -23,7 +24,7 @@ export class AuditLogQueryDto extends OffsetPaginationDto {
     example: 'createdAt',
     type: String,
     enum: SORT_BY_FIELDS,
-    enumName: 'AuditLogSortBy',
+    enumName: ENUM_NAMES.AUDIT_LOG_SORT_BY,
     description: 'Field to sort by (default: createdAt)',
   })
   @IsOptional()
@@ -34,7 +35,7 @@ export class AuditLogQueryDto extends OffsetPaginationDto {
     example: 'desc',
     type: String,
     enum: SORT_ORDERS,
-    enumName: 'SortOrder',
+    enumName: ENUM_NAMES.SORT_ORDER,
     description: 'Sort direction (default: desc)',
   })
   @IsOptional()

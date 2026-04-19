@@ -5,18 +5,17 @@ import { auditLogs } from '@/database/schemas/index.js';
 import { DB_TOKEN } from '@/database/types.js';
 import type { DrizzleDb } from '@/database/types.js';
 import type { SortOrder } from '@/shared/constants/sort.constants.js';
+import type { DeviceContext } from '@/shared/types/device-context.js';
 
 import type { SortByField } from './audit-log.constants.js';
 
-export interface AuditLogData {
+export interface AuditLogData extends DeviceContext {
   action: string;
   actorId?: string;
   actorEmail?: string;
   resourceType?: string;
   resourceId?: string;
   detail?: Record<string, unknown>;
-  ipAddress?: string;
-  userAgent?: string;
   requestId?: string;
 }
 

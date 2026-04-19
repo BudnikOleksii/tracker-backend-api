@@ -1,6 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsIn, IsOptional } from 'class-validator';
 
+import { ENUM_NAMES } from '@/shared/constants/enum-name.constants.js';
 import { SORT_ORDERS } from '@/shared/constants/sort.constants.js';
 import type { SortOrder } from '@/shared/constants/sort.constants.js';
 import { IsInField, IsStringField } from '@/shared/decorators/validators.js';
@@ -17,7 +18,7 @@ export class UserQueryDto extends OffsetPaginationDto {
   @IsStringField()
   search?: string;
 
-  @ApiPropertyOptional({ example: 'ADMIN', enum: ROLES, enumName: 'UserRole' })
+  @ApiPropertyOptional({ example: 'ADMIN', enum: ROLES, enumName: ENUM_NAMES.USER_ROLE })
   @IsOptional()
   @IsInField([...ROLES])
   role?: UserRole;
@@ -26,7 +27,7 @@ export class UserQueryDto extends OffsetPaginationDto {
     example: 'createdAt',
     type: String,
     enum: SORT_BY_FIELDS,
-    enumName: 'UserSortBy',
+    enumName: ENUM_NAMES.USER_SORT_BY,
     description: 'Field to sort by (default: createdAt)',
   })
   @IsOptional()
@@ -37,7 +38,7 @@ export class UserQueryDto extends OffsetPaginationDto {
     example: 'desc',
     type: String,
     enum: SORT_ORDERS,
-    enumName: 'SortOrder',
+    enumName: ENUM_NAMES.SORT_ORDER,
     description: 'Sort direction (default: desc)',
   })
   @IsOptional()

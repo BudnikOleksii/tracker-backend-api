@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsIn, IsOptional } from 'class-validator';
 
+import { ENUM_NAMES } from '@/shared/constants/enum-name.constants.js';
 import { IsISO8601Field, IsNotBeforeField, IsUUIDField } from '@/shared/decorators/validators.js';
 
 export const EXPORT_FORMATS = ['json', 'csv'] as const;
@@ -11,7 +12,7 @@ export class ExportTransactionQueryDto {
     example: 'json',
     type: String,
     enum: EXPORT_FORMATS,
-    enumName: 'ExportFormat',
+    enumName: ENUM_NAMES.EXPORT_FORMAT,
     description: 'Output file format',
   })
   @IsIn(EXPORT_FORMATS)

@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+import { ENUM_NAMES } from '@/shared/constants/enum-name.constants.js';
 import { CategoryInfoDto } from '@/shared/dtos/category-info.dto.js';
 import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 import type { RecurringFrequency } from '@/shared/enums/recurring-frequency.enum.js';
@@ -28,7 +29,7 @@ export class RecurringTransactionResponseDto {
     example: 'EXPENSE',
     type: String,
     enum: TRANSACTION_TYPES,
-    enumName: 'TransactionType',
+    enumName: ENUM_NAMES.TRANSACTION_TYPE,
   })
   type: TransactionType;
 
@@ -40,7 +41,7 @@ export class RecurringTransactionResponseDto {
     example: 'USD',
     type: String,
     enum: CURRENCY_CODES,
-    enumName: 'CurrencyCode',
+    enumName: ENUM_NAMES.CURRENCY_CODE,
   })
   currencyCode: CurrencyCode;
 
@@ -57,7 +58,7 @@ export class RecurringTransactionResponseDto {
     example: 'MONTHLY',
     type: String,
     enum: RECURRING_FREQUENCIES,
-    enumName: 'RecurringFrequency',
+    enumName: ENUM_NAMES.RECURRING_FREQUENCY,
   })
   frequency: RecurringFrequency;
 
@@ -83,7 +84,7 @@ export class RecurringTransactionResponseDto {
     example: 'ACTIVE',
     type: String,
     enum: RECURRING_TRANSACTION_STATUSES,
-    enumName: 'RecurringTransactionStatus',
+    enumName: ENUM_NAMES.RECURRING_TRANSACTION_STATUS,
   })
   status: RecurringTransactionStatus;
 

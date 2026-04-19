@@ -16,6 +16,7 @@ import { BCRYPT_ROUNDS } from '@/shared/constants/auth.constants.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 import { hasRequiredRole } from '@/shared/enums/role.enum.js';
 import type { UserRole } from '@/shared/enums/role.enum.js';
+import type { DeviceContext } from '@/shared/types/device-context.js';
 
 import { USER_EVENTS, UserHardDeletedEvent } from './events/user.event.js';
 import { IdentityRepository } from './identity.repository.js';
@@ -258,6 +259,10 @@ export class UserService {
   async updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
     await this.userRepository.updatePasswordHashWithLocalIdentity(userId, passwordHash);
     await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE));
+  }
+
+  async updateDeviceContext(userId: string, deviceContext: DeviceContext): Promise<void> {
+    await this.userRepository.updateDeviceContext(userId, deviceContext);
   }
 
   async softDelete(userId: string): Promise<boolean> {

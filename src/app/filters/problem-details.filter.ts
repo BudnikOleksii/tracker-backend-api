@@ -4,10 +4,44 @@ import { ClsService } from 'nestjs-cls';
 import type { ExceptionFilter, ArgumentsHost } from '@nestjs/common';
 import type { Request, Response } from 'express';
 
+import { HTTP_STATUS } from '@/shared/constants/http-status.constants.js';
+import type { HttpStatusCode } from '@/shared/constants/http-status.constants.js';
 import type { ProblemDetailsDto, FieldError } from '@/shared/dtos/problem-details.dto.js';
 import type { ValidationErrorItem } from '@/shared/types/validation-error.js';
 
 import type { Env } from '../config/env.schema.js';
+
+const TYPE_MAP: Partial<Record<HttpStatusCode, string>> = {
+  [HTTP_STATUS.BAD_REQUEST]: 'bad-request',
+  [HTTP_STATUS.UNAUTHORIZED]: 'unauthorized',
+  [HTTP_STATUS.FORBIDDEN]: 'forbidden',
+  [HTTP_STATUS.NOT_FOUND]: 'not-found',
+  [HTTP_STATUS.CONFLICT]: 'conflict',
+  [HTTP_STATUS.UNPROCESSABLE_ENTITY]: 'validation-failed',
+  [HTTP_STATUS.TOO_MANY_REQUESTS]: 'rate-limit-exceeded',
+  [HTTP_STATUS.INTERNAL_SERVER_ERROR]: 'internal-server-error',
+  [HTTP_STATUS.SERVICE_UNAVAILABLE]: 'service-unavailable',
+};
+
+const TITLE_MAP: Partial<Record<HttpStatusCode, string>> = {
+  [HTTP_STATUS.BAD_REQUEST]: 'Bad Request',
+  [HTTP_STATUS.UNAUTHORIZED]: 'Unauthorized',
+  [HTTP_STATUS.FORBIDDEN]: 'Forbidden',
+  [HTTP_STATUS.NOT_FOUND]: 'Not Found',
+  [HTTP_STATUS.CONFLICT]: 'Conflict',
+  [HTTP_STATUS.UNPROCESSABLE_ENTITY]: 'Unprocessable Entity',
+  [HTTP_STATUS.TOO_MANY_REQUESTS]: 'Too Many Requests',
+  [HTTP_STATUS.INTERNAL_SERVER_ERROR]: 'Internal Server Error',
+  [HTTP_STATUS.SERVICE_UNAVAILABLE]: 'Service Unavailable',
+};
+
+const FALLBACK_CODE_MAP: Partial<Record<HttpStatusCode, string>> = {
+  [HTTP_STATUS.UNAUTHORIZED]: 'UNAUTHORIZED',
+  [HTTP_STATUS.FORBIDDEN]: 'FORBIDDEN',
+  [HTTP_STATUS.NOT_FOUND]: 'RESOURCE_NOT_FOUND',
+  [HTTP_STATUS.CONFLICT]: 'RESOURCE_CONFLICT',
+  [HTTP_STATUS.TOO_MANY_REQUESTS]: 'RATE_LIMIT_EXCEEDED',
+};
 
 @Catch(HttpException)
 export class ProblemDetailsFilter implements ExceptionFilter {
@@ -54,41 +88,13 @@ export class ProblemDetailsFilter implements ExceptionFilter {
 
   private getTypeUri(status: number): string {
     const baseUrl = this.configService.get('API_BASE_URL', { infer: true });
-    const errorType = this.getErrorType(status);
+    const errorType = TYPE_MAP[status as HttpStatusCode] ?? 'unknown-error';
 
     return `${baseUrl}/errors/${errorType}`;
   }
 
-  private getErrorType(status: number): string {
-    const typeMap: Record<number, string> = {
-      400: 'bad-request',
-      401: 'unauthorized',
-      403: 'forbidden',
-      404: 'not-found',
-      409: 'conflict',
-      422: 'validation-failed',
-      429: 'rate-limit-exceeded',
-      500: 'internal-server-error',
-      503: 'service-unavailable',
-    };
-
-    return typeMap[status] ?? 'unknown-error';
-  }
-
   private getTitle(status: number, exception: HttpException): string {
-    const titleMap: Record<number, string> = {
-      400: 'Bad Request',
-      401: 'Unauthorized',
-      403: 'Forbidden',
-      404: 'Not Found',
-      409: 'Conflict',
-      422: 'Unprocessable Entity',
-      429: 'Too Many Requests',
-      500: 'Internal Server Error',
-      503: 'Service Unavailable',
-    };
-
-    return titleMap[status] ?? exception.name;
+    return TITLE_MAP[status as HttpStatusCode] ?? exception.name;
   }
 
   private buildErrorPayload(
@@ -96,7 +102,7 @@ export class ProblemDetailsFilter implements ExceptionFilter {
     exception: HttpException,
     status: number,
   ): Pick<ProblemDetailsDto, 'code' | 'detail' | 'errors'> {
-    if (status === 400 || status === 422) {
+    if (status === HTTP_STATUS.BAD_REQUEST || status === HTTP_STATUS.UNPROCESSABLE_ENTITY) {
       const validationErrors = this.extractValidationErrors(exceptionResponse);
       if (validationErrors && validationErrors.length > 0) {
         return {
@@ -116,15 +122,10 @@ export class ProblemDetailsFilter implements ExceptionFilter {
     }
 
     const detail = typeof exceptionResponse === 'string' ? exceptionResponse : exception.message;
-    const fallbackCodeMap: Record<number, string> = {
-      401: 'UNAUTHORIZED',
-      403: 'FORBIDDEN',
-      404: 'RESOURCE_NOT_FOUND',
-      409: 'RESOURCE_CONFLICT',
-      429: 'RATE_LIMIT_EXCEEDED',
-    };
     const code =
-      status >= 500 ? 'INTERNAL_SERVER_ERROR' : (fallbackCodeMap[status] ?? 'BAD_REQUEST');
+      status >= HTTP_STATUS.INTERNAL_SERVER_ERROR
+        ? 'INTERNAL_SERVER_ERROR'
+        : (FALLBACK_CODE_MAP[status as HttpStatusCode] ?? 'BAD_REQUEST');
 
     return { code, detail };
   }
@@ -177,7 +178,7 @@ export class ProblemDetailsFilter implements ExceptionFilter {
       typeof item === 'object' &&
       item !== null &&
       'property' in item &&
-      typeof (item as ValidationErrorItem).property === 'string'
+      typeof item.property === 'string'
     );
   }
 }

@@ -5,17 +5,14 @@ import * as bcrypt from 'bcrypt';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 import { MS_PER_DAY } from '@/shared/constants/time.constants.js';
 import { isUniqueViolation } from '@/shared/utils/pg-errors.js';
+import type { DeviceContext } from '@/shared/types/device-context.js';
+import type { UserIdentity } from '@/shared/types/user-identity.js';
 
 import { MailerService } from '../mailer/mailer.service.js';
 import { UserService } from '../user/user.service.js';
 import { LoginLogRepository } from './login-log.repository.js';
 import { TokenService } from './token.service.js';
-import type {
-  DeviceContext,
-  GenerateTokensResult,
-  SocialLoginParams,
-  SocialLoginResult,
-} from './auth.types.js';
+import type { GenerateTokensResult, SocialLoginParams, SocialLoginResult } from './auth.types.js';
 
 @Injectable()
 export class AuthService {
@@ -142,6 +139,10 @@ export class AuthService {
       userAgent: deviceContext?.userAgent,
     });
 
+    if (deviceContext) {
+      void this.userService.updateDeviceContext(user.id, deviceContext);
+    }
+
     return this.tokenService.generateTokens({
       userId: user.id,
       email: user.email,
@@ -250,7 +251,7 @@ export class AuthService {
   }
 
   private async loginAsExistingUser(
-    user: { id: string; email: string; role: GenerateTokensResult['user']['role'] },
+    user: UserIdentity,
     deviceContext?: DeviceContext,
   ): Promise<SocialLoginResult> {
     void this.loginLogRepo.create({
@@ -260,6 +261,10 @@ export class AuthService {
       ipAddress: deviceContext?.ipAddress,
       userAgent: deviceContext?.userAgent,
     });
+
+    if (deviceContext) {
+      void this.userService.updateDeviceContext(user.id, deviceContext);
+    }
 
     const tokens = await this.tokenService.generateTokens({
       userId: user.id,
@@ -276,7 +281,7 @@ export class AuthService {
     provider: SocialLoginParams['provider'];
     providerId: string;
     email: string;
-    userForTokens: { id: string; email: string; role: GenerateTokensResult['user']['role'] };
+    userForTokens: UserIdentity;
     deviceContext?: DeviceContext;
   }): Promise<SocialLoginResult> {
     try {
@@ -363,6 +368,10 @@ export class AuthService {
       ipAddress: args.deviceContext?.ipAddress,
       userAgent: args.deviceContext?.userAgent,
     });
+
+    if (args.deviceContext) {
+      void this.userService.updateDeviceContext(newUser.id, args.deviceContext);
+    }
 
     const tokens = await this.tokenService.generateTokens({
       userId: newUser.id,

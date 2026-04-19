@@ -10,6 +10,7 @@ import {
   MatchesField,
   MaxLengthField,
 } from '@/shared/decorators/validators.js';
+import { ENUM_NAMES } from '@/shared/constants/enum-name.constants.js';
 import { BUDGET_PERIODS } from '@/shared/enums/budget.enum.js';
 import type { BudgetPeriod } from '@/shared/enums/budget.enum.js';
 import { CURRENCY_CODES } from '@/shared/enums/currency-code.enum.js';
@@ -22,11 +23,21 @@ export class CreateBudgetDto {
   @MatchesField(/^\d{1,17}(\.\d{1,2})?$/)
   amount!: string;
 
-  @ApiProperty({ example: 'USD', type: String, enum: CURRENCY_CODES, enumName: 'CurrencyCode' })
+  @ApiProperty({
+    example: 'USD',
+    type: String,
+    enum: CURRENCY_CODES,
+    enumName: ENUM_NAMES.CURRENCY_CODE,
+  })
   @IsIn(CURRENCY_CODES)
   currencyCode!: CurrencyCode;
 
-  @ApiProperty({ example: 'MONTHLY', type: String, enum: BUDGET_PERIODS, enumName: 'BudgetPeriod' })
+  @ApiProperty({
+    example: 'MONTHLY',
+    type: String,
+    enum: BUDGET_PERIODS,
+    enumName: ENUM_NAMES.BUDGET_PERIOD,
+  })
   @IsIn(BUDGET_PERIODS)
   period!: BudgetPeriod;
 

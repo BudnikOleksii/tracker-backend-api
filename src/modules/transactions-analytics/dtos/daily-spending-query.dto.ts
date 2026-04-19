@@ -3,6 +3,7 @@ import { IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 
 import { IsInField, IsIntField, MaxField, MinField } from '@/shared/decorators/validators.js';
+import { ENUM_NAMES } from '@/shared/constants/enum-name.constants.js';
 import { CURRENCY_CODES } from '@/shared/enums/currency-code.enum.js';
 import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 import { TRANSACTION_TYPES } from '@/shared/enums/transaction-type.enum.js';
@@ -27,7 +28,7 @@ export class DailySpendingQueryDto {
     example: 'USD',
     type: String,
     enum: CURRENCY_CODES,
-    enumName: 'CurrencyCode',
+    enumName: ENUM_NAMES.CURRENCY_CODE,
   })
   @IsOptional()
   @IsInField([...CURRENCY_CODES])
@@ -37,7 +38,7 @@ export class DailySpendingQueryDto {
     example: 'EXPENSE',
     type: String,
     enum: TRANSACTION_TYPES,
-    enumName: 'TransactionType',
+    enumName: ENUM_NAMES.TRANSACTION_TYPE,
   })
   @IsOptional()
   @IsInField([...TRANSACTION_TYPES])

@@ -9,6 +9,7 @@ import {
   MaxLengthField,
   MatchesField,
 } from '@/shared/decorators/validators.js';
+import { ENUM_NAMES } from '@/shared/constants/enum-name.constants.js';
 import { CURRENCY_CODES } from '@/shared/enums/currency-code.enum.js';
 import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 import { TRANSACTION_TYPES } from '@/shared/enums/transaction-type.enum.js';
@@ -23,7 +24,7 @@ export class CreateTransactionDto {
     example: 'EXPENSE',
     type: String,
     enum: TRANSACTION_TYPES,
-    enumName: 'TransactionType',
+    enumName: ENUM_NAMES.TRANSACTION_TYPE,
   })
   @IsIn(TRANSACTION_TYPES)
   type!: TransactionType;
@@ -34,7 +35,12 @@ export class CreateTransactionDto {
   @MatchesField(/^\d{1,17}(\.\d{1,2})?$/)
   amount!: string;
 
-  @ApiProperty({ example: 'USD', type: String, enum: CURRENCY_CODES, enumName: 'CurrencyCode' })
+  @ApiProperty({
+    example: 'USD',
+    type: String,
+    enum: CURRENCY_CODES,
+    enumName: ENUM_NAMES.CURRENCY_CODE,
+  })
   @IsIn(CURRENCY_CODES)
   currencyCode!: CurrencyCode;
 

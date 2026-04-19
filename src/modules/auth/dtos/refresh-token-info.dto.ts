@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+import { ENUM_NAMES } from '@/shared/constants/enum-name.constants.js';
 import { ROLES } from '@/shared/enums/role.enum.js';
 import type { UserRole } from '@/shared/enums/role.enum.js';
 
@@ -15,7 +16,7 @@ class RefreshTokenUserDto {
     example: 'USER',
     type: String,
     enum: ROLES,
-    enumName: 'UserRole',
+    enumName: ENUM_NAMES.USER_ROLE,
   })
   role: UserRole;
 }

@@ -2,6 +2,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsIn, IsOptional } from 'class-validator';
 import { Transform } from 'class-transformer';
 
+import { ENUM_NAMES } from '@/shared/constants/enum-name.constants.js';
 import { SORT_ORDERS } from '@/shared/constants/sort.constants.js';
 import type { SortOrder } from '@/shared/constants/sort.constants.js';
 import { OffsetPaginationDto } from '@/shared/dtos/pagination.dto.js';
@@ -17,7 +18,7 @@ export class CategoryQueryDto extends OffsetPaginationDto {
     example: 'EXPENSE',
     type: String,
     enum: TRANSACTION_TYPES,
-    enumName: 'TransactionType',
+    enumName: ENUM_NAMES.TRANSACTION_TYPE,
   })
   @IsOptional()
   @IsIn(TRANSACTION_TYPES)
@@ -47,7 +48,7 @@ export class CategoryQueryDto extends OffsetPaginationDto {
     example: 'name',
     type: String,
     enum: SORT_BY_FIELDS,
-    enumName: 'CategorySortBy',
+    enumName: ENUM_NAMES.CATEGORY_SORT_BY,
     description: 'Field to sort by (default: name)',
   })
   @IsOptional()
@@ -58,7 +59,7 @@ export class CategoryQueryDto extends OffsetPaginationDto {
     example: 'asc',
     type: String,
     enum: SORT_ORDERS,
-    enumName: 'SortOrder',
+    enumName: ENUM_NAMES.SORT_ORDER,
     description: 'Sort direction (default: asc)',
   })
   @IsOptional()
