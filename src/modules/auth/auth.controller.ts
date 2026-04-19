@@ -30,6 +30,8 @@ import type { Env } from '@/app/config/env.schema.js';
 import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 import { CsrfGuard } from '@/shared/guards/csrf.guard.js';
 import { JwtAuthGuard } from '@/shared/guards/jwt-auth.guard.js';
+import type { DeviceContext } from '@/shared/types/device-context.js';
+import type { HttpRequest, RequestWithCookies } from '@/shared/types/http-request.js';
 import { convertHeaderToString } from '@/shared/utils/header.utils.js';
 
 import { AuthService } from './auth.service.js';
@@ -112,21 +114,14 @@ export class AuthController {
   @ApiResponse({ status: 200, type: AuthResponseDto })
   async login(
     @Body() dto: LoginDto,
-    @Request()
-    req: {
-      headers: Record<string, string | string[] | undefined>;
-      socket?: { remoteAddress?: string };
-    },
+    @Request() req: HttpRequest,
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponseDto> {
-    const deviceContext = {
-      ipAddress:
-        convertHeaderToString(req.headers['x-forwarded-for'])?.split(',')[0]?.trim() ??
-        req.socket?.remoteAddress,
-      userAgent: convertHeaderToString(req.headers['user-agent']),
-    };
-
-    const result = await this.authService.login(dto.email, dto.password, deviceContext);
+    const result = await this.authService.login(
+      dto.email,
+      dto.password,
+      this.buildDeviceContext(req),
+    );
 
     this.setRefreshTokenCookie(res, result);
 
@@ -140,7 +135,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Refresh access token' })
   @ApiResponse({ status: 200, type: AuthResponseDto })
   async refreshToken(
-    @Request() req: { cookies?: Record<string, string> },
+    @Request() req: RequestWithCookies,
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponseDto> {
     const refreshToken = this.getRefreshTokenFromCookie(req);
@@ -179,7 +174,7 @@ export class AuthController {
   @ApiResponse({ status: 200, type: LogoutResponseDto })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async logout(
-    @Request() req: AuthenticatedRequest & { cookies?: Record<string, string> },
+    @Request() req: AuthenticatedRequest & RequestWithCookies,
     @Res({ passthrough: true }) res: Response,
   ): Promise<LogoutResponseDto> {
     const refreshToken = this.getRefreshTokenFromCookie(req);
@@ -284,12 +279,7 @@ export class AuthController {
   @UseGuards(GoogleOAuthGuard)
   @ApiExcludeEndpoint()
   async googleCallback(
-    @Request()
-    req: {
-      user: SocialLoginParams;
-      headers: Record<string, string | string[] | undefined>;
-      socket?: { remoteAddress?: string };
-    },
+    @Request() req: { user: SocialLoginParams } & HttpRequest,
     @Res() res: Response,
   ): Promise<void> {
     await this.handleSocialCallback(req, res);
@@ -309,12 +299,7 @@ export class AuthController {
   @UseGuards(GitHubOAuthGuard)
   @ApiExcludeEndpoint()
   async githubCallback(
-    @Request()
-    req: {
-      user: SocialLoginParams;
-      headers: Record<string, string | string[] | undefined>;
-      socket?: { remoteAddress?: string };
-    },
+    @Request() req: { user: SocialLoginParams } & HttpRequest,
     @Res() res: Response,
   ): Promise<void> {
     await this.handleSocialCallback(req, res);
@@ -345,26 +330,15 @@ export class AuthController {
   }
 
   private async handleSocialCallback(
-    req: {
-      user: SocialLoginParams;
-      headers: Record<string, string | string[] | undefined>;
-      socket?: { remoteAddress?: string };
-    },
+    req: { user: SocialLoginParams } & HttpRequest,
     res: Response,
   ): Promise<void> {
     const redirectUrl = this.socialAuthRedirectUrl as string;
 
     try {
-      const deviceContext = {
-        ipAddress:
-          convertHeaderToString(req.headers['x-forwarded-for'])?.split(',')[0]?.trim() ??
-          req.socket?.remoteAddress,
-        userAgent: convertHeaderToString(req.headers['user-agent']),
-      };
-
       const result = await this.authService.socialLogin({
         ...req.user,
-        deviceContext,
+        deviceContext: this.buildDeviceContext(req),
       });
 
       const code = await this.socialAuthCodeService.createCode(result, result.isNewUser);
@@ -448,7 +422,16 @@ export class AuthController {
     }
   }
 
-  private getRefreshTokenFromCookie(req: { cookies?: Record<string, string> }): string {
+  private buildDeviceContext(req: HttpRequest): DeviceContext {
+    return {
+      ipAddress:
+        convertHeaderToString(req.headers['x-forwarded-for'])?.split(',')[0]?.trim() ??
+        req.socket?.remoteAddress,
+      userAgent: convertHeaderToString(req.headers['user-agent']),
+    };
+  }
+
+  private getRefreshTokenFromCookie(req: RequestWithCookies): string {
     const token = req.cookies?.[this.cookieName];
 
     if (!token) {

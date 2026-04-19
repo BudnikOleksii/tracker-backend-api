@@ -8,6 +8,7 @@ import {
   IsUUIDField,
   MaxLengthField,
 } from '@/shared/decorators/validators.js';
+import { ENUM_NAMES } from '@/shared/constants/enum-name.constants.js';
 import { TRANSACTION_TYPES } from '@/shared/enums/transaction-type.enum.js';
 import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
 
@@ -23,7 +24,7 @@ export class CreateDefaultTransactionCategoryDto {
     example: 'EXPENSE',
     type: String,
     enum: TRANSACTION_TYPES,
-    enumName: 'TransactionType',
+    enumName: ENUM_NAMES.TRANSACTION_TYPE,
   })
   @IsIn(TRANSACTION_TYPES)
   type!: TransactionType;

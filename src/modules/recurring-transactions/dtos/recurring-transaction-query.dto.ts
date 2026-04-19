@@ -1,6 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsIn, IsOptional } from 'class-validator';
 
+import { ENUM_NAMES } from '@/shared/constants/enum-name.constants.js';
 import { SORT_ORDERS } from '@/shared/constants/sort.constants.js';
 import type { SortOrder } from '@/shared/constants/sort.constants.js';
 import { IsUUIDField } from '@/shared/decorators/validators.js';
@@ -22,7 +23,7 @@ export class RecurringTransactionQueryDto extends OffsetPaginationDto {
     example: 'ACTIVE',
     type: String,
     enum: RECURRING_TRANSACTION_STATUSES,
-    enumName: 'RecurringTransactionStatus',
+    enumName: ENUM_NAMES.RECURRING_TRANSACTION_STATUS,
   })
   @IsOptional()
   @IsIn(RECURRING_TRANSACTION_STATUSES)
@@ -32,7 +33,7 @@ export class RecurringTransactionQueryDto extends OffsetPaginationDto {
     example: 'EXPENSE',
     type: String,
     enum: TRANSACTION_TYPES,
-    enumName: 'TransactionType',
+    enumName: ENUM_NAMES.TRANSACTION_TYPE,
   })
   @IsOptional()
   @IsIn(TRANSACTION_TYPES)
@@ -47,7 +48,7 @@ export class RecurringTransactionQueryDto extends OffsetPaginationDto {
     example: 'USD',
     type: String,
     enum: CURRENCY_CODES,
-    enumName: 'CurrencyCode',
+    enumName: ENUM_NAMES.CURRENCY_CODE,
   })
   @IsOptional()
   @IsIn(CURRENCY_CODES)
@@ -57,7 +58,7 @@ export class RecurringTransactionQueryDto extends OffsetPaginationDto {
     example: 'MONTHLY',
     type: String,
     enum: RECURRING_FREQUENCIES,
-    enumName: 'RecurringFrequency',
+    enumName: ENUM_NAMES.RECURRING_FREQUENCY,
   })
   @IsOptional()
   @IsIn(RECURRING_FREQUENCIES)
@@ -67,7 +68,7 @@ export class RecurringTransactionQueryDto extends OffsetPaginationDto {
     example: 'createdAt',
     type: String,
     enum: SORT_BY_FIELDS,
-    enumName: 'RecurringTransactionSortBy',
+    enumName: ENUM_NAMES.RECURRING_TRANSACTION_SORT_BY,
     description: 'Field to sort by (default: createdAt)',
   })
   @IsOptional()
@@ -78,7 +79,7 @@ export class RecurringTransactionQueryDto extends OffsetPaginationDto {
     example: 'desc',
     type: String,
     enum: SORT_ORDERS,
-    enumName: 'SortOrder',
+    enumName: ENUM_NAMES.SORT_ORDER,
     description: 'Sort direction (default: desc)',
   })
   @IsOptional()

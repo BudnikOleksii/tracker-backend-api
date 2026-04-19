@@ -5,8 +5,8 @@ import { userAuthIdentities, users } from '@/database/schemas/index.js';
 import type { UserAuthIdentity } from '@/database/schemas/index.js';
 import { DB_TOKEN } from '@/database/types.js';
 import type { DrizzleDb } from '@/database/types.js';
-import type { UserRole } from '@/shared/enums/role.enum.js';
 import type { AuthProvider } from '@/shared/enums/auth-provider.enum.js';
+import type { UserIdentity } from '@/shared/types/user-identity.js';
 
 export interface CreateIdentityData {
   userId: string;
@@ -15,10 +15,7 @@ export interface CreateIdentityData {
   emailAtLink?: string | null;
 }
 
-export interface IdentityTokenUser {
-  id: string;
-  email: string;
-  role: UserRole;
+export interface IdentityTokenUser extends UserIdentity {
   emailVerified: boolean;
 }
 

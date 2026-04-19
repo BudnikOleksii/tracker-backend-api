@@ -13,6 +13,7 @@ import {
   MaxLengthField,
   MinField,
 } from '@/shared/decorators/validators.js';
+import { ENUM_NAMES } from '@/shared/constants/enum-name.constants.js';
 import { CURRENCY_CODES } from '@/shared/enums/currency-code.enum.js';
 import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 import { RECURRING_FREQUENCIES } from '@/shared/enums/recurring-frequency.enum.js';
@@ -29,7 +30,7 @@ export class CreateRecurringTransactionDto {
     example: 'EXPENSE',
     type: String,
     enum: TRANSACTION_TYPES,
-    enumName: 'TransactionType',
+    enumName: ENUM_NAMES.TRANSACTION_TYPE,
   })
   @IsIn(TRANSACTION_TYPES)
   type!: TransactionType;
@@ -40,7 +41,12 @@ export class CreateRecurringTransactionDto {
   @MatchesField(/^\d{1,17}(\.\d{1,2})?$/)
   amount!: string;
 
-  @ApiProperty({ example: 'USD', type: String, enum: CURRENCY_CODES, enumName: 'CurrencyCode' })
+  @ApiProperty({
+    example: 'USD',
+    type: String,
+    enum: CURRENCY_CODES,
+    enumName: ENUM_NAMES.CURRENCY_CODE,
+  })
   @IsIn(CURRENCY_CODES)
   currencyCode!: CurrencyCode;
 
@@ -54,7 +60,7 @@ export class CreateRecurringTransactionDto {
     example: 'MONTHLY',
     type: String,
     enum: RECURRING_FREQUENCIES,
-    enumName: 'RecurringFrequency',
+    enumName: ENUM_NAMES.RECURRING_FREQUENCY,
   })
   @IsIn(RECURRING_FREQUENCIES)
   frequency!: RecurringFrequency;

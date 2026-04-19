@@ -3,13 +3,12 @@ import { Inject, Injectable } from '@nestjs/common';
 import { loginLogs } from '@/database/schemas/index.js';
 import { DB_TOKEN } from '@/database/types.js';
 import type { DrizzleDb } from '@/database/types.js';
+import type { DeviceContext } from '@/shared/types/device-context.js';
 
-export interface LoginLogEntry {
+export interface LoginLogEntry extends DeviceContext {
   userId?: string;
   email: string;
   status: 'SUCCESS' | 'FAILED';
-  ipAddress?: string;
-  userAgent?: string;
   failReason?: string;
 }
 

@@ -10,6 +10,7 @@ import {
   MaxLengthField,
   MinLengthField,
 } from '@/shared/decorators/validators.js';
+import { ENUM_NAMES } from '@/shared/constants/enum-name.constants.js';
 import { ROLES } from '@/shared/enums/role.enum.js';
 import type { UserRole } from '@/shared/enums/role.enum.js';
 
@@ -42,7 +43,7 @@ export class CreateUserDto {
   @MaxLengthField(50)
   lastName?: string;
 
-  @ApiPropertyOptional({ example: 'USER', enum: ROLES, enumName: 'UserRole' })
+  @ApiPropertyOptional({ example: 'USER', enum: ROLES, enumName: ENUM_NAMES.USER_ROLE })
   @IsOptional()
   @IsInField(ROLES)
   role?: UserRole;

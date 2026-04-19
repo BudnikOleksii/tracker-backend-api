@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+import { ENUM_NAMES } from '@/shared/constants/enum-name.constants.js';
 import type { AuthProvider } from '@/shared/enums/auth-provider.enum.js';
 import { AUTH_PROVIDERS } from '@/shared/enums/auth-provider.enum.js';
 import type { CountryCode } from '@/shared/enums/country-code.enum.js';
@@ -21,7 +22,7 @@ export class UserResponseDto {
     example: 'USER',
     type: String,
     enum: ROLES,
-    enumName: 'UserRole',
+    enumName: ENUM_NAMES.USER_ROLE,
   })
   role: UserRole;
 
@@ -31,7 +32,7 @@ export class UserResponseDto {
     example: 'LOCAL',
     type: String,
     enum: AUTH_PROVIDERS,
-    enumName: 'AuthProvider',
+    enumName: ENUM_NAMES.AUTH_PROVIDER,
     nullable: true,
   })
   authProvider: AuthProvider | null;
@@ -44,7 +45,7 @@ export class UserResponseDto {
     example: 'USA',
     type: String,
     enum: COUNTRY_CODES,
-    enumName: 'CountryCode',
+    enumName: ENUM_NAMES.COUNTRY_CODE,
     nullable: true,
   })
   countryCode: CountryCode | null;
@@ -54,7 +55,7 @@ export class UserResponseDto {
     example: 'USD',
     type: String,
     enum: CURRENCY_CODES,
-    enumName: 'CurrencyCode',
+    enumName: ENUM_NAMES.CURRENCY_CODE,
     nullable: true,
   })
   baseCurrencyCode: CurrencyCode | null;

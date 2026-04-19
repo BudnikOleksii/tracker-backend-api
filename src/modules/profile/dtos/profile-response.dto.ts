@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+import { ENUM_NAMES } from '@/shared/constants/enum-name.constants.js';
 import { COUNTRY_CODES } from '@/shared/enums/country-code.enum.js';
 import { CURRENCY_CODES } from '@/shared/enums/currency-code.enum.js';
 import { ROLES } from '@/shared/enums/role.enum.js';
@@ -25,7 +26,7 @@ export class ProfileResponseDto {
     example: 'US',
     type: String,
     enum: COUNTRY_CODES,
-    enumName: 'CountryCode',
+    enumName: ENUM_NAMES.COUNTRY_CODE,
     nullable: true,
   })
   countryCode: CountryCode | null;
@@ -35,7 +36,7 @@ export class ProfileResponseDto {
     example: 'USD',
     type: String,
     enum: CURRENCY_CODES,
-    enumName: 'CurrencyCode',
+    enumName: ENUM_NAMES.CURRENCY_CODE,
     nullable: true,
   })
   baseCurrencyCode: CurrencyCode | null;
@@ -48,7 +49,7 @@ export class ProfileResponseDto {
     example: 'USER',
     type: String,
     enum: ROLES,
-    enumName: 'UserRole',
+    enumName: ENUM_NAMES.USER_ROLE,
   })
   role: UserRole;
 

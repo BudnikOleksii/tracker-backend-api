@@ -7,6 +7,7 @@ import { refreshTokens } from '@/database/schemas/refresh-tokens.js';
 import { DB_TOKEN } from '@/database/types.js';
 import type { DrizzleDb } from '@/database/types.js';
 import type { Env } from '@/app/config/env.schema.js';
+import type { DeviceContext } from '@/shared/types/device-context.js';
 
 type RefreshToken = typeof refreshTokens.$inferSelect;
 
@@ -24,13 +25,9 @@ export class RefreshTokenRepository {
     return createHmac('sha256', secret).update(token).digest('hex');
   }
 
-  async create(data: {
-    userId: string;
-    token: string;
-    expiresAt: Date;
-    ipAddress?: string;
-    userAgent?: string;
-  }): Promise<RefreshToken> {
+  async create(
+    data: { userId: string; token: string; expiresAt: Date } & DeviceContext,
+  ): Promise<RefreshToken> {
     const [session] = await this.db
       .insert(refreshTokens)
       .values({

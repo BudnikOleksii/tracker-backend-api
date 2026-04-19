@@ -7,6 +7,7 @@ import { DB_TOKEN } from '@/database/types.js';
 import type { DrizzleDb } from '@/database/types.js';
 import type { User } from '@/database/schemas/index.js';
 import type { SortOrder } from '@/shared/constants/sort.constants.js';
+import type { DeviceContext } from '@/shared/types/device-context.js';
 import type { CountryCode } from '@/shared/enums/country-code.enum.js';
 import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 import type { UserRole } from '@/shared/enums/role.enum.js';
@@ -476,6 +477,22 @@ export class UserRepository {
       .where(eq(users.id, user.id));
 
     return { success: true, userId: user.id };
+  }
+
+  async updateDeviceContext(id: string, data: DeviceContext): Promise<void> {
+    const updates: Partial<typeof users.$inferInsert> = {};
+    if (data.ipAddress !== undefined) {
+      updates.ipAddress = data.ipAddress;
+    }
+    if (data.userAgent !== undefined) {
+      updates.userAgent = data.userAgent;
+    }
+    if (Object.keys(updates).length === 0) {
+      return;
+    }
+
+    updates.updatedAt = new Date();
+    await this.db.update(users).set(updates).where(eq(users.id, id));
   }
 
   async softDelete(id: string): Promise<boolean> {

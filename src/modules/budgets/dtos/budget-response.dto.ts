@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+import { ENUM_NAMES } from '@/shared/constants/enum-name.constants.js';
 import type { BudgetPeriod, BudgetStatus } from '@/shared/enums/budget.enum.js';
 import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 import { BUDGET_PERIODS, BUDGET_STATUSES } from '@/shared/enums/budget.enum.js';
@@ -25,7 +26,7 @@ export class BudgetResponseDto {
     example: 'USD',
     type: String,
     enum: CURRENCY_CODES,
-    enumName: 'CurrencyCode',
+    enumName: ENUM_NAMES.CURRENCY_CODE,
   })
   currencyCode: CurrencyCode;
 
@@ -34,7 +35,7 @@ export class BudgetResponseDto {
     example: 'MONTHLY',
     type: String,
     enum: BUDGET_PERIODS,
-    enumName: 'BudgetPeriod',
+    enumName: ENUM_NAMES.BUDGET_PERIOD,
   })
   period: BudgetPeriod;
 
@@ -49,7 +50,7 @@ export class BudgetResponseDto {
     example: 'ACTIVE',
     type: String,
     enum: BUDGET_STATUSES,
-    enumName: 'BudgetStatus',
+    enumName: ENUM_NAMES.BUDGET_STATUS,
   })
   status: BudgetStatus;
 

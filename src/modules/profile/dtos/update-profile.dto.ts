@@ -7,6 +7,7 @@ import {
   MaxLengthField,
   MinLengthField,
 } from '@/shared/decorators/validators.js';
+import { ENUM_NAMES } from '@/shared/constants/enum-name.constants.js';
 import { COUNTRY_CODES } from '@/shared/enums/country-code.enum.js';
 import { CURRENCY_CODES } from '@/shared/enums/currency-code.enum.js';
 import type { CountryCode } from '@/shared/enums/country-code.enum.js';
@@ -31,7 +32,7 @@ export class UpdateProfileDto {
     example: 'US',
     type: String,
     enum: COUNTRY_CODES,
-    enumName: 'CountryCode',
+    enumName: ENUM_NAMES.COUNTRY_CODE,
   })
   @IsOptional()
   @IsInField(COUNTRY_CODES)
@@ -41,7 +42,7 @@ export class UpdateProfileDto {
     example: 'USD',
     type: String,
     enum: CURRENCY_CODES,
-    enumName: 'CurrencyCode',
+    enumName: ENUM_NAMES.CURRENCY_CODE,
   })
   @IsOptional()
   @IsInField(CURRENCY_CODES)
