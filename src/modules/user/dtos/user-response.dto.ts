@@ -24,7 +24,7 @@ export class UserResponseDto {
 
   @ApiProperty({
     description:
-      'Derived auth provider: LOCAL if the user has a password identity, else the earliest-created social identity. Null only if the user has zero identities (data integrity bug).',
+      'Derived auth provider: LOCAL if the user has a password identity, else the earliest-created social identity. Null only when no authentication identity is associated with the user.',
     example: 'LOCAL',
     enum: AUTH_PROVIDERS,
     enumName: 'AuthProvider',

@@ -22,8 +22,8 @@ The database SHALL have a `UserAuthIdentity` table that stores one row per authe
 
 #### Scenario: User lookup index
 
-- **WHEN** the application looks up all identities for a user by `userId`
-- **THEN** a non-unique index on `userId` MUST make the lookup efficient
+- **WHEN** the application looks up all identities for a user by `userId` (e.g., `findByUserId`)
+- **THEN** a non-unique composite index on `(userId, createdAt)` MUST make both the lookup and the `createdAt` ordering efficient
 
 #### Scenario: Cascade delete with user
 

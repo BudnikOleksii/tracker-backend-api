@@ -203,6 +203,21 @@ export class AuthService {
       });
     }
 
+    if (!emailVerified) {
+      void this.loginLogRepo.create({
+        email,
+        status: 'FAILED',
+        ipAddress: deviceContext?.ipAddress,
+        userAgent: deviceContext?.userAgent,
+        failReason: 'email_unverified_provider',
+      });
+      throw new ConflictException({
+        code: ErrorCode.EMAIL_UNVERIFIED_PROVIDER,
+        message:
+          'The social provider has not verified this email address. Please verify it with the provider before creating an account.',
+      });
+    }
+
     return this.createNewSocialUser({
       provider,
       providerId,

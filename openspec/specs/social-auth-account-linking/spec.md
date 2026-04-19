@@ -36,11 +36,20 @@ The auth service SHALL expose a `socialLogin` method that handles user lookup, c
 #### Scenario: No existing user (new registration)
 
 - **WHEN** `socialLogin` is called with an email and provider identity that match no existing user or identity
+- **AND** the provider reports the email as verified (`emailVerified: true` in the social login params)
 - **THEN** the system MUST create a new user with email and name from the social profile
 - **AND** the new user MUST have no `LOCAL` identity row
 - **AND** the new user MUST have `emailVerified` set to true (provider verified the email)
 - **AND** the system MUST insert a `UserAuthIdentity` row with the provider and providerId
 - **AND** the system MUST issue tokens for the new user and return `isNewUser: true`
+
+#### Scenario: No existing user, provider email unverified
+
+- **WHEN** `socialLogin` is called with an email and provider identity that match no existing user or identity
+- **AND** the provider reports the email as not verified (`emailVerified: false`)
+- **THEN** the system MUST reject the login with a `CONFLICT`-class error carrying code `EMAIL_UNVERIFIED_PROVIDER`
+- **AND** the system MUST log the attempt with `failReason: 'email_unverified_provider'`
+- **AND** the system MUST NOT create any user or identity row
 
 #### Scenario: Concurrent callbacks do not create duplicate identities
 

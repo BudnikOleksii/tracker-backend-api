@@ -7,6 +7,8 @@ import type { Env } from '@/app/config/env.schema.js';
 
 import type { SocialLoginParams } from './auth.types.js';
 
+const GITHUB_EMAILS_TIMEOUT_MS = 3000;
+
 interface GitHubEmail {
   value: string;
   verified?: boolean;
@@ -58,11 +60,13 @@ export class GitHubStrategy extends PassportStrategy(Strategy, 'github') {
     const apiEmails = await this.fetchUserEmails(accessToken);
     const emails = apiEmails.length > 0 ? apiEmails : (profile.emails ?? []);
 
+    // Per spec: only a PRIMARY verified email counts as "verified by provider".
+    // Secondary verified emails fall back to the un-verified path so the service
+    // rejects with EMAIL_UNVERIFIED_PROVIDER instead of auto-linking.
     const primaryVerified = emails.find((e) => e.verified === true && e.primary === true);
-    const anyVerified = emails.find((e) => e.verified === true);
-    const anyEmail = emails[0];
+    const fallback = emails[0];
 
-    const picked = primaryVerified ?? anyVerified ?? anyEmail;
+    const picked = primaryVerified ?? fallback;
     if (!picked) {
       throw new UnauthorizedException('GitHub account has no accessible email');
     }
@@ -73,39 +77,53 @@ export class GitHubStrategy extends PassportStrategy(Strategy, 'github') {
       provider: 'GITHUB',
       providerId: profile.id,
       email: picked.value,
-      emailVerified: picked.verified === true,
+      emailVerified: picked === primaryVerified,
       firstName: nameParts?.[0],
       lastName: nameParts?.slice(1).join(' ') || undefined,
     };
   }
 
   private async fetchUserEmails(accessToken: string): Promise<GitHubEmail[]> {
-    const response = await fetch('https://api.github.com/user/emails', {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        Accept: 'application/vnd.github+json',
-        'User-Agent': 'tracker-backend-api',
-      },
-    });
+    const abortController = new AbortController();
+    const timeout = setTimeout(() => abortController.abort(), GITHUB_EMAILS_TIMEOUT_MS);
 
-    if (!response.ok) {
+    try {
+      const response = await fetch('https://api.github.com/user/emails', {
+        signal: abortController.signal,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: 'application/vnd.github+json',
+          'User-Agent': 'tracker-backend-api',
+        },
+      });
+
+      if (!response.ok) {
+        this.logger.warn(
+          `GitHub /user/emails returned ${response.status}; falling back to profile emails`,
+        );
+
+        return [];
+      }
+
+      const data = (await response.json()) as {
+        email: string;
+        primary: boolean;
+        verified: boolean;
+      }[];
+
+      return data.map((item) => ({
+        value: item.email,
+        primary: item.primary,
+        verified: item.verified,
+      }));
+    } catch (error) {
       this.logger.warn(
-        `GitHub /user/emails returned ${response.status}; falling back to profile emails`,
+        `GitHub /user/emails request failed (${error instanceof Error ? error.message : 'unknown error'}); falling back to profile emails`,
       );
 
       return [];
+    } finally {
+      clearTimeout(timeout);
     }
-
-    const data = (await response.json()) as {
-      email: string;
-      primary: boolean;
-      verified: boolean;
-    }[];
-
-    return data.map((item) => ({
-      value: item.email,
-      primary: item.primary,
-      verified: item.verified,
-    }));
   }
 }
