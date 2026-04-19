@@ -20,7 +20,7 @@ import type { CreateTransactionData } from './transactions.repository.js';
 import type { ImportResult, ParsedTransactionRow } from './transactions.types.js';
 import { CACHE_MODULE } from './transactions.constants.js';
 
-const MAX_IMPORT_ROWS = 1000;
+const MAX_IMPORT_ROWS = 3000;
 const TYPE_MAP: Record<string, TransactionType> = {
   expense: 'EXPENSE',
   income: 'INCOME',

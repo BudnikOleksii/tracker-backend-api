@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as bcrypt from 'bcrypt';
 
 import type { User } from '@/database/schemas/users.js';
@@ -16,6 +17,7 @@ import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 import { hasRequiredRole } from '@/shared/enums/role.enum.js';
 import type { UserRole } from '@/shared/enums/role.enum.js';
 
+import { USER_EVENTS, UserHardDeletedEvent } from './events/user.event.js';
 import { IdentityRepository } from './identity.repository.js';
 import type { IdentityWithUser } from './identity.repository.js';
 import { UserRepository } from './user.repository.js';
@@ -32,10 +34,12 @@ const CACHE_MODULE = 'users';
 
 @Injectable()
 export class UserService {
+  // eslint-disable-next-line @typescript-eslint/max-params
   constructor(
     private readonly userRepository: UserRepository,
     private readonly identityRepository: IdentityRepository,
     private readonly cacheService: CacheService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async findByEmail(email: string): Promise<User | null> {
@@ -187,6 +191,8 @@ export class UserService {
     }
 
     await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE));
+
+    await this.eventEmitter.emitAsync(USER_EVENTS.HARD_DELETED, new UserHardDeletedEvent(id));
   }
 
   async getSummary(): Promise<UserSummary> {

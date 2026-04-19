@@ -3,7 +3,9 @@ import { ApiProperty } from '@nestjs/swagger';
 import type { AuthProvider } from '@/shared/enums/auth-provider.enum.js';
 import { AUTH_PROVIDERS } from '@/shared/enums/auth-provider.enum.js';
 import type { CountryCode } from '@/shared/enums/country-code.enum.js';
+import { COUNTRY_CODES } from '@/shared/enums/country-code.enum.js';
 import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
+import { CURRENCY_CODES } from '@/shared/enums/currency-code.enum.js';
 import type { UserRole } from '@/shared/enums/role.enum.js';
 import { ROLES } from '@/shared/enums/role.enum.js';
 
@@ -17,6 +19,7 @@ export class UserResponseDto {
   @ApiProperty({
     description: 'User role',
     example: 'USER',
+    type: String,
     enum: ROLES,
     enumName: 'UserRole',
   })
@@ -26,6 +29,7 @@ export class UserResponseDto {
     description:
       'Derived auth provider: LOCAL if the user has a password identity, else the earliest-created social identity. Null only when no authentication identity is associated with the user.',
     example: 'LOCAL',
+    type: String,
     enum: AUTH_PROVIDERS,
     enumName: 'AuthProvider',
     nullable: true,
@@ -38,22 +42,38 @@ export class UserResponseDto {
   @ApiProperty({
     description: 'Country code (ISO 3166-1 alpha-3)',
     example: 'USA',
+    type: String,
+    enum: COUNTRY_CODES,
+    enumName: 'CountryCode',
     nullable: true,
   })
   countryCode: CountryCode | null;
 
-  @ApiProperty({ description: 'Base currency code (ISO 4217)', example: 'USD', nullable: true })
+  @ApiProperty({
+    description: 'Base currency code (ISO 4217)',
+    example: 'USD',
+    type: String,
+    enum: CURRENCY_CODES,
+    enumName: 'CurrencyCode',
+    nullable: true,
+  })
   baseCurrencyCode: CurrencyCode | null;
 
   @ApiProperty({ description: 'Whether onboarding is completed', example: false })
   onboardingCompleted: boolean;
 
-  @ApiProperty({ description: 'Last known IP address', example: '192.168.1.1', nullable: true })
+  @ApiProperty({
+    description: 'Last known IP address',
+    example: '192.168.1.1',
+    type: String,
+    nullable: true,
+  })
   ipAddress: string | null;
 
   @ApiProperty({
     description: 'Last known user agent',
     example: 'Mozilla/5.0...',
+    type: String,
     nullable: true,
   })
   userAgent: string | null;
