@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import type {} from 'multer';
 import { parse } from 'csv-parse';
 
 import type { DrizzleDb } from '@/database/types.js';
