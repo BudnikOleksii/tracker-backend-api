@@ -12,7 +12,7 @@ import {
 import { CURRENCY_CODES, type CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 
 export class CompleteOnboardingDto {
-  @ApiProperty({ example: 'USD' })
+  @ApiProperty({ example: 'USD', type: String, enum: CURRENCY_CODES, enumName: 'CurrencyCode' })
   @IsStringField()
   @IsNotEmptyField({ message: 'baseCurrencyCode is required' })
   @IsInField([...CURRENCY_CODES], { message: 'Invalid currency code' })

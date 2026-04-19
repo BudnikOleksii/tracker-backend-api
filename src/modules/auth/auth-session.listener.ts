@@ -5,6 +5,7 @@ import {
   PROFILE_EVENTS,
   type ProfileSessionInvalidationEvent,
 } from '@/modules/profile/events/profile.event.js';
+import { USER_EVENTS, type UserHardDeletedEvent } from '@/modules/user/events/user.event.js';
 
 import { TokenService } from './token.service.js';
 
@@ -22,6 +23,22 @@ export class AuthSessionListener {
   @OnEvent(PROFILE_EVENTS.ACCOUNT_DELETED, { async: true })
   async handleAccountDeleted(event: ProfileSessionInvalidationEvent): Promise<void> {
     await this.invalidateSessions(event, 'account deletion');
+  }
+
+  @OnEvent(USER_EVENTS.HARD_DELETED, { async: true })
+  async handleUserHardDeleted(event: UserHardDeletedEvent): Promise<void> {
+    // Admin-triggered hard delete: we only know the target userId, not any
+    // active access-token JTI, so we can only revoke refresh tokens here.
+    // Access tokens expire naturally; the cascade FK deletes refresh tokens
+    // too, but the explicit call documents intent and survives schema changes.
+    try {
+      await this.tokenService.revokeAllRefreshTokens(event.userId);
+    } catch (error) {
+      this.logger.error(
+        `Failed to revoke refresh tokens after hard delete for user ${event.userId}`,
+        error instanceof Error ? error.stack : undefined,
+      );
+    }
   }
 
   private async invalidateSessions(

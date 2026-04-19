@@ -303,19 +303,29 @@ export class DefaultTransactionCategoryRepository {
       const insertedParents = await tx
         .insert(transactionCategories)
         .values(parents.map((p) => ({ userId, name: p.name, type: p.type })))
-        .returning({ id: transactionCategories.id, name: transactionCategories.name });
+        .returning({
+          id: transactionCategories.id,
+          name: transactionCategories.name,
+          type: transactionCategories.type,
+        });
 
-      // PostgreSQL guarantees that RETURNING rows are returned in insertion order,
-      // so insertedParents[i] corresponds to parents[i] and the mapping is stable.
-      const idMap = new Map<string, string>(
-        parents
-          .map((p, i) => {
-            const inserted = insertedParents[i];
+      // Build idMap by (name, type) natural key rather than positional index.
+      // PostgreSQL does not guarantee RETURNING order, and parallel workers or
+      // triggers could reorder rows and silently corrupt the category tree.
+      // (name, type) is unique within the parents set because defaults enforce
+      // uniqueness on (name, type, parent=NULL).
+      const insertedByKey = new Map<string, string>();
+      for (const inserted of insertedParents) {
+        insertedByKey.set(`${inserted.type}::${inserted.name}`, inserted.id);
+      }
 
-            return inserted ? ([p.id, inserted.id] as [string, string]) : null;
-          })
-          .filter((entry): entry is [string, string] => entry !== null),
-      );
+      const idMap = new Map<string, string>();
+      for (const parent of parents) {
+        const newId = insertedByKey.get(`${parent.type}::${parent.name}`);
+        if (newId) {
+          idMap.set(parent.id, newId);
+        }
+      }
 
       if (children.length === 0) {
         return;
