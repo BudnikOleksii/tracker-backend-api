@@ -23,12 +23,14 @@ export class UserResponseDto {
   role: UserRole;
 
   @ApiProperty({
-    description: 'Authentication provider',
+    description:
+      'Derived auth provider: LOCAL if the user has a password identity, else the earliest-created social identity. Null only if the user has zero identities (data integrity bug).',
     example: 'LOCAL',
     enum: AUTH_PROVIDERS,
     enumName: 'AuthProvider',
+    nullable: true,
   })
-  authProvider: AuthProvider;
+  authProvider: AuthProvider | null;
 
   @ApiProperty({ description: 'Whether user email is verified', example: true })
   emailVerified: boolean;

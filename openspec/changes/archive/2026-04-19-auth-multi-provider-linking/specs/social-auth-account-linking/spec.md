@@ -1,4 +1,4 @@
-## ADDED Requirements
+## MODIFIED Requirements
 
 ### Requirement: Social login service method
 
@@ -106,6 +106,8 @@ The system SHALL use a `SOCIAL_AUTH_REDIRECT_URL` environment variable to determ
 - **WHEN** any social provider is configured
 - **THEN** `SOCIAL_AUTH_REDIRECT_URL` MUST also be configured and MUST be a valid URL
 
+## ADDED Requirements
+
 ### Requirement: Provider-reported email verification signal
 
 Social login strategies SHALL pass a boolean `emailVerified` flag in `SocialLoginParams`, reflecting the provider's own assertion that the email has been verified.
@@ -123,3 +125,17 @@ Social login strategies SHALL pass a boolean `emailVerified` flag in `SocialLogi
 - **AND** MUST select the primary verified email (`primary: true, verified: true`) as the login email
 - **AND** `emailVerified` MUST be `true` only when such an email is found
 - **AND** if no verified primary email is available, the strategy MAY still emit the profile email but MUST set `emailVerified` to `false`
+
+## REMOVED Requirements
+
+### Requirement: Auth provider enum in database schema
+
+**Reason**: Replaced by the `provider` column on the `UserAuthIdentity` table. A user is no longer pinned to a single provider, so a user-level column is no longer the correct model.
+
+**Migration**: Query `UserAuthIdentity` rows for a given `userId` to determine which providers the user can sign in with. For backwards compatibility, `UserInfo.authProvider` continues to be derived and exposed in API responses (see the `user-auth-identities` capability).
+
+### Requirement: Auth provider ID in database schema
+
+**Reason**: Replaced by the `providerId` column on the `UserAuthIdentity` table. The user-level column cannot express multiple identities.
+
+**Migration**: Use `UserAuthIdentity.providerId` scoped to a `(provider, userId)` row. The `(provider, providerId)` uniqueness constraint is preserved on the new table.

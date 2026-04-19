@@ -393,6 +393,14 @@ export class AuthController {
 
   private getSocialAuthErrorReason(error: unknown): string {
     if (error instanceof ConflictException) {
+      const code = this.extractErrorCode(error);
+      if (code === ErrorCode.EMAIL_UNVERIFIED_LOCAL) {
+        return 'email_unverified_local';
+      }
+      if (code === ErrorCode.EMAIL_UNVERIFIED_PROVIDER) {
+        return 'email_unverified_provider';
+      }
+
       return 'email_exists';
     }
     if (error instanceof UnauthorizedException) {
@@ -400,6 +408,18 @@ export class AuthController {
     }
 
     return 'unknown';
+  }
+
+  private extractErrorCode(error: ConflictException): string | undefined {
+    const response = error.getResponse();
+    if (typeof response === 'object' && response !== null && 'code' in response) {
+      const code = (response as { code: unknown }).code;
+      if (typeof code === 'string') {
+        return code;
+      }
+    }
+
+    return undefined;
   }
 
   private setRefreshTokenCookie(res: Response, result: GenerateTokensResult): void {

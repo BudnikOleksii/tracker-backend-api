@@ -1,8 +1,8 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { and, asc, count, desc, eq, gte, ilike, isNull } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte, ilike, isNull, sql } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 
-import { users } from '@/database/schemas/index.js';
+import { userAuthIdentities, users } from '@/database/schemas/index.js';
 import { DB_TOKEN } from '@/database/types.js';
 import type { DrizzleDb } from '@/database/types.js';
 import type { User } from '@/database/schemas/index.js';
@@ -12,13 +12,14 @@ import type { CurrencyCode } from '@/shared/enums/currency-code.enum.js';
 import type { UserRole } from '@/shared/enums/role.enum.js';
 import type { AuthProvider } from '@/shared/enums/auth-provider.enum.js';
 
+import { IdentityRepository } from './identity.repository.js';
 import type { SortByField } from './user.constants.js';
 
 export interface UserInfo {
   id: string;
   email: string;
   role: UserRole;
-  authProvider: AuthProvider;
+  authProvider: AuthProvider | null;
   emailVerified: boolean;
   countryCode: CountryCode | null;
   baseCurrencyCode: CurrencyCode | null;
@@ -70,9 +71,12 @@ export interface CreateUserData {
   role?: UserRole;
   firstName?: string;
   lastName?: string;
-  authProvider?: AuthProvider;
-  authProviderId?: string;
   emailVerified?: boolean;
+  identity?: {
+    provider: AuthProvider;
+    providerId: string | null;
+    emailAtLink?: string | null;
+  };
 }
 
 export interface UpdateUserData {
@@ -85,11 +89,31 @@ export interface UserSummary {
   newToday: number;
 }
 
+// Derives the user's displayed auth provider from the identity table:
+// LOCAL wins if present; otherwise the earliest-created social identity.
+// Returns NULL when a user has zero identities — a data-integrity violation
+// that callers should surface rather than paper over with a LOCAL default.
+const DERIVED_AUTH_PROVIDER = sql<AuthProvider | null>`(
+  CASE
+    WHEN EXISTS (
+      SELECT 1 FROM ${userAuthIdentities}
+      WHERE ${userAuthIdentities.userId} = ${users.id}
+        AND ${userAuthIdentities.provider} = 'LOCAL'
+    ) THEN 'LOCAL'::"AuthProvider"
+    ELSE (
+      SELECT ${userAuthIdentities.provider} FROM ${userAuthIdentities}
+      WHERE ${userAuthIdentities.userId} = ${users.id}
+      ORDER BY ${userAuthIdentities.createdAt} ASC
+      LIMIT 1
+    )
+  END
+)`;
+
 const USER_INFO_COLUMNS = {
   id: users.id,
   email: users.email,
   role: users.role,
-  authProvider: users.authProvider,
+  authProvider: DERIVED_AUTH_PROVIDER,
   emailVerified: users.emailVerified,
   countryCode: users.countryCode,
   baseCurrencyCode: users.baseCurrencyCode,
@@ -105,11 +129,27 @@ const SORT_COLUMN_MAP = {
   createdAt: users.createdAt,
 } as const;
 
+interface UserInfoRow {
+  id: string;
+  email: string;
+  role: UserRole;
+  authProvider: AuthProvider | null;
+  emailVerified: boolean;
+  countryCode: CountryCode | null;
+  baseCurrencyCode: CurrencyCode | null;
+  onboardingCompleted: boolean;
+  ipAddress: string | null;
+  userAgent: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 @Injectable()
 export class UserRepository {
   constructor(
     @Inject(DB_TOKEN)
     private readonly db: DrizzleDb,
+    private readonly identityRepository: IdentityRepository,
   ) {}
 
   async findAll(query: UserListQuery): Promise<UserListResult> {
@@ -178,32 +218,70 @@ export class UserRepository {
     const result = await this.db
       .select({ count: count() })
       .from(users)
-      .where(eq(users.email, email.toLowerCase()));
+      .where(and(eq(users.email, email.toLowerCase()), isNull(users.deletedAt)));
 
     return (result[0]?.count ?? 0) > 0;
   }
 
   async create(data: CreateUserData): Promise<UserInfo> {
-    const result = await this.db
-      .insert(users)
-      .values({
-        email: data.email.toLowerCase(),
-        passwordHash: data.passwordHash ?? null,
-        role: data.role ?? 'USER',
-        firstName: data.firstName,
-        lastName: data.lastName,
-        authProvider: data.authProvider ?? 'LOCAL',
-        authProviderId: data.authProviderId,
-        emailVerified: data.emailVerified ?? false,
-      })
-      .returning();
+    const insertUserId = await this.db.transaction(async (tx) => {
+      const inserted = await tx
+        .insert(users)
+        .values({
+          email: data.email.toLowerCase(),
+          passwordHash: data.passwordHash ?? null,
+          role: data.role ?? 'USER',
+          firstName: data.firstName,
+          lastName: data.lastName,
+          emailVerified: data.emailVerified ?? false,
+        })
+        .returning({ id: users.id });
 
-    const [row] = result;
-    if (!row) {
-      throw new Error('Insert did not return a row');
+      const [row] = inserted;
+      if (!row) {
+        throw new Error('Insert did not return a row');
+      }
+
+      if (data.identity) {
+        await this.identityRepository.create(
+          {
+            userId: row.id,
+            provider: data.identity.provider,
+            providerId: data.identity.providerId,
+            emailAtLink: data.identity.emailAtLink ?? data.email.toLowerCase(),
+          },
+          tx,
+        );
+      }
+
+      return row.id;
+    });
+
+    const created = await this.findById(insertUserId);
+    if (!created) {
+      throw new Error('Failed to load created user');
     }
 
-    return this.toUserInfo(row);
+    return created;
+  }
+
+  async updatePasswordHashWithLocalIdentity(id: string, passwordHash: string): Promise<void> {
+    await this.db.transaction(async (tx) => {
+      await tx.update(users).set({ passwordHash, updatedAt: new Date() }).where(eq(users.id, id));
+
+      const existing = await tx
+        .select({ id: userAuthIdentities.id })
+        .from(userAuthIdentities)
+        .where(and(eq(userAuthIdentities.userId, id), eq(userAuthIdentities.provider, 'LOCAL')))
+        .limit(1);
+
+      if (existing.length === 0) {
+        await this.identityRepository.create(
+          { userId: id, provider: 'LOCAL', providerId: null },
+          tx,
+        );
+      }
+    });
   }
 
   async update(id: string, data: UpdateUserData): Promise<UserInfo | null> {
@@ -212,14 +290,17 @@ export class UserRepository {
       updates.role = data.role;
     }
 
-    const result = await this.db.update(users).set(updates).where(eq(users.id, id)).returning();
+    const result = await this.db
+      .update(users)
+      .set(updates)
+      .where(eq(users.id, id))
+      .returning({ id: users.id });
 
-    const [row] = result;
-    if (!row) {
+    if (result.length === 0) {
       return null;
     }
 
-    return this.toUserInfo(row);
+    return this.findById(id);
   }
 
   async hardDelete(id: string): Promise<boolean> {
@@ -347,43 +428,6 @@ export class UserRepository {
     return this.toProfileInfo(row);
   }
 
-  async updatePasswordHash(id: string, passwordHash: string): Promise<void> {
-    await this.db
-      .update(users)
-      .set({ passwordHash, updatedAt: new Date() })
-      .where(eq(users.id, id));
-  }
-
-  async findByAuthProvider(
-    authProvider: AuthProvider,
-    authProviderId: string,
-  ): Promise<User | null> {
-    const result = await this.db
-      .select()
-      .from(users)
-      .where(
-        and(
-          eq(users.authProvider, authProvider),
-          eq(users.authProviderId, authProviderId),
-          isNull(users.deletedAt),
-        ),
-      )
-      .limit(1);
-
-    return result[0] ?? null;
-  }
-
-  async linkSocialAccount(
-    id: string,
-    authProvider: AuthProvider,
-    authProviderId: string,
-  ): Promise<void> {
-    await this.db
-      .update(users)
-      .set({ authProvider, authProviderId, updatedAt: new Date() })
-      .where(eq(users.id, id));
-  }
-
   async setEmailVerificationToken(userId: string, token: string, expiresAt: Date): Promise<void> {
     await this.db
       .update(users)
@@ -473,23 +517,7 @@ export class UserRepository {
     };
   }
 
-  private toUserInfo(
-    user: Pick<
-      User,
-      | 'id'
-      | 'email'
-      | 'role'
-      | 'authProvider'
-      | 'emailVerified'
-      | 'countryCode'
-      | 'baseCurrencyCode'
-      | 'onboardingCompleted'
-      | 'ipAddress'
-      | 'userAgent'
-      | 'createdAt'
-      | 'updatedAt'
-    >,
-  ): UserInfo {
+  private toUserInfo(user: UserInfoRow): UserInfo {
     return {
       id: user.id,
       email: user.email,

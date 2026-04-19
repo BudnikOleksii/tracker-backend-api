@@ -1,5 +1,6 @@
 export * from './enums.js';
 export * from './users.js';
+export * from './user-auth-identities.js';
 export * from './refresh-tokens.js';
 export * from './known-devices.js';
 export * from './default-transaction-categories.js';

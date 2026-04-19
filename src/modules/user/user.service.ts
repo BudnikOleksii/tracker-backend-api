@@ -7,6 +7,7 @@ import {
 import * as bcrypt from 'bcrypt';
 
 import type { User } from '@/database/schemas/users.js';
+import type { UserAuthIdentity } from '@/database/schemas/user-auth-identities.js';
 import type { AuthProvider } from '@/shared/enums/auth-provider.enum.js';
 import { buildCacheKey, buildCachePrefix } from '@/modules/cache/cache-key.utils.js';
 import { CacheService } from '@/modules/cache/cache.service.js';
@@ -15,6 +16,8 @@ import { ErrorCode } from '@/shared/enums/error-code.enum.js';
 import { hasRequiredRole } from '@/shared/enums/role.enum.js';
 import type { UserRole } from '@/shared/enums/role.enum.js';
 
+import { IdentityRepository } from './identity.repository.js';
+import type { IdentityWithUser } from './identity.repository.js';
 import { UserRepository } from './user.repository.js';
 import type {
   ProfileInfo,
@@ -24,12 +27,14 @@ import type {
   UserListResult,
   UserSummary,
 } from './user.repository.js';
+
 const CACHE_MODULE = 'users';
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
+    private readonly identityRepository: IdentityRepository,
     private readonly cacheService: CacheService,
   ) {}
 
@@ -38,19 +43,31 @@ export class UserService {
   }
 
   async findByAuthProvider(
-    authProvider: AuthProvider,
-    authProviderId: string,
-  ): Promise<User | null> {
-    return this.userRepository.findByAuthProvider(authProvider, authProviderId);
+    provider: AuthProvider,
+    providerId: string,
+  ): Promise<IdentityWithUser | null> {
+    return this.identityRepository.findByProvider(provider, providerId);
   }
 
-  async linkSocialAccount(
-    id: string,
-    authProvider: AuthProvider,
-    authProviderId: string,
-  ): Promise<void> {
-    await this.userRepository.linkSocialAccount(id, authProvider, authProviderId);
+  async linkIdentity(params: {
+    userId: string;
+    provider: AuthProvider;
+    providerId: string;
+    emailAtLink?: string;
+  }): Promise<UserAuthIdentity> {
+    const created = await this.identityRepository.create({
+      userId: params.userId,
+      provider: params.provider,
+      providerId: params.providerId,
+      emailAtLink: params.emailAtLink,
+    });
     await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE));
+
+    return created;
+  }
+
+  async hasLocalIdentity(userId: string): Promise<boolean> {
+    return this.identityRepository.hasLocalIdentity(userId);
   }
 
   async createSocialUser(data: {
@@ -60,22 +77,20 @@ export class UserService {
     firstName?: string;
     lastName?: string;
   }): Promise<UserInfo> {
-    const exists = await this.userRepository.existsByEmail(data.email);
-    if (exists) {
-      throw new ConflictException({
-        code: ErrorCode.EMAIL_EXISTS,
-        message: 'This email address is already in use',
-      });
-    }
-
+    // The unique constraint on (email) and the partial unique on (provider, providerId)
+    // are the authoritative guards. Callers must handle `isUniqueViolation` to cover
+    // the race window that a pre-check could never fully close.
     const result = await this.userRepository.create({
       email: data.email,
       passwordHash: null,
-      authProvider: data.authProvider,
-      authProviderId: data.authProviderId,
       firstName: data.firstName,
       lastName: data.lastName,
       emailVerified: true,
+      identity: {
+        provider: data.authProvider,
+        providerId: data.authProviderId,
+        emailAtLink: data.email,
+      },
     });
 
     await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE));
@@ -136,6 +151,11 @@ export class UserService {
       role: data.role,
       firstName: data.firstName,
       lastName: data.lastName,
+      identity: {
+        provider: 'LOCAL',
+        providerId: null,
+        emailAtLink: data.email,
+      },
     });
 
     await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE));
@@ -230,7 +250,7 @@ export class UserService {
   }
 
   async updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
-    await this.userRepository.updatePasswordHash(userId, passwordHash);
+    await this.userRepository.updatePasswordHashWithLocalIdentity(userId, passwordHash);
     await this.cacheService.delByPrefix(buildCachePrefix(CACHE_MODULE));
   }
 

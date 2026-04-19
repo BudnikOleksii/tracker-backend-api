@@ -30,10 +30,10 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     },
     done: VerifyCallback,
   ): void {
-    const verifiedEmail = profile.emails?.find((e) => e.verified !== false);
+    const primaryEmail = profile.emails?.[0];
 
-    if (!verifiedEmail) {
-      done(new UnauthorizedException('Google account has no verified email'), false);
+    if (!primaryEmail) {
+      done(new UnauthorizedException('Google account has no email'), false);
 
       return;
     }
@@ -41,7 +41,8 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     const result: SocialLoginParams = {
       provider: 'GOOGLE',
       providerId: profile.id,
-      email: verifiedEmail.value,
+      email: primaryEmail.value,
+      emailVerified: primaryEmail.verified === true,
       firstName: profile.name?.givenName,
       lastName: profile.name?.familyName,
     };
