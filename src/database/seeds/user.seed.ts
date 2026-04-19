@@ -1,8 +1,8 @@
 /* eslint-disable no-console */
 import * as bcrypt from 'bcrypt';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 
-import { users } from '../schemas/index.js';
+import { userAuthIdentities, users } from '../schemas/index.js';
 import type { SeedDb } from './client.js';
 
 export async function createSuperAdminUser(db: SeedDb): Promise<typeof users.$inferSelect> {
@@ -18,6 +18,7 @@ export async function createSuperAdminUser(db: SeedDb): Promise<typeof users.$in
 
   if (existingUser) {
     console.log(`Found existing SUPER_ADMIN user: ${existingUser.email}`);
+    await ensureLocalIdentity(db, existingUser.id, existingUser.email);
 
     return existingUser;
   }
@@ -38,7 +39,28 @@ export async function createSuperAdminUser(db: SeedDb): Promise<typeof users.$in
     throw new Error('Failed to create SUPER_ADMIN user');
   }
 
+  await ensureLocalIdentity(db, user.id, user.email);
+
   console.log(`Created SUPER_ADMIN user: ${user.email}`);
 
   return user;
+}
+
+async function ensureLocalIdentity(db: SeedDb, userId: string, email: string): Promise<void> {
+  const [existing] = await db
+    .select()
+    .from(userAuthIdentities)
+    .where(and(eq(userAuthIdentities.userId, userId), eq(userAuthIdentities.provider, 'LOCAL')))
+    .limit(1);
+
+  if (existing) {
+    return;
+  }
+
+  await db.insert(userAuthIdentities).values({
+    userId,
+    provider: 'LOCAL',
+    providerId: null,
+    emailAtLink: email,
+  });
 }

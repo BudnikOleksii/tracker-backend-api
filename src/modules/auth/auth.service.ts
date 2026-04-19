@@ -100,6 +100,9 @@ export class AuthService {
       });
     }
 
+    // passwordHash null ⇔ no LOCAL identity (enforced by `updatePasswordHashWithLocalIdentity`
+    // and by the two-insert transaction in `UserRepository.create`). Skipping the extra
+    // `hasLocalIdentity` round-trip keeps the login path at one user query.
     if (!user.passwordHash) {
       void this.loginLogRepo.create({
         userId: user.id,
@@ -148,81 +151,81 @@ export class AuthService {
   }
 
   async socialLogin(params: SocialLoginParams): Promise<SocialLoginResult> {
-    const { provider, providerId, email, firstName, lastName, deviceContext } = params;
+    const { provider, providerId, email, emailVerified, firstName, lastName, deviceContext } =
+      params;
 
     const existingByProvider = await this.userService.findByAuthProvider(provider, providerId);
     if (existingByProvider) {
-      void this.loginLogRepo.create({
-        userId: existingByProvider.id,
-        email: existingByProvider.email,
-        status: 'SUCCESS',
-        ipAddress: deviceContext?.ipAddress,
-        userAgent: deviceContext?.userAgent,
-      });
-
-      const tokens = await this.tokenService.generateTokens({
-        userId: existingByProvider.id,
-        email: existingByProvider.email,
-        role: existingByProvider.role,
-        deviceContext,
-      });
-
-      return { ...tokens, isNewUser: false };
+      return this.loginAsExistingUser(existingByProvider.user, deviceContext);
     }
 
     const existingByEmail = await this.userService.findByEmail(email);
     if (existingByEmail) {
-      void this.loginLogRepo.create({
+      if (!existingByEmail.emailVerified) {
+        void this.loginLogRepo.create({
+          userId: existingByEmail.id,
+          email,
+          status: 'FAILED',
+          ipAddress: deviceContext?.ipAddress,
+          userAgent: deviceContext?.userAgent,
+          failReason: 'email_unverified_local',
+        });
+        throw new ConflictException({
+          code: ErrorCode.EMAIL_UNVERIFIED_LOCAL,
+          message:
+            'An account with this email exists but the email is not verified. Please verify your email before linking a social provider.',
+        });
+      }
+
+      if (!emailVerified) {
+        void this.loginLogRepo.create({
+          userId: existingByEmail.id,
+          email,
+          status: 'FAILED',
+          ipAddress: deviceContext?.ipAddress,
+          userAgent: deviceContext?.userAgent,
+          failReason: 'email_unverified_provider',
+        });
+        throw new ConflictException({
+          code: ErrorCode.EMAIL_UNVERIFIED_PROVIDER,
+          message:
+            'The social provider has not verified this email address. Please verify it with the provider before linking.',
+        });
+      }
+
+      return this.linkAndLogin({
         userId: existingByEmail.id,
+        provider,
+        providerId,
+        email,
+        userForTokens: existingByEmail,
+        deviceContext,
+      });
+    }
+
+    if (!emailVerified) {
+      void this.loginLogRepo.create({
         email,
         status: 'FAILED',
         ipAddress: deviceContext?.ipAddress,
         userAgent: deviceContext?.userAgent,
-        failReason: 'email_already_exists',
+        failReason: 'email_unverified_provider',
       });
       throw new ConflictException({
-        code: ErrorCode.EMAIL_EXISTS,
+        code: ErrorCode.EMAIL_UNVERIFIED_PROVIDER,
         message:
-          'An account with this email already exists. Please sign in with your existing method.',
+          'The social provider has not verified this email address. Please verify it with the provider before creating an account.',
       });
     }
 
-    let newUser;
-    try {
-      newUser = await this.userService.createSocialUser({
-        email,
-        authProvider: provider,
-        authProviderId: providerId,
-        firstName,
-        lastName,
-      });
-    } catch (error) {
-      if (isUniqueViolation(error)) {
-        throw new ConflictException({
-          code: ErrorCode.EMAIL_EXISTS,
-          message:
-            'An account with this email already exists. Please sign in with your existing method.',
-        });
-      }
-      throw error;
-    }
-
-    void this.loginLogRepo.create({
-      userId: newUser.id,
-      email: newUser.email,
-      status: 'SUCCESS',
-      ipAddress: deviceContext?.ipAddress,
-      userAgent: deviceContext?.userAgent,
-    });
-
-    const tokens = await this.tokenService.generateTokens({
-      userId: newUser.id,
-      email: newUser.email,
-      role: newUser.role,
+    return this.createNewSocialUser({
+      provider,
+      providerId,
+      email,
+      firstName,
+      lastName,
       deviceContext,
     });
-
-    return { ...tokens, isNewUser: true };
   }
 
   async verifyEmail(
@@ -244,5 +247,130 @@ export class AuthService {
       role: user.role,
       deviceContext,
     });
+  }
+
+  private async loginAsExistingUser(
+    user: { id: string; email: string; role: GenerateTokensResult['user']['role'] },
+    deviceContext?: DeviceContext,
+  ): Promise<SocialLoginResult> {
+    void this.loginLogRepo.create({
+      userId: user.id,
+      email: user.email,
+      status: 'SUCCESS',
+      ipAddress: deviceContext?.ipAddress,
+      userAgent: deviceContext?.userAgent,
+    });
+
+    const tokens = await this.tokenService.generateTokens({
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      deviceContext,
+    });
+
+    return { ...tokens, isNewUser: false };
+  }
+
+  private async linkAndLogin(args: {
+    userId: string;
+    provider: SocialLoginParams['provider'];
+    providerId: string;
+    email: string;
+    userForTokens: { id: string; email: string; role: GenerateTokensResult['user']['role'] };
+    deviceContext?: DeviceContext;
+  }): Promise<SocialLoginResult> {
+    try {
+      await this.userService.linkIdentity({
+        userId: args.userId,
+        provider: args.provider,
+        providerId: args.providerId,
+        emailAtLink: args.email,
+      });
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        // Raced with another callback that already created this identity row.
+        // Re-fetch and assert it belongs to the user we intended to link, so
+        // we never silently hand back tokens for an unrelated principal.
+        const existing = await this.userService.findByAuthProvider(args.provider, args.providerId);
+        if (existing && existing.user.id === args.userId) {
+          return this.loginAsExistingUser(existing.user, args.deviceContext);
+        }
+        void this.loginLogRepo.create({
+          userId: args.userId,
+          email: args.email,
+          status: 'FAILED',
+          ipAddress: args.deviceContext?.ipAddress,
+          userAgent: args.deviceContext?.userAgent,
+          failReason: 'link_conflict',
+        });
+        throw new ConflictException({
+          code: ErrorCode.RESOURCE_CONFLICT,
+          message: 'This social identity is already linked to a different account.',
+        });
+      }
+      throw error;
+    }
+
+    return this.loginAsExistingUser(args.userForTokens, args.deviceContext);
+  }
+
+  private async createNewSocialUser(args: {
+    provider: SocialLoginParams['provider'];
+    providerId: string;
+    email: string;
+    firstName?: string;
+    lastName?: string;
+    deviceContext?: DeviceContext;
+  }): Promise<SocialLoginResult> {
+    let newUser;
+    try {
+      newUser = await this.userService.createSocialUser({
+        email: args.email,
+        authProvider: args.provider,
+        authProviderId: args.providerId,
+        firstName: args.firstName,
+        lastName: args.lastName,
+      });
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        // Raced with another callback that created the user and identity.
+        // Retry the provider-identity lookup.
+        const existing = await this.userService.findByAuthProvider(args.provider, args.providerId);
+        if (existing) {
+          return this.loginAsExistingUser(existing.user, args.deviceContext);
+        }
+        // Race on the email unique index (concurrent local registration with same email).
+        void this.loginLogRepo.create({
+          email: args.email,
+          status: 'FAILED',
+          ipAddress: args.deviceContext?.ipAddress,
+          userAgent: args.deviceContext?.userAgent,
+          failReason: 'email_race_conflict',
+        });
+        throw new ConflictException({
+          code: ErrorCode.EMAIL_EXISTS,
+          message:
+            'An account with this email already exists. Please sign in with your existing method.',
+        });
+      }
+      throw error;
+    }
+
+    void this.loginLogRepo.create({
+      userId: newUser.id,
+      email: newUser.email,
+      status: 'SUCCESS',
+      ipAddress: args.deviceContext?.ipAddress,
+      userAgent: args.deviceContext?.userAgent,
+    });
+
+    const tokens = await this.tokenService.generateTokens({
+      userId: newUser.id,
+      email: newUser.email,
+      role: newUser.role,
+      deviceContext: args.deviceContext,
+    });
+
+    return { ...tokens, isNewUser: true };
   }
 }

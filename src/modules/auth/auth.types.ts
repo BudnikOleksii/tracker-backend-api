@@ -65,6 +65,7 @@ export interface SocialLoginParams {
   provider: AuthProvider;
   providerId: string;
   email: string;
+  emailVerified: boolean;
   firstName?: string;
   lastName?: string;
   deviceContext?: DeviceContext;

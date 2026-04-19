@@ -1,20 +1,12 @@
-import {
-  boolean,
-  index,
-  pgTable,
-  text,
-  timestamp,
-  uniqueIndex,
-  uuid,
-  varchar,
-} from 'drizzle-orm/pg-core';
+import { boolean, index, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
 
 import type { CountryCode, CurrencyCode } from './enums.js';
-import { authProviderEnum, userRoleEnum } from './enums.js';
+import { userRoleEnum } from './enums.js';
 import { refreshTokens } from './refresh-tokens.js';
 import { transactionCategories } from './transaction-categories.js';
 import { transactions } from './transactions.js';
+import { userAuthIdentities } from './user-auth-identities.js';
 
 export const users = pgTable(
   'User',
@@ -22,8 +14,6 @@ export const users = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     email: text('email').notNull().unique(),
     passwordHash: text('passwordHash'),
-    authProvider: authProviderEnum('authProvider').notNull().default('LOCAL'),
-    authProviderId: text('authProviderId'),
     firstName: text('firstName'),
     lastName: text('lastName'),
     emailVerified: boolean('emailVerified').notNull().default(false),
@@ -49,9 +39,6 @@ export const users = pgTable(
     deletedAt: timestamp('deletedAt', { precision: 3, mode: 'date', withTimezone: true }),
   },
   (table) => [
-    uniqueIndex('User_authProvider_authProviderId_unique')
-      .on(table.authProvider, table.authProviderId)
-      .where(sql`${table.authProviderId} IS NOT NULL`),
     index('User_emailVerificationToken_idx')
       .on(table.emailVerificationToken)
       .where(sql`${table.emailVerificationToken} IS NOT NULL`),
@@ -68,4 +55,5 @@ export const usersRelations = relations(users, ({ many }) => ({
   refreshTokens: many(refreshTokens),
   transactionCategories: many(transactionCategories),
   transactions: many(transactions),
+  identities: many(userAuthIdentities),
 }));
