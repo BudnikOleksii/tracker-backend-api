@@ -34,23 +34,12 @@ export class GitHubStrategy extends PassportStrategy(Strategy, 'github') {
     });
   }
 
-  // eslint-disable-next-line @typescript-eslint/max-params
-  validate(
+  async validate(
     accessToken: string,
     _refreshToken: string,
     profile: GitHubProfile,
-    done: (error: Error | null, user?: SocialLoginParams | false) => void,
-  ): void {
-    // Keep `validate` synchronous to stay compatible with `passport-github2`'s
-    // verify-callback contract. Async work is done via `.then`/`.catch` into `done`.
-    this.buildSocialLoginParams(accessToken, profile)
-      .then((result) => done(null, result))
-      .catch((error: unknown) => {
-        done(
-          error instanceof Error ? error : new UnauthorizedException('GitHub auth failed'),
-          false,
-        );
-      });
+  ): Promise<SocialLoginParams> {
+    return this.buildSocialLoginParams(accessToken, profile);
   }
 
   private async buildSocialLoginParams(

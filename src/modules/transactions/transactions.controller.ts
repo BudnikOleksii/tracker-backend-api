@@ -29,6 +29,7 @@ import {
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
+import type {} from 'multer';
 
 import { BulkDeleteDto } from '@/shared/dtos/bulk-delete.dto.js';
 import { BulkDeleteResponseDto } from '@/shared/dtos/bulk-delete-response.dto.js';
