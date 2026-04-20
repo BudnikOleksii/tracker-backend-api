@@ -26,6 +26,7 @@ import type { RecurringFrequency } from '@/shared/enums/recurring-frequency.enum
 import type { RecurringTransactionStatus } from '@/shared/enums/recurring-transaction-status.enum.js';
 import type { TransactionType } from '@/shared/enums/transaction-type.enum.js';
 import type { CategoryDetail, CategoryJoinColumns } from '@/shared/types/category-detail.js';
+import { fetchCategoryJoinColumns } from '@/shared/utils/fetch-category-columns.js';
 
 import type { SortByField } from './recurring-transactions.constants.js';
 
@@ -284,7 +285,7 @@ export class RecurringTransactionsRepository {
       throw new Error('Failed to create recurring transaction');
     }
 
-    const categoryInfo = await this.getCategoryInfo(inserted.categoryId, db);
+    const categoryInfo = await fetchCategoryJoinColumns(inserted.categoryId, db);
 
     return this.toRecurringTransactionInfo({ ...inserted, ...categoryInfo });
   }
@@ -333,18 +334,18 @@ export class RecurringTransactionsRepository {
       updates.status = data.status;
     }
 
-    const updated = (await db
+    const updated = await db
       .update(recurringTransactions)
       .set(updates)
       .where(and(eq(recurringTransactions.id, id), eq(recurringTransactions.userId, userId)))
-      .returning()) as (typeof recurringTransactions.$inferSelect)[];
+      .returning();
 
     const [updatedRow] = updated;
     if (!updatedRow) {
       return null;
     }
 
-    const categoryInfo = await this.getCategoryInfo(updatedRow.categoryId, db);
+    const categoryInfo = await fetchCategoryJoinColumns(updatedRow.categoryId, db);
 
     return this.toRecurringTransactionInfo({ ...updatedRow, ...categoryInfo });
   }
@@ -425,27 +426,6 @@ export class RecurringTransactionsRepository {
         recurringTransactionId: d.recurringTransactionId,
       })),
     );
-  }
-
-  private async getCategoryInfo(categoryId: string, db: DrizzleDb): Promise<CategoryJoinColumns> {
-    const result = (await db
-      .select({
-        categoryName: transactionCategories.name,
-        parentCatId: parentCategory.id,
-        parentCatName: parentCategory.name,
-      })
-      .from(transactionCategories)
-      .leftJoin(parentCategory, eq(transactionCategories.parentCategoryId, parentCategory.id))
-      .where(eq(transactionCategories.id, categoryId))
-      .limit(1)) as CategoryJoinColumns[];
-
-    const [row] = result;
-
-    return {
-      categoryName: row?.categoryName ?? null,
-      parentCatId: row?.parentCatId ?? null,
-      parentCatName: row?.parentCatName ?? null,
-    };
   }
 
   private toRecurringTransactionInfo(

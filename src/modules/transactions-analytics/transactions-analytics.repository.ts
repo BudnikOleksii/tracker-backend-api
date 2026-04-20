@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, eq, gte, lte, sql } from 'drizzle-orm';
+import { and, count, desc, eq, gte, lte, sql } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 
 import { transactionCategories, transactions } from '@/database/schemas/index.js';
@@ -110,7 +110,7 @@ export class TransactionsAnalyticsRepository {
       .innerJoin(transactionCategories, eq(transactions.categoryId, transactionCategories.id))
       .where(and(...conditions))
       .groupBy(transactions.categoryId, transactionCategories.name, transactions.type)
-      .orderBy(sql`total DESC`);
+      .orderBy(desc(sql`SUM(${transactions.amount})`));
 
     return rows.map((row) => ({
       categoryId: row.categoryId,
@@ -175,7 +175,7 @@ export class TransactionsAnalyticsRepository {
       .innerJoin(transactionCategories, eq(transactions.categoryId, transactionCategories.id))
       .where(and(...conditions))
       .groupBy(transactions.categoryId, transactionCategories.name, transactions.type)
-      .orderBy(sql`total DESC`)
+      .orderBy(desc(sql`SUM(${transactions.amount})`))
       .limit(limit);
 
     return rows.map((row) => ({
@@ -189,17 +189,18 @@ export class TransactionsAnalyticsRepository {
 
   async getDailyTotals(query: AnalyticsBaseQuery): Promise<DailyTotalRow[]> {
     const conditions = this.buildBaseConditions(query);
+    const dayExpr: SQL = sql`${transactions.date}::date`;
 
     const rows = await this.db
       .select({
-        date: sql<string>`${transactions.date}::date`.as('day'),
+        date: sql<string>`${dayExpr}`.as('day'),
         total: sql<string>`COALESCE(SUM(${transactions.amount}), 0)`.as('total'),
         transactionCount: count(),
       })
       .from(transactions)
       .where(and(...conditions))
-      .groupBy(sql`day`)
-      .orderBy(sql`day`);
+      .groupBy(dayExpr)
+      .orderBy(dayExpr);
 
     return rows.map((row) => ({
       date: row.date,

@@ -15,7 +15,7 @@ export class UpdateBudgetDto {
   @IsOptional()
   @IsStringField()
   @IsNotEmptyField()
-  @MatchesField(/^\d{1,17}(\.\d{1,2})?$/)
+  @MatchesField(/^(?!0+(?:\.0{1,2})?$)\d{1,17}(\.\d{1,2})?$/)
   amount?: string;
 
   @ApiPropertyOptional({ example: '550e8400-e29b-41d4-a716-446655440000' })

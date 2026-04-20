@@ -48,7 +48,15 @@ export const budgets = pgTable(
     index('Budget_status_endDate_idx')
       .on(table.status, table.endDate)
       .where(sql`status IN ('ACTIVE', 'EXCEEDED')`),
+    index('Budget_userId_status_idx').on(table.userId, table.status),
+    index('Budget_userId_currencyCode_startDate_endDate_idx').on(
+      table.userId,
+      table.currencyCode,
+      table.startDate,
+      table.endDate,
+    ),
     check('Budget_endDate_after_startDate', sql`"endDate" > "startDate"`),
+    check('Budget_amount_positive', sql`${table.amount} > 0`),
   ],
 );
 

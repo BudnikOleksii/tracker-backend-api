@@ -14,6 +14,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 
 import { Roles } from '@/shared/decorators/roles.decorator.js';
 import { BulkDeleteDto } from '@/shared/dtos/bulk-delete.dto.js';
@@ -79,7 +80,7 @@ export class RecurringTransactionsController {
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a recurring transaction' })
   @ApiResponse({ status: 201, type: RecurringTransactionResponseDto })
-  @ApiResponse({ status: 400, description: 'Validation error' })
+  @ApiResponse({ status: 422, description: 'Validation error' })
   @ApiResponse({ status: 404, description: 'Category not found' })
   async create(
     @Body() dto: CreateRecurringTransactionDto,
@@ -102,7 +103,7 @@ export class RecurringTransactionsController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update a recurring transaction' })
   @ApiResponse({ status: 200, type: RecurringTransactionResponseDto })
-  @ApiResponse({ status: 400, description: 'Validation error' })
+  @ApiResponse({ status: 422, description: 'Validation error' })
   @ApiResponse({ status: 404, description: 'Recurring transaction not found' })
   async update(
     @Param('id', ParseUUIDPipe) id: string,
@@ -126,7 +127,7 @@ export class RecurringTransactionsController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Bulk delete (cancel) recurring transactions' })
   @ApiResponse({ status: 200, type: BulkDeleteResponseDto })
-  @ApiResponse({ status: 400, description: 'Validation error' })
+  @ApiResponse({ status: 422, description: 'Validation error' })
   async bulkDelete(
     @Body() dto: BulkDeleteDto,
     @Request() req: AuthenticatedRequest,
@@ -176,6 +177,7 @@ export class RecurringTransactionsController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(RolesGuard)
   @Roles('ADMIN')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @ApiOperation({ summary: 'Process due recurring transactions' })
   @ApiResponse({ status: 200, type: ProcessResultResponseDto })
   @ApiResponse({ status: 403, description: 'Insufficient permissions' })

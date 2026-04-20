@@ -174,6 +174,7 @@ export class TransactionsController {
   @ApiResponse({ status: 201, type: TransactionResponseDto })
   @ApiResponse({ status: 400, description: 'Category type mismatch' })
   @ApiResponse({ status: 404, description: 'Category not found' })
+  @ApiResponse({ status: 422, description: 'Validation error' })
   async create(
     @Body() dto: CreateTransactionDto,
     @Request() req: AuthenticatedRequest,
@@ -194,6 +195,7 @@ export class TransactionsController {
   @ApiResponse({ status: 200, type: TransactionResponseDto })
   @ApiResponse({ status: 400, description: 'Category type mismatch' })
   @ApiResponse({ status: 404, description: 'Transaction not found' })
+  @ApiResponse({ status: 422, description: 'Validation error' })
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateTransactionDto,
@@ -213,7 +215,7 @@ export class TransactionsController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Bulk delete transactions' })
   @ApiResponse({ status: 200, type: BulkDeleteResponseDto })
-  @ApiResponse({ status: 400, description: 'Validation error' })
+  @ApiResponse({ status: 422, description: 'Validation error' })
   async bulkDelete(
     @Body() dto: BulkDeleteDto,
     @Request() req: AuthenticatedRequest,

@@ -87,7 +87,7 @@ export class BudgetsController {
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a budget' })
   @ApiResponse({ status: 201, type: BudgetResponseDto })
-  @ApiResponse({ status: 400, description: 'Validation error' })
+  @ApiResponse({ status: 422, description: 'Validation error' })
   @ApiResponse({ status: 404, description: 'Category not found' })
   @ApiResponse({ status: 409, description: 'Overlapping budget exists' })
   async create(
@@ -109,7 +109,7 @@ export class BudgetsController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update a budget' })
   @ApiResponse({ status: 200, type: BudgetResponseDto })
-  @ApiResponse({ status: 400, description: 'Validation error' })
+  @ApiResponse({ status: 422, description: 'Validation error' })
   @ApiResponse({ status: 404, description: 'Budget not found' })
   @ApiResponse({ status: 409, description: 'Overlapping budget exists' })
   async update(
@@ -129,7 +129,7 @@ export class BudgetsController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Bulk delete budgets' })
   @ApiResponse({ status: 200, type: BulkDeleteResponseDto })
-  @ApiResponse({ status: 400, description: 'Validation error' })
+  @ApiResponse({ status: 422, description: 'Validation error' })
   async bulkDelete(
     @Body() dto: BulkDeleteDto,
     @Request() req: AuthenticatedRequest,

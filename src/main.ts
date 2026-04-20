@@ -10,11 +10,6 @@ import type { NestExpressApplication } from '@nestjs/platform-express';
 import { createCorsConfig } from './app/config/cors.config.js';
 import { setupSwagger } from './app/config/swagger.config.js';
 import { createValidationPipe } from './app/config/validation.config.js';
-import { AllExceptionsFilter } from './app/filters/all-exceptions.filter.js';
-import { ProblemDetailsFilter } from './app/filters/problem-details.filter.js';
-import { PaginationLinkInterceptor } from './app/interceptors/pagination-link.interceptor.js';
-import { RequestContextInterceptor } from './app/interceptors/request-context.interceptor.js';
-import { TimeoutInterceptor } from './app/interceptors/timeout.interceptor.js';
 import { AppModule } from './app.module.js';
 import type { Env } from './app/config/env.schema.js';
 
@@ -40,14 +35,6 @@ async function bootstrap() {
       { path: 'auth/github/callback', method: RequestMethod.GET },
     ],
   });
-
-  app.useGlobalFilters(app.get(ProblemDetailsFilter), app.get(AllExceptionsFilter));
-
-  app.useGlobalInterceptors(
-    app.get(RequestContextInterceptor),
-    app.get(TimeoutInterceptor),
-    app.get(PaginationLinkInterceptor),
-  );
 
   app.useGlobalPipes(createValidationPipe());
 

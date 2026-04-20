@@ -333,7 +333,10 @@ export class AuthController {
     req: { user: SocialLoginParams } & HttpRequest,
     res: Response,
   ): Promise<void> {
-    const redirectUrl = this.socialAuthRedirectUrl as string;
+    if (!this.socialAuthRedirectUrl) {
+      throw new InternalServerErrorException('Social auth redirect URL is not configured');
+    }
+    const redirectUrl = this.socialAuthRedirectUrl;
 
     try {
       const result = await this.authService.socialLogin({

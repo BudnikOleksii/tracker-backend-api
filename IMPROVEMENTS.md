@@ -9,50 +9,35 @@
 
 ## Active Findings
 
-| #   | Priority | Finding                                                        | Effort | Impact | Agent(s)               | Status |
-| --- | -------- | -------------------------------------------------------------- | ------ | ------ | ---------------------- | ------ |
-| 15  | P1       | No API versioning strategy                                     | Medium | High   | api-designer           | Todo   |
-| 68  | P2       | Cross-module repository writes bypass service layer            | Medium | Medium | architect, nestjs      | Todo   |
-| 69  | P2       | existsByEmail counts soft-deleted users                        | Low    | Medium | security-auditor       | Todo   |
-| 70  | P2       | Admin can hard-delete own account                              | Low    | Medium | security-auditor       | Todo   |
-| 71  | P2       | socialAuthRedirectUrl as string without runtime guard          | Low    | Medium | security, typescript   | Todo   |
-| 72  | P2       | Validation errors documented as 400 but pipe throws 422        | Low    | Medium | api-designer           | Todo   |
-| 73  | P2       | BudgetResponseDto.endDate non-nullable but column optional     | Low    | Medium | api-designer           | Todo   |
-| 74  | P2       | POST /recurring-transactions/process lacks rate limiting       | Low    | Medium | api-designer           | Todo   |
-| 75  | P2       | Missing CHECK positive amount on Budget + RecurringTransaction | Low    | Medium | postgres-pro           | Todo   |
-| 76  | P2       | Missing composite index (userId, status) on Budget             | Low    | Medium | postgres-pro           | Todo   |
-| 77  | P2       | Verification table no unique constraint on identifier          | Low    | Medium | postgres-pro           | Todo   |
-| 78  | P2       | SQL alias-based GROUP BY/ORDER BY fragile pattern              | Low    | Medium | perf, postgres, db-opt | Todo   |
-| 79  | P2       | getSpentAmount no partial index for EXPENSE filter             | Low    | Medium | database-optimizer     | Todo   |
-| 80  | P2       | findOverlapping budget no composite index                      | Low    | Medium | database-optimizer     | Todo   |
-| 81  | P2       | bulkUpdateStatuses TOCTOU — no row lock                        | Medium | Medium | database-optimizer     | Todo   |
-| 82  | P2       | Redundant getCategoryInfo query per recurring iteration        | Medium | Medium | performance-engineer   | Todo   |
-| 83  | P2       | Duplicated getCategoryInfo method across repositories          | Low    | Medium | refactoring-specialist | Todo   |
-| 84  | P2       | Repeated field-by-field update construction in repos           | Medium | Medium | refactoring-specialist | Todo   |
-| 85  | P2       | Unsafe as casts on .returning() suppress Drizzle inference     | Low    | Medium | typescript-pro         | Todo   |
-| 86  | P2       | Filters/interceptors dual-registration pattern                 | Low    | Medium | nestjs-expert          | Todo   |
-| 87  | P3       | Login log writes fire-and-forget no error handling             | Low    | Low    | security-auditor       | Todo   |
-| 88  | P3       | Password change allows same password                           | Low    | Low    | security-auditor       | Todo   |
-| 89  | P3       | DELETE endpoints return 200 instead of 204                     | Low    | Low    | api-designer           | Todo   |
-| 90  | P3       | Missing Swagger response types on auth/providers + onboarding  | Low    | Low    | api-designer           | Todo   |
-| 91  | P3       | Import errors unstructured string array                        | Medium | Low    | api-designer           | Todo   |
-| 92  | P3       | LoginLog.email + KnownDevice.userId missing indexes            | Low    | Low    | postgres, db-opt       | Todo   |
-| 93  | P3       | Verification table no cleanup + no expiresAt index             | Low    | Low    | database-optimizer     | Todo   |
-| 94  | P3       | getUserSummary three separate COUNT queries                    | Low    | Low    | perf, db-opt           | Todo   |
-| 95  | P3       | Export redundant queries (categories + two round-trips)        | Low    | Low    | performance-engineer   | Todo   |
-| 96  | P3       | Analytics cache keys unbounded growth                          | Low    | Low    | performance-engineer   | Todo   |
-| 97  | P3       | Transaction_userId_date_idx DESC vs ASC mismatch               | Low    | Low    | performance-engineer   | Todo   |
-| 98  | P3       | Multiple unsafe as casts across codebase                       | Low    | Low    | typescript-pro         | Todo   |
-| 99  | P3       | Cache module name strings duplicated across modules            | Low    | Low    | architect, nestjs      | Todo   |
-| 100 | P3       | Dead code: createTransaction method + noop conditional         | Low    | Low    | refactoring-specialist | Todo   |
-| 101 | P3       | Duplicated pause/resume + findDue + hasUpdates patterns        | Low    | Low    | refactoring-specialist | Todo   |
-| 102 | P3       | Identical transaction\<T\> wrapper in 5 repositories           | Medium | Low    | refactoring-specialist | Todo   |
-| 103 | P3       | ScheduledTasksService mixes unrelated responsibilities         | Medium | Low    | nestjs-expert          | Todo   |
-| 104 | P3       | AuthController config assembly in constructor                  | Low    | Low    | nestjs-expert          | Todo   |
-| 105 | P3       | AuditLogInterceptor records raw URL not structured             | Low    | Low    | nestjs-expert          | Todo   |
-| 106 | P3       | Dependency vulnerabilities: flatted + vite                     | Low    | Low    | dependency-manager     | Todo   |
-| 107 | P3       | Unused dependencies: vitest, @nestjs/testing, jiti             | Low    | Low    | dependency-manager     | Todo   |
-| 108 | P3       | AuditLogModule unnecessary @Global                             | Low    | Low    | architect-reviewer     | Todo   |
+| #   | Priority | Finding                                                       | Effort | Impact | Agent(s)               | Status |
+| --- | -------- | ------------------------------------------------------------- | ------ | ------ | ---------------------- | ------ |
+| 15  | P1       | No API versioning strategy                                    | Medium | High   | api-designer           | Todo   |
+| 68  | P2       | Cross-module repository writes bypass service layer           | Medium | Medium | architect, nestjs      | Todo   |
+| 81  | P2       | bulkUpdateStatuses TOCTOU — no row lock                       | Medium | Medium | database-optimizer     | Todo   |
+| 82  | P2       | Redundant getCategoryInfo query per recurring iteration       | Medium | Medium | performance-engineer   | Todo   |
+| 84  | P2       | Repeated field-by-field update construction in repos          | Medium | Medium | refactoring-specialist | Todo   |
+| 87  | P3       | Login log writes fire-and-forget no error handling            | Low    | Low    | security-auditor       | Todo   |
+| 88  | P3       | Password change allows same password                          | Low    | Low    | security-auditor       | Todo   |
+| 89  | P3       | DELETE endpoints return 200 instead of 204                    | Low    | Low    | api-designer           | Todo   |
+| 90  | P3       | Missing Swagger response types on auth/providers + onboarding | Low    | Low    | api-designer           | Todo   |
+| 91  | P3       | Import errors unstructured string array                       | Medium | Low    | api-designer           | Todo   |
+| 92  | P3       | LoginLog.email + KnownDevice.userId missing indexes           | Low    | Low    | postgres, db-opt       | Todo   |
+| 93  | P3       | Verification table no cleanup + no expiresAt index            | Low    | Low    | database-optimizer     | Todo   |
+| 94  | P3       | getUserSummary three separate COUNT queries                   | Low    | Low    | perf, db-opt           | Todo   |
+| 95  | P3       | Export redundant queries (categories + two round-trips)       | Low    | Low    | performance-engineer   | Todo   |
+| 96  | P3       | Analytics cache keys unbounded growth                         | Low    | Low    | performance-engineer   | Todo   |
+| 97  | P3       | Transaction_userId_date_idx DESC vs ASC mismatch              | Low    | Low    | performance-engineer   | Todo   |
+| 98  | P3       | Multiple unsafe as casts across codebase                      | Low    | Low    | typescript-pro         | Todo   |
+| 99  | P3       | Cache module name strings duplicated across modules           | Low    | Low    | architect, nestjs      | Todo   |
+| 100 | P3       | Dead code: createTransaction method + noop conditional        | Low    | Low    | refactoring-specialist | Todo   |
+| 101 | P3       | Duplicated pause/resume + findDue + hasUpdates patterns       | Low    | Low    | refactoring-specialist | Todo   |
+| 102 | P3       | Identical transaction\<T\> wrapper in 5 repositories          | Medium | Low    | refactoring-specialist | Todo   |
+| 103 | P3       | ScheduledTasksService mixes unrelated responsibilities        | Medium | Low    | nestjs-expert          | Todo   |
+| 104 | P3       | AuthController config assembly in constructor                 | Low    | Low    | nestjs-expert          | Todo   |
+| 105 | P3       | AuditLogInterceptor records raw URL not structured            | Low    | Low    | nestjs-expert          | Todo   |
+| 106 | P3       | Dependency vulnerabilities: flatted + vite                    | Low    | Low    | dependency-manager     | Todo   |
+| 107 | P3       | Unused dependencies: vitest, @nestjs/testing, jiti            | Low    | Low    | dependency-manager     | Todo   |
+| 108 | P3       | AuditLogModule unnecessary @Global                            | Low    | Low    | architect-reviewer     | Todo   |
 
 ---
 
@@ -98,180 +83,6 @@ This bypasses business rules, validation, and cache invalidation. `TransactionCa
 
 ---
 
-#### 69. existsByEmail Counts Soft-Deleted Users Blocking Re-Registration
-
-**Effort:** Low | **Impact:** Medium | **Reported by:** security-auditor
-
-`existsByEmail` queries without filtering `isNull(users.deletedAt)`. When a user soft-deletes their account, their email becomes permanently locked. This is inconsistent with `findByEmail` which correctly filters soft-deleted records, and creates a DoS vector.
-
-**Fix:** Add `isNull(users.deletedAt)` to the `where` clause of `existsByEmail`.
-
-**Files:**
-
-- `src/modules/user/user.repository.ts:177-183`
-
----
-
-#### 70. Admin Can Hard-Delete Own Account
-
-**Effort:** Low | **Impact:** Medium | **Reported by:** security-auditor
-
-The admin `DELETE /users/:id` endpoint has no self-deletion guard. An admin can permanently delete their own account, potentially leaving the system with no administrators. Unlike `assignRole` which explicitly blocks self-modification, `delete` has no such check.
-
-**Fix:** Add a self-deletion guard in `UserService.delete()` that compares the target `id` against the actor's `id`, rejecting with a `ForbiddenException` if they match.
-
-**Files:**
-
-- `src/modules/user/user.controller.ts:119-128`
-- `src/modules/user/user.service.ts:160-169`
-
----
-
-#### 71. socialAuthRedirectUrl `as string` Without Runtime Guard
-
-**Effort:** Low | **Impact:** Medium | **Reported by:** security-auditor, typescript-pro
-
-`this.socialAuthRedirectUrl` is typed `string | undefined` but cast to `string` with `as string` in `handleSocialCallback`. If undefined at runtime, `new URL(redirectUrl)` throws an uncaught TypeError. The `verifyEmail` method correctly validates with an explicit null check.
-
-**Fix:** Replace `as string` with a runtime guard: `if (!this.socialAuthRedirectUrl) throw new InternalServerErrorException('Social auth redirect URL is not configured');`.
-
-**Files:**
-
-- `src/modules/auth/auth.controller.ts:355`
-
----
-
-#### 72. Validation Errors Documented as 400 but Pipe Throws 422
-
-**Effort:** Low | **Impact:** Medium | **Reported by:** api-designer
-
-The global `ValidationPipe` is configured with `errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY` (422), but every controller documents `@ApiResponse({ status: 400, description: 'Validation error' })`. Clients relying on the Swagger spec will not handle 422 correctly.
-
-**Fix:** Replace all `@ApiResponse({ status: 400, description: 'Validation error' })` with `@ApiResponse({ status: 422, description: 'Validation error' })`. Reserve 400 only for explicit `BadRequestException` throws.
-
-**Files:**
-
-- `src/app/config/validation.config.ts:12-14`
-- All controllers with `@ApiResponse({ status: 400 })`
-
----
-
-#### 73. BudgetResponseDto.endDate Non-Nullable but Column Optional
-
-**Effort:** Low | **Impact:** Medium | **Reported by:** api-designer
-
-`CreateBudgetDto.endDate` and `UpdateBudgetDto.endDate` are `@IsOptional()`, so a budget may lack an end date. Yet `BudgetResponseDto.endDate` is declared as non-nullable `Date`, misleading clients.
-
-**Fix:** Change to `endDate: Date | null` and add `{ type: Date, nullable: true }` to its `@ApiProperty` decorator.
-
-**Files:**
-
-- `src/modules/budgets/dtos/budget-response.dto.ts:44-45`
-
----
-
-#### 74. POST /recurring-transactions/process Lacks Rate Limiting
-
-**Effort:** Low | **Impact:** Medium | **Reported by:** api-designer
-
-The `process` endpoint triggers bulk recurring transaction processing and is admin-only, but has no `@Throttle` decorator. A compromised admin token could invoke it in a tight loop causing mass duplicate transactions.
-
-**Fix:** Add `@Throttle({ default: { limit: 5, ttl: 60000 } })` to the `process` method.
-
-**Files:**
-
-- `src/modules/recurring-transactions/recurring-transactions.controller.ts:175-184`
-
----
-
-#### 75. Missing CHECK Positive Amount on Budget and RecurringTransaction
-
-**Effort:** Low | **Impact:** Medium | **Reported by:** postgres-pro
-
-The `Transaction` table has `CHECK (amount > 0)` but `Budget` and `RecurringTransaction` tables have no equivalent constraint. Zero or negative amounts are insertable via SQL.
-
-**Fix:** Add `check('Budget_amount_positive', sql\`amount > 0\`)`and`check('RecurringTransaction_amount_positive', sql\`amount > 0\`)`to the respective table constraints. Run`pnpm db:generate && pnpm db:migrate`.
-
-**Files:**
-
-- `src/database/schemas/budgets.ts:28,43-52`
-- `src/database/schemas/recurring-transactions.ts:34,55-71`
-
----
-
-#### 76. Missing Composite Index (userId, status) on Budget
-
-**Effort:** Low | **Impact:** Medium | **Reported by:** postgres-pro
-
-User-scoped budget queries filter by `userId` + `status` but only have separate single-column indexes. The nightly cron and user-facing list queries fall back to bitmap-and on two indexes.
-
-**Fix:** Add `index('Budget_userId_status_idx').on(table.userId, table.status)` to the Budget schema.
-
-**Files:**
-
-- `src/database/schemas/budgets.ts:43-52`
-- `src/modules/budgets/budgets.repository.ts:306-319`
-
----
-
-#### 77. Verification Table No Unique Constraint on Identifier
-
-**Effort:** Low | **Impact:** Medium | **Reported by:** postgres-pro
-
-Multiple concurrent requests can insert duplicate verification rows for the same identifier. A lookup returns whichever row is first, making prior tokens stale without invalidation.
-
-**Fix:** Replace the plain `index` on `identifier` with `uniqueIndex('Verification_identifier_key').on(table.identifier)`.
-
-**Files:**
-
-- `src/database/schemas/verifications.ts:3-19`
-
----
-
-#### 78. SQL Alias-Based GROUP BY/ORDER BY Fragile Pattern
-
-**Effort:** Low | **Impact:** Medium | **Reported by:** performance-engineer, postgres-pro, database-optimizer
-
-`getDailyTotals` groups by alias `day`, and `getCategoryBreakdown`/`getTopCategories` order by alias `total`. Using aliases in GROUP BY/ORDER BY is PostgreSQL-specific, fragile if aliases change, and prevents the planner from reusing computed expressions efficiently.
-
-**Fix:** Replace alias references with the full expressions: `.groupBy(sql\`${transactions.date}::date\`)` and `.orderBy(desc(sql\`SUM(${transactions.amount})\`))`.
-
-**Files:**
-
-- `src/modules/transactions-analytics/transactions-analytics.repository.ts:113,177,195,201-202`
-
----
-
-#### 79. getSpentAmount No Partial Index for EXPENSE Filter
-
-**Effort:** Low | **Impact:** Medium | **Reported by:** database-optimizer
-
-`getSpentAmount` queries with `type = 'EXPENSE'` but the existing `Transaction_userId_currencyCode_date_idx` doesn't include `type`. PostgreSQL re-filters all rows after the index scan.
-
-**Fix:** Add a partial composite index `ON "Transaction" ("userId", "currencyCode", "date" DESC) WHERE type = 'EXPENSE'`.
-
-**Files:**
-
-- `src/database/schemas/transactions.ts:45-64`
-- `src/modules/budgets/budgets.repository.ts:275-303`
-
----
-
-#### 80. findOverlapping Budget No Composite Index
-
-**Effort:** Low | **Impact:** Medium | **Reported by:** database-optimizer
-
-`findOverlapping` filters `userId + currencyCode + startDate + endDate + categoryId` but no composite index covers this combination.
-
-**Fix:** Add `index('Budget_userId_currencyCode_startDate_endDate_idx').on(table.userId, table.currencyCode, table.startDate, table.endDate)`.
-
-**Files:**
-
-- `src/modules/budgets/budgets.repository.ts:232-273`
-- `src/database/schemas/budgets.ts:43-52`
-
----
-
 #### 81. bulkUpdateStatuses TOCTOU — No Row Lock
 
 **Effort:** Medium | **Impact:** Medium | **Reported by:** database-optimizer
@@ -300,21 +111,6 @@ Both `create` and `update` in `RecurringTransactionsRepository` call `getCategor
 
 ---
 
-#### 83. Duplicated getCategoryInfo Method Across Repositories
-
-**Effort:** Low | **Impact:** Medium | **Reported by:** refactoring-specialist
-
-The `getCategoryInfo` private method is copy-pasted identically between `TransactionRepository` and `RecurringTransactionsRepository`.
-
-**Fix:** Extract a shared utility function `fetchCategoryJoinColumns(categoryId, db)` into `src/shared/utils/`.
-
-**Files:**
-
-- `src/modules/transactions/transactions.repository.ts:487-506`
-- `src/modules/recurring-transactions/recurring-transactions.repository.ts:430-449`
-
----
-
 #### 84. Repeated Field-by-Field Update Construction in Repositories
 
 **Effort:** Medium | **Impact:** Medium | **Reported by:** refactoring-specialist
@@ -329,36 +125,6 @@ Every repository `update` method manually checks each field with `if (data.X !==
 - `src/modules/recurring-transactions/recurring-transactions.repository.ts:300-334`
 - `src/modules/budgets/budgets.repository.ts:182-198`
 - `src/modules/user/user.repository.ts:316-333`
-
----
-
-#### 85. Unsafe `as` Casts on .returning() Suppress Drizzle Inference
-
-**Effort:** Low | **Impact:** Medium | **Reported by:** typescript-pro
-
-Both `TransactionRepository.update()` and `RecurringTransactionsRepository.update()` cast `.returning()` results to `(typeof table.$inferSelect)[]`, discarding Drizzle's own structural inference and masking potential schema mismatches.
-
-**Fix:** Remove the casts. Type the `updates` variable properly and let Drizzle infer the `.returning()` result. Use `satisfies` if stricter narrowing is needed.
-
-**Files:**
-
-- `src/modules/transactions/transactions.repository.ts:316-320`
-- `src/modules/recurring-transactions/recurring-transactions.repository.ts:336-340`
-
----
-
-#### 86. Filters/Interceptors Dual-Registration Pattern
-
-**Effort:** Low | **Impact:** Medium | **Reported by:** nestjs-expert
-
-`AllExceptionsFilter`, `ProblemDetailsFilter`, `PaginationLinkInterceptor`, `RequestContextInterceptor`, and `TimeoutInterceptor` are listed as bare class providers in `AppModule`, then retrieved via `app.get(...)` in `main.ts` for global registration. Only `AuditLogInterceptor` uses the correct `APP_INTERCEPTOR` token pattern.
-
-**Fix:** Register each via its respective token (`APP_FILTER`, `APP_INTERCEPTOR`) using `{ provide: APP_FILTER, useClass: ... }` and remove the manual `app.get(...)` calls from `main.ts`.
-
-**Files:**
-
-- `src/app.module.ts:89-103`
-- `src/main.ts:44-50`
 
 ---
 
@@ -901,3 +667,18 @@ No documentation for required environment variables beyond the Zod schema. Incre
 | 65   | RETURNING order dependency in cloneDefaultCategoriesToUser    | High     | Low    | P1       | Done   |
 | 66   | Admin hard-delete does not invalidate user sessions           | High     | Medium | P1       | Done   |
 | 67   | path-to-regexp ReDoS vulnerability in @nestjs/core            | High     | Low    | P1       | Done   |
+| 69   | existsByEmail counts soft-deleted users                       | Medium   | Low    | P2       | Done   |
+| 70   | Admin can hard-delete own account                             | Medium   | Low    | P2       | Done   |
+| 71   | socialAuthRedirectUrl as string without runtime guard         | Medium   | Low    | P2       | Done   |
+| 72   | Validation errors documented as 400 but pipe throws 422       | Medium   | Low    | P2       | Done   |
+| 73   | BudgetResponseDto.endDate non-nullable but column optional    | Medium   | Low    | P2       | N/A    |
+| 74   | POST /recurring-transactions/process lacks rate limiting      | Medium   | Low    | P2       | Done   |
+| 75   | Missing CHECK positive amount on Budget+RecurringTransaction  | Medium   | Low    | P2       | Done   |
+| 76   | Missing composite index (userId, status) on Budget            | Medium   | Low    | P2       | Done   |
+| 77   | Verification table no unique constraint on identifier         | Medium   | Low    | P2       | Done   |
+| 78   | SQL alias-based GROUP BY/ORDER BY fragile pattern             | Medium   | Low    | P2       | Done   |
+| 79   | getSpentAmount no partial index for EXPENSE filter            | Medium   | Low    | P2       | Done   |
+| 80   | findOverlapping budget no composite index                     | Medium   | Low    | P2       | Done   |
+| 83   | Duplicated getCategoryInfo method across repositories         | Medium   | Low    | P2       | Done   |
+| 85   | Unsafe as casts on .returning() suppress Drizzle inference    | Medium   | Low    | P2       | Done   |
+| 86   | Filters/interceptors dual-registration pattern                | Medium   | Low    | P2       | Done   |

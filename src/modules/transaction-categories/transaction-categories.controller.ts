@@ -107,7 +107,7 @@ export class TransactionCategoriesController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Bulk delete transaction categories' })
   @ApiResponse({ status: 200, type: BulkDeleteResponseDto })
-  @ApiResponse({ status: 400, description: 'Validation error' })
+  @ApiResponse({ status: 422, description: 'Validation error' })
   async bulkDelete(
     @Body() dto: BulkDeleteDto,
     @Request() req: AuthenticatedRequest,

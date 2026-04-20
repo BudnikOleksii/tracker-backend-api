@@ -155,6 +155,13 @@
       "when": 1776594648511,
       "tag": "0021_mushy_callisto",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1776616255733,
+      "tag": "0022_crazy_salo",
+      "breakpoints": true
     }
   ]
 }

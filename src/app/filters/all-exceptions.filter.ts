@@ -1,4 +1,5 @@
-import { Catch, HttpException, HttpStatus, Inject, Logger } from '@nestjs/common';
+import { inspect } from 'node:util';
+import { Catch, HttpStatus, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClsService } from 'nestjs-cls';
 import type { ExceptionFilter, ArgumentsHost } from '@nestjs/common';
@@ -6,7 +7,6 @@ import type { Request, Response } from 'express';
 
 import type { ProblemDetailsDto } from '@/shared/dtos/problem-details.dto.js';
 
-import { ProblemDetailsFilter } from './problem-details.filter.js';
 import type { Env } from '../config/env.schema.js';
 
 @Catch()
@@ -15,8 +15,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
   constructor(
     private readonly cls: ClsService,
-    @Inject(ProblemDetailsFilter)
-    private readonly problemDetailsFilter: ProblemDetailsFilter,
     private readonly configService: ConfigService<Env, true>,
   ) {}
 
@@ -24,10 +22,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const context = host.switchToHttp();
     const response = context.getResponse<Response>();
     const request = context.getRequest<Request>();
-
-    if (exception instanceof HttpException) {
-      return this.problemDetailsFilter.catch(exception, host);
-    }
 
     const status = HttpStatus.INTERNAL_SERVER_ERROR;
 
@@ -56,11 +50,23 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (exception instanceof Error) {
       this.logger.error(logMessage, exception.stack);
     } else {
-      this.logger.error(logMessage, JSON.stringify(exception));
+      this.logger.error(logMessage, safeStringify(exception));
     }
 
     response.setHeader('Content-Type', 'application/problem+json');
     response.setHeader('Cache-Control', 'no-store');
     response.status(status).json(problemDetails);
+  }
+}
+
+function safeStringify(value: unknown): string {
+  try {
+    return JSON.stringify(value);
+  } catch {
+    try {
+      return inspect(value, { depth: 3, breakLength: Infinity });
+    } catch {
+      return '[Unserializable exception]';
+    }
   }
 }

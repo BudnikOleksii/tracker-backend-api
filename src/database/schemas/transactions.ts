@@ -55,6 +55,9 @@ export const transactions = pgTable(
       table.currencyCode,
       table.date.desc(),
     ),
+    index('Transaction_userId_currencyCode_date_expense_idx')
+      .on(table.userId, table.currencyCode, table.date.desc())
+      .where(sql`type = 'EXPENSE'`),
     foreignKey({
       columns: [table.userId, table.categoryId],
       foreignColumns: [transactionCategories.userId, transactionCategories.id],

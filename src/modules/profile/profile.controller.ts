@@ -39,7 +39,7 @@ export class ProfileController {
   @Patch()
   @ApiOperation({ summary: 'Update current user profile' })
   @ApiResponse({ status: 200, type: ProfileResponseDto })
-  @ApiResponse({ status: 400, description: 'Validation error' })
+  @ApiResponse({ status: 422, description: 'Validation error' })
   async updateProfile(
     @Request() req: AuthenticatedRequest,
     @Body() dto: UpdateProfileDto,
