@@ -189,7 +189,7 @@ export class TransactionsAnalyticsRepository {
 
   async getDailyTotals(query: AnalyticsBaseQuery): Promise<DailyTotalRow[]> {
     const conditions = this.buildBaseConditions(query);
-    const dayExpr = sql`${transactions.date}::date`;
+    const dayExpr: SQL = sql`${transactions.date}::date`;
 
     const rows = await this.db
       .select({

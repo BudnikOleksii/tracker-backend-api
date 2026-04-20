@@ -1,3 +1,4 @@
+import { inspect } from 'node:util';
 import { Catch, HttpStatus, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClsService } from 'nestjs-cls';
@@ -49,11 +50,23 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (exception instanceof Error) {
       this.logger.error(logMessage, exception.stack);
     } else {
-      this.logger.error(logMessage, JSON.stringify(exception));
+      this.logger.error(logMessage, safeStringify(exception));
     }
 
     response.setHeader('Content-Type', 'application/problem+json');
     response.setHeader('Cache-Control', 'no-store');
     response.status(status).json(problemDetails);
+  }
+}
+
+function safeStringify(value: unknown): string {
+  try {
+    return JSON.stringify(value);
+  } catch {
+    try {
+      return inspect(value, { depth: 3, breakLength: Infinity });
+    } catch {
+      return '[Unserializable exception]';
+    }
   }
 }
