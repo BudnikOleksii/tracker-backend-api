@@ -20,7 +20,7 @@ export class CreateBudgetDto {
   @ApiProperty({ example: '500.00' })
   @IsStringField()
   @IsNotEmptyField()
-  @MatchesField(/^\d{1,17}(\.\d{1,2})?$/)
+  @MatchesField(/^(?!0+(?:\.0{1,2})?$)\d{1,17}(\.\d{1,2})?$/)
   amount!: string;
 
   @ApiProperty({
